@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+  <world name="default">
+    <gui>
+      <camera name='user_default'>
+        <pose>16 0 12 0 0.6 -3.141</pose>
+      </camera>
+    </gui>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <plugin name="USARGaz" filename="libUSARGaz.so"/>
+  </world>
+</sdf>

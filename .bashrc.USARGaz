@@ -1,0 +1,4 @@
+export GAZEBO_PLUGIN_PATH=~/RoboCupRescuePackae/build:${GAZEBO_PLUGIN_PATH}
+export GAZEBO_MODEL_PATH=~/RoboCupRescuePackae/models:${GAZEBO_MODEL_PATH}
+source /opt/ros/indigo/setup.bash
+
