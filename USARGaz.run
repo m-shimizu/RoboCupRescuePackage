@@ -1,0 +1,3 @@
+gzserver USARGaz.world &
+gzclient -g libUSARGaz.so
+killall gzserver
