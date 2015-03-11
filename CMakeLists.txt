@@ -11,14 +11,14 @@ include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 ################################################
-# Build the USARGaz plugin
-add_library(USARGaz SHARED USARGaz1.cc)
-target_link_libraries(USARGaz ${GAZEBO_LIBRARIES})
+# Build the USARGazebo plugin
+add_library(USARGazebo SHARED USARGazebo.cc)
+target_link_libraries(USARGazebo ${GAZEBO_LIBRARIES})
 
 ################################################
-# Build the example a set of USARGaz-WorldPlugin(Subscriber) and usarsim_pub program
-add_library(USARGazW SHARED USARGaz-WorldPluginSample.cc)
-target_link_libraries(USARGazW ${GAZEBO_LIBRARIES})
+# Build the example a set of USARGazebo-WorldPlugin(Subscriber) and usarsim_pub program
+add_library(USARGazeboW SHARED USARGazebo-WorldPluginSample.cc)
+target_link_libraries(USARGazeboW ${GAZEBO_LIBRARIES})
 add_executable(usarsim_pub usarsim_pub.cc)
 target_link_libraries(usarsim_pub ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 

@@ -1,11 +1,11 @@
-# RoboCupRescuePackage
+# RoboCupRescuePackage for RoboCup Resuce Virtual Robot League
 A package adding USARSim interface to Gazebo
 
 ## How to setup
         $ cd ~
         $ git clone https://github.com/m-shimizu/RoboCupRescuePackage/
         $ cd ~/RoboCupRescuePackage
-        $ source ./.bashrc.USARGaz
+        $ source ./.bashrc.USARGazebo
         $ mkdir build
         $ cd build
         $ make
@@ -13,8 +13,8 @@ A package adding USARSim interface to Gazebo
 ## How to use
         * At Terminal1
         $ cd ~/RoboCupRescuePackage
-        $ source ./.bashrc.USARGaz
-        $ ./USRAGaz.run
+        $ source ./.bashrc.USARGazebo
+        $ ./USRAGazebo.run
         
         * At Terminal2
         $ telnet localhost 3000
@@ -32,6 +32,9 @@ A package adding USARSim interface to Gazebo
 ### Workable USARSim command
          -none
 
-### Completed rate
+### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
     |++++++++++++++|
+
+### Change log
+    * 11/ 3/2015 : Changed filename

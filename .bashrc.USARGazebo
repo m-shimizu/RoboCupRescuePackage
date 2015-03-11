@@ -1,3 +1,4 @@
 export GAZEBO_PLUGIN_PATH=~/RoboCupRescuePackage/build:${GAZEBO_PLUGIN_PATH}
 export GAZEBO_MODEL_PATH=~/RoboCupRescuePackage/models:~/.gazebo/models:${GAZEBO_MODEL_PATH}
 source /opt/ros/indigo/setup.bash
+#source /opt/ros/hydro/setup.bash

@@ -142,41 +142,36 @@ namespace gazebo
     /// \brief Called every PreRender event. See the Load function.
     private: void Update()
     {
-printf("-\n");
 // ##################################################################
       if(0 < rbuf_num)
+      {
 	if(1==rbuf[rbuf_num-1].Msg.Request)
 	{
 // it must be needed => if(1==rbuf[rbuf_num-1].Spawn.Request)
-		rbuf[rbuf_num-1].Msg.Request = 0;
-		rbuf[rbuf_num-1].Spawn.Done  = 1;
-    // Create a new transport node
-      transport::NodePtr node(new transport::Node());
-    // Initialize the node with the world name
-      node->Init();
-    // Create a publisher on the ~/factory topic
-      transport::PublisherPtr factoryPub
-         = node->Advertise<msgs::Factory>("~/factory");
-    // Create the message
-      msgs::Factory msg;
-    // Model file to load
-    //  msg.set_sdf_filename("model://cylinder");
-printf("--\n");
-      msg.set_sdf_filename("model://pioneer3at");
-printf("---\n");
-    //  msg.set_edit_name("cylinder1");
-    //  msg.set_clone_model_name("cylinder1");
-//      msg.set_edit_name("cylinder1");
-printf("----\n");
-    // Pose to initialize the model to
-printf("-----B\n");
-      msgs::Set(msg.mutable_pose()
-         , math::Pose(math::Vector3(1, -2, 0), math::Quaternion(0, 0, 0)));
-printf("------\n");
-    // Send the message
-      factoryPub->Publish(msg);
-printf("-------\n");
-    }
+          rbuf[rbuf_num-1].Msg.Request = 0;
+          rbuf[rbuf_num-1].Spawn.Done  = 1;
+
+       // Create a new transport node
+          transport::NodePtr node(new transport::Node());
+       // Initialize the node with the world name
+          node->Init();
+       // Create a publisher on the ~/factory topic
+          transport::PublisherPtr factoryPub
+            = node->Advertise<msgs::Factory>("~/factory");
+       // Create the message
+          msgs::Factory msg;
+       // Model file to load
+       // msg.set_sdf_filename("model://cylinder");
+          msg.set_sdf_filename("model://pioneer3at");
+       // msg.set_edit_name("cylinder1");
+       // Pose to initialize the model to
+          msgs::Set(msg.mutable_pose()
+           , math::Pose(math::Vector3(1, -2, 0), math::Quaternion(0, 0, 0)));
+       // Send the message
+          factoryPub->Publish(msg);
+
+        }
+      }
 // ##################################################################
 //      if (!this->userCam)
 //      {
@@ -203,7 +198,7 @@ printf("-------\n");
     }
 
     /// Pointer the user camera.
-//    private: rendering::UserCameraPtr userCam;
+//  private: rendering::UserCameraPtr userCam;
 
     /// All the event connections.
     private: std::vector<event::ConnectionPtr> connections;
