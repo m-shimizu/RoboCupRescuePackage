@@ -25,4 +25,8 @@ A package adding USARSim interface to Gazebo
 * When accepting a socket connection, spawn a robot into a gazebo
 
 ## Workable USARSim command (2015.3.10)
-     -none
+         -none
+
+## Completed rate (2015.3.10)
+    0---10---20---30---40---50---60---70---80---90---100 %
+    +++++++++++++++|

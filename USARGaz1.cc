@@ -166,7 +166,7 @@ printf("--\n");
 printf("---\n");
     //  msg.set_edit_name("cylinder1");
     //  msg.set_clone_model_name("cylinder1");
-      msg.set_edit_name("cylinder1");
+//      msg.set_edit_name("cylinder1");
 printf("----\n");
     // Pose to initialize the model to
 printf("-----B\n");
