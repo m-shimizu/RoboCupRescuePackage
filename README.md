@@ -37,4 +37,6 @@ A package adding USARSim interface to Gazebo
     |++++++++++++++|
 
 ### Change log
+    * 11/ 3/2015 : Adding a model which have 2 cameras, 1 hokuyo.
+                   The model's name is "pioneer3at_with_sensors".
     * 11/ 3/2015 : Changed filename
