@@ -65,7 +65,7 @@ char* message;
     }
     server.sin_family      = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port        = htons(3000);
+    server.sin_port        = htons(3000); // Defined by USARSim Manual P.50
     if(0 > bind(portal_socket, (struct sockaddr*)&server, sizeof(server)))
     {
         perror("Bind failed\n");
