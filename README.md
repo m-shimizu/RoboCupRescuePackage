@@ -20,13 +20,18 @@ A package adding USARSim interface to Gazebo
         $ telnet localhost 3000
         (and you can see spawing a robot into a gazebo window)
 
-## Current Funcion
-* Waiting for a socket connection at port 3000
-* When accepting a socket connection, spawn a robot into a gazebo
+## Status at 2015.3.10
 
-## Workable USARSim command (2015.3.10)
-         -none
+    ### Current Function 
+    * Waiting for a socket connection at port 3000
+    * When accepting a socket connection, spawn a robot into a gazebo
 
-## Completed rate (2015.3.10)
-    0---10---20---30---40---50---60---70---80---90---100 %
-    +++++++++++++++|
+    ### Current Constructing Point
+    * Command recognizer
+    
+    ### Workable USARSim command
+             -none
+
+    ### Completed rate
+        0---10---20---30---40---50---60---70---80---90---100 %
+        +++++++++++++++|
