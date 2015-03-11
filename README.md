@@ -22,16 +22,16 @@ A package adding USARSim interface to Gazebo
 
 ## Status at 2015.3.10
 
-    ### Current Function 
-    * Waiting for a socket connection at port 3000
-    * When accepting a socket connection, spawn a robot into a gazebo
+### Current Function 
+* Waiting for a socket connection at port 3000
+* When accepting a socket connection, spawn a robot into a gazebo
 
-    ### Current Constructing Point
-    * Command recognizer
-    
-    ### Workable USARSim command
-             -none
+### Current Constructing Point
+* Command recognizer
 
-    ### Completed rate
-        0---10---20---30---40---50---60---70---80---90---100 %
-        +++++++++++++++|
+### Workable USARSim command
+         -none
+
+### Completed rate
+    0---10---20---30---40---50---60---70---80---90---100 %
+    |++++++++++++++|
