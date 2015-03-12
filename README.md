@@ -1,6 +1,32 @@
 # RoboCupRescuePackage for RoboCup Resuce Virtual Robot League
 A package adding USARSim interface to Gazebo
 
+## Requirements
+* Hardware : core i-7(CLK 3GHz), Mem 8GB, nVidia Geforce GTX680Ti        
+* Software : 
+  Recommend : Ubuntu 14, Gazebo 5, ROS indigo
+  Maybe OK  : Ubuntu 12, Gazebo 4, ROS hydro
+
+### Installation tips  
+        I often stopped installation by "broken dependency error".  
+        My shortest method is here:  
+
+        1st step: Ubuntu 14 installation(just do it by an ordinally method)  
+
+        2st step: ROS indigo installation  
+        $ sudo apt-get install ros-indigo-desktop-full  
+
+        3nd step: Gazebo5 installation with running over "broken dependency error"
+        $ sudo dpkg --configure -a  
+        $ sudo apt-get install -f  
+        $ sudo apt-get install libgazebo5 libgazebo5-dev  
+        $ sudo apt-get install gazebo5  
+
+        4th step: Other elements installation
+        $ sudo apt-get install protobuf-compiler
+
+        done.  
+
 ## How to setup
         $ cd ~
         $ git clone https://github.com/m-shimizu/RoboCupRescuePackage/
