@@ -22,3 +22,7 @@ target_link_libraries(USARGazeboW ${GAZEBO_LIBRARIES})
 add_executable(usarsim_pub usarsim_pub.cc)
 target_link_libraries(usarsim_pub ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
+add_executable (robot_teleop robot_teleop.cc)
+target_link_libraries(robot_teleop ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+# target_link_libraries(robot_teleop ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} ${SDF_LIBRARIES})
+

@@ -162,7 +162,8 @@ namespace gazebo
           msgs::Factory msg;
        // Model file to load
        // msg.set_sdf_filename("model://cylinder");
-          msg.set_sdf_filename("model://pioneer3at");
+       // msg.set_sdf_filename("model://pioneer3at");
+          msg.set_sdf_filename("model://pioneer3at_with_sensors");
        // msg.set_edit_name("cylinder1");
        // Pose to initialize the model to
           msgs::Set(msg.mutable_pose()
