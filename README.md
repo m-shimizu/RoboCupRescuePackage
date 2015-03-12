@@ -13,10 +13,10 @@ A package adding USARSim interface to Gazebo
 
         1st step: Ubuntu 14 installation(no tips, just do it by an ordinally method)  
 
-        2st step: ROS indigo installation  
+        2nd step: ROS indigo installation  
         $ sudo apt-get install ros-indigo-desktop-full  
 
-        3nd step: Gazebo5 installation with running over "broken dependency error"
+        3rd step: Gazebo5 installation with running over "broken dependency error"
         $ sudo dpkg --configure -a  
         $ sudo apt-get install -f  
         $ sudo apt-get install libgazebo5 libgazebo5-dev  
