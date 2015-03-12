@@ -27,7 +27,7 @@ A package adding USARSim interface to Gazebo
 
         done.  
         
-        If you are using Gazebo4 and ROS hydro by installing drcsim-hydro package, maybe you need libgazebo4-dev package.
+        If you are already using Gazebo4 and ROS hydro by installing drcsim-hydro package, maybe you need libgazebo4-dev package.
         $ sudo apt-get install libgazebo4-dev
 
         
