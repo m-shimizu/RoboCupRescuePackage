@@ -3,15 +3,15 @@ A package adding USARSim interface to Gazebo
 
 ## Requirements
 * Hardware : core i-7(CLK 3GHz), Mem 8GB, nVidia Geforce GTX680Ti        
-* Software : 
-  Recommend : Ubuntu 14, Gazebo 5, ROS indigo
-  Maybe OK  : Ubuntu 12, Gazebo 4, ROS hydro
+* Software :   
+  Recommend : Ubuntu 14, Gazebo 5, ROS indigo  
+  Maybe OK  : Ubuntu 12, Gazebo 4, ROS hydro  
 
 ### Installation tips  
         I often stopped installation by "broken dependency error".  
         My shortest method is here:  
 
-        1st step: Ubuntu 14 installation(just do it by an ordinally method)  
+        1st step: Ubuntu 14 installation(no tips, just do it by an ordinally method)  
 
         2st step: ROS indigo installation  
         $ sudo apt-get install ros-indigo-desktop-full  
@@ -27,6 +27,7 @@ A package adding USARSim interface to Gazebo
 
         done.  
 
+        
 ## How to setup
         $ cd ~
         $ git clone https://github.com/m-shimizu/RoboCupRescuePackage/
