@@ -106,11 +106,11 @@ write(rbuf[rbuf_num].socket , message , strlen(message));
 
 namespace gazebo
 {
-  class USARGaz : public SystemPlugin
+  class USARGazebo : public SystemPlugin
   {
     /////////////////////////////////////////////
     /// \brief Destructor
-    public: virtual ~USARGaz()
+    public: virtual ~USARGazebo()
     {
       this->connections.clear();
 //      if (this->userCam)
@@ -124,7 +124,7 @@ namespace gazebo
     {
       this->connections.push_back(
           event::Events::ConnectPreRender(
-            boost::bind(&USARGaz::Update, this)));
+            boost::bind(&USARGazebo::Update, this)));
     }
 
     pthread_t thread_hnd;
@@ -206,5 +206,5 @@ namespace gazebo
   };
 
   // Register this plugin with the simulator
-  GZ_REGISTER_SYSTEM_PLUGIN(USARGaz)
+  GZ_REGISTER_SYSTEM_PLUGIN(USARGazebo)
 }
