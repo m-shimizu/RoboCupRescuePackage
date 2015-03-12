@@ -7,9 +7,9 @@ A package adding USARSim interface to Gazebo
   Recommend : Ubuntu 14, Gazebo 5, ROS indigo  
   Maybe OK  : Ubuntu 12, Gazebo 4, ROS hydro  
 
-### Installation tips  
-        I often stopped installation by "broken dependency error".  
-        My shortest method is here:  
+### Software Environment Installation Tips  
+        I often stopped Gazebo5 installation by "broken dependency error".  
+        Followings are my installation memo:  
 
         1st step: Ubuntu 14 installation(no tips, just do it by an ordinally method)  
 
@@ -26,6 +26,9 @@ A package adding USARSim interface to Gazebo
         $ sudo apt-get install protobuf-compiler
 
         done.  
+        
+        If you are using Gazebo4 and ROS hydro by installing drcsim-hydro package, maybe you need libgazebo4-dev package.
+        $ sudo apt-get install libgazebo4-dev
 
         
 ## How to setup
