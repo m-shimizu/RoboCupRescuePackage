@@ -20,15 +20,15 @@ A package adding USARSim interface to Gazebo
         $ telnet localhost 3000
         (and you can see spawing a robot into a gazebo window)
 
-       * Tempollary method to control robot
+        * Temporally method to control robot
         (After a robot spawned by abave method, open another terminal)
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
         $ cd build
         $ ./robot_teleop pioneer3at_with_sensors 2
-        robot_teleop is a program to control a robot which have a plugin "SkidSteerDrivePlugin" through topic "/vel_cmd".  
-        The 1st argument is the model name. Please check it in the model name tree in the left sidebar of the gazebo window.  
-        The 2nd argument is kind of plugin. Do not change.  
+        "robot_teleop" is a program to control a robot which have a plugin "SkidSteerDrivePlugin" through topic "/vel_cmd".  
+        The 1st argument is the model name. Please check it in the model name tree in the left sidebar of the gazebo window. If you see a different name like "pioneer3at_with_sensors_0", replace the 1st argument with it.  
+        The 2nd argument is a plugin type number defined in this program. Do not change.  
         To stop this program, push control key and C key on your keyboard at same time.  
 
 ## Status at 2015.3.11
