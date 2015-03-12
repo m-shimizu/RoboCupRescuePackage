@@ -38,6 +38,7 @@ A package adding USARSim interface to Gazebo
         $ source ./.bashrc.USARGazebo
         $ mkdir build
         $ cd build
+        $ cmake ../
         $ make
 
 ## How to use
