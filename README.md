@@ -75,9 +75,9 @@ A package adding USARSim interface to Gazebo
 * When accepting a socket connection, spawn a robot into a gazebo
 
 ### Current Constructing Point
-* Find a method to transfer camera image and other sensor data.
-    ** Made a robot model which have cameras and a range sensor.
-    ** Making a prototype new ImageServer.
+* Find a method to transfer camera image and other sensor data.  
+    ** Made a robot model which have cameras and a range sensor.  
+    ** Making a prototype new ImageServer.  
 * Command recognizer(restarting of development)
 
 ### Workable USARSim command
