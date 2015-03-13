@@ -45,11 +45,17 @@ A package adding USARSim interface to Gazebo
         * At Terminal1
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
-        $ ./USRAGazebo.run
+        $ gazebo USRAGazebo.world
         
         * At Terminal2
         $ telnet localhost 3000
         (and you can see spawing a robot into a gazebo window)
+
+        * At Terminal3  
+        $ telnet localhost 5003  
+        (and you can see 10 image files in RoboCupRescuePackage directory)  
+        (It's for checking of read image data from Gazebo image topic)  
+        (Sending Image data on TCP/IP as USARSim Imageserver is now constructing)  
 
         * Temporally method to control robot
         (After a robot spawned by abave method, open another terminal)
@@ -62,7 +68,7 @@ A package adding USARSim interface to Gazebo
         The 2nd argument is a plugin type number defined in this program. Do not change.  
         To stop this program, push control key and C key on your keyboard at same time.  
 
-## Status at 2015.3.11
+## Status at 2015.3.12
 
 ### Current Function 
 * Waiting for a socket connection at port 3000
@@ -70,17 +76,21 @@ A package adding USARSim interface to Gazebo
 
 ### Current Constructing Point
 * Find a method to transfer camera image and other sensor data.
-    ** Make a robot model which have cameras and a range sensor.
-* Command recognizer(stopping)
+    ** Made a robot model which have cameras and a range sensor.
+    ** Making a prototype new ImageServer.
+* Command recognizer(restarting of development)
 
 ### Workable USARSim command
          -none
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
-    |++++++++++++++|
+    |++++++++++++++++++++++++|
 
 ### Change log
+    * 12/ 3/2015 : Adding a limited ImageServer in USARGazebo.cc
+                   Now sending image data on TCP/IP is not realized,
+                   but you can see image files.
     * 11/ 3/2015 : Adding a model which have 2 cameras, 1 hokuyo.
                    The model's name is "pioneer3at_with_sensors".
     * 11/ 3/2015 : Changed filename

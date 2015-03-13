@@ -17,11 +17,13 @@ target_link_libraries(USARGazebo ${GAZEBO_LIBRARIES})
 
 ################################################
 # Build the example a set of USARGazebo-WorldPlugin(Subscriber) and usarsim_pub program
-add_library(USARGazeboW SHARED USARGazebo-WorldPluginSample.cc)
-target_link_libraries(USARGazeboW ${GAZEBO_LIBRARIES})
-add_executable(usarsim_pub usarsim_pub.cc)
-target_link_libraries(usarsim_pub ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+#add_library(USARGazeboW SHARED USARGazebo-WorldPluginSample.cc)
+#target_link_libraries(USARGazeboW ${GAZEBO_LIBRARIES})
+#add_executable(usarsim_pub usarsim_pub.cc)
+#target_link_libraries(usarsim_pub ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
+###############################################
+# Build the optional tool
 add_executable (robot_teleop robot_teleop.cc)
 target_link_libraries(robot_teleop ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 

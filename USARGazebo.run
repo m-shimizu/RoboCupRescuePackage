@@ -1,3 +1,0 @@
-gzserver USARGazebo.world &
-gzclient -g libUSARGazebo.so
-killall gzserver
