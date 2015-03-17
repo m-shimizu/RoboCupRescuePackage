@@ -50,13 +50,13 @@ A package adding USARSim interface to Gazebo
         * At Terminal2
         $ telnet localhost 3000
         (and you can see spawing a robot into a gazebo window)
-
+        
         * At Terminal3  
         $ telnet localhost 5003  
         (and you can see 10 image files in RoboCupRescuePackage directory)  
         (It's for checking of read image data from Gazebo image topic)  
         (Sending Image data on TCP/IP as USARSim Imageserver is now constructing)  
-
+        
         * Temporally method to control robot
         (After a robot spawned by abave method, open another terminal)
         $ cd ~/RoboCupRescuePackage
@@ -67,6 +67,8 @@ A package adding USARSim interface to Gazebo
         The 1st argument is the model name. Please check it in the model name tree in the left sidebar of the gazebo window. If you see a different name like "pioneer3at_with_sensors_0", replace the 1st argument with it.  
         The 2nd argument is a plugin type number defined in this program. Do not change.  
         To stop this program, push control key and C key on your keyboard at same time.  
+        
+        * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.
 
 ## Status at 2015.3.12
 
