@@ -73,6 +73,25 @@ void spawn_a_robot(USARrobot* rbuf_ptr)
     rbuf_ptr->Spawned = 1;
 }
 
+void give_start_poses(USARrobot* rbuf_ptr)
+{
+ // Defined on USARSim Manual P.43
+ char response[128]; // should be enough
+ int  nwritten, bytes;
+ //  perror("we should send the string NFO {StartPoses #} {Name1 x,y,z a,b,c} over the socket");
+    sprintf(response, "NFO {StartPoses 1}{PlayerStart %g, %g, %g 0,0,0}", rbuf_ptr->spawn_location[0], rbuf_ptr->spawn_location[1], rbuf_ptr->spawn_location[2]);
+    // should also convert the Quaternion spawn_direction
+    // Could there be multiple StartPoses?
+    // Could StartPoses be defined in a Gazebo map?
+    bytes = strlen(response);
+    nwritten = write(rbuf_ptr->socket, response, bytes);
+
+    if(nwritten <= 0) {
+        perror("NFO message could not be written, check errno");
+    } else if (nwritten != bytes) {
+        perror("not whole NFO message written");
+    }
+}
 /* MEMO AREA
         rbuf[rbuf_num-1].Msg.Request = 0;
         rbuf[rbuf_num-1].Spawn.Done  = 1;
@@ -103,7 +122,8 @@ enum USAR_COMMAND
    UC_SET     = 2,
    UC_GETCONF = 3,
    UC_GETGEO  = 4,
-   UC_DRIVE   = 5
+   UC_DRIVE   = 5,
+   UC_GETSTARTPOSES = 6
 };
 
 int check_command_from_USARclient(USARrobot* rbuf_ptr)
@@ -112,13 +132,37 @@ int check_command_from_USARclient(USARrobot* rbuf_ptr)
 //  2.recognize a command
 //  3.read parameters and set it into rbuf_ptr
 //  4.if need, set or reset flag
-    if(0 == rbuf_ptr->Spawned)
-    {
-        set_spawn_param(rbuf_ptr, (char*)"Robo_A"
-            , (char*)"pioneer3at_with_sensors", 1, -2, 0, 0, 0, 0);
-        return UC_INIT;
+    int nread;
+    char line[4096]; // USARCommander uses a buffer length of 4K
+
+    nread = read(rbuf_ptr->socket, line, 4096);
+
+    if(nread < 0) {
+	perror("Could not read socket 3000");
+        close(rbuf_ptr->socket); 
+	pthread_detach(pthread_self());
+    } else if(nread == 0) {
+	perror("EOF, should break connection");
+        close(rbuf_ptr->socket);
+// could not perform rbuf_num--, because there can be robots with a higher number
+	pthread_detach(pthread_self());
     }
-    return UC_NOOP;
+
+    if(strncmp(line,"INIT",4) == 0) {
+       
+        if(0 == rbuf_ptr->Spawned)
+        {
+            set_spawn_param(rbuf_ptr, (char*)"Robo_A"
+                , (char*)"pioneer3at_with_sensors", 1, -2, 0, 0, 0, 0);
+            return UC_INIT;
+        }
+    } else if(strncmp(line,"GETSTARTPOSES",13) == 0) {
+//      perror("GETSTARTPOSES, should give rbuf_ptr->spawn_location");
+        return UC_GETSTARTPOSES;
+
+    } else {
+        return UC_NOOP;
+    }
 }
 
 void *child_connection(void* rbuf_ptr)
@@ -130,6 +174,8 @@ SCK_TXT(rp->socket, (char*)"USARGazebo:Message from child_connection\n");
         switch(check_command_from_USARclient(rp))
         {
         case UC_INIT : spawn_a_robot(rp);
+                       break;
+        case UC_GETSTARTPOSES : give_start_poses(rp);
                        break;
         }
     }
@@ -145,7 +191,7 @@ void *accept_loop(void* dummy)
     if(-1 == portal_socket)
     {
         perror("Could not create socket\n");
-        exit -1;
+        exit(-1);
     }
     server.sin_family      = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
@@ -173,7 +219,7 @@ SCK_TXT(rbuf[rbuf_num].socket, (char*)"USARGazebo:Message from accept_loop:assig
                               , child_connection, (void*)&rbuf[rbuf_num]))
                 {
                     perror("Could not create thread\n");
-                    exit -1;
+                    exit(-1);
                 }
                 rbuf_num++;
                 //pthread_join(thread_hnd, NULL);
@@ -181,7 +227,7 @@ SCK_TXT(rbuf[rbuf_num].socket, (char*)"USARGazebo:Message from accept_loop:assig
             else
             {
                 perror("Accept fail\n");
-                exit -1;
+                exit(-1);
             }
         }
     }
@@ -250,7 +296,7 @@ void *imageserver_accept_loop(void* dummy)
     if(-1 == portal_socket)
     {
         perror("Could not create socket\n");
-        exit -1;
+        exit(-1);
     }
     server.sin_family      = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
@@ -278,7 +324,7 @@ SCK_TXT(ibuf[ibuf_num].socket, (char*)"USARGazeboImageServer:Message from images
                               , (void*)&ibuf[ibuf_num]))
                 {
                     perror("Could not create image server thread\n");
-                    exit -1;
+                    exit(-1);
                 }
                 ibuf_num++;
                 //pthread_join(thread_hnd, NULL);
@@ -286,7 +332,7 @@ SCK_TXT(ibuf[ibuf_num].socket, (char*)"USARGazeboImageServer:Message from images
             else
             {
                 perror("ImageServer Accept fail\n");
-                exit -1;
+                exit(-1);
             }
         }
     }
