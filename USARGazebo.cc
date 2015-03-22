@@ -27,7 +27,7 @@ struct RD
         RD(void) {Init();}
 };
 
-struct USARrobot
+struct USARcommand
 {
     int socket;
     RD  Msg, Spawn;
@@ -36,14 +36,28 @@ struct USARrobot
     gazebo::math::Vector3 spawn_location;
     gazebo::math::Quaternion spawn_direction;
     void Init(void) {Spawned = 0; Msg.Init(); Spawn.Init();}
-    USARrobot(void) {Init();}
+    USARcommand(void) {Init();}
+};
+
+enum USAR_COMMAND
+{
+   UC_NOOP    = 0,
+   UC_INIT    = 1,
+   UC_SET     = 2,
+   UC_GETCONF = 3,
+   UC_GETGEO  = 4,
+   UC_DRIVE   = 5,
+   UC_GETSTARTPOSES = 6
 };
 
 #define MAX_ROBOTS      16 // Depend on USARsim Manual P.50
-USARrobot       rbuf[MAX_ROBOTS];
+USARcommand       rbuf[MAX_ROBOTS];
 int             rbuf_num=0;
 
-void spawn_a_robot(USARrobot* rbuf_ptr)
+//#######################################################################
+//  INIT Command
+
+void UC_INIT_spawn_a_robot(USARcommand* rbuf_ptr)
 {
     char	model_cmd[100];
     // Already a robot has been spawned, then return
@@ -73,7 +87,33 @@ void spawn_a_robot(USARrobot* rbuf_ptr)
     rbuf_ptr->Spawned = 1;
 }
 
-void give_start_poses(USARrobot* rbuf_ptr)
+/* MEMO AREA
+        rbuf[rbuf_num-1].Msg.Request = 0;
+        rbuf[rbuf_num-1].Spawn.Done  = 1;
+        if(0 == rp->Spawn.Request)
+        {
+            rp->Spawn.Request = 1;
+            rp->Msg.Request   = 1;
+        }
+        if(1==rbuf[rbuf_num-1].Spawn.Request)
+   MEMO AREA */
+
+void UC_INIT_set_spawn_param(USARcommand* rbuf_ptr, char* own_name, char* model_name,
+   float x, float y, float z, float q1, float q2, float q3)
+{
+    gazebo::math::Vector3 _location(x, y, z);
+    gazebo::math::Quaternion _direction(q1, q2, q3);
+    sprintf(rbuf_ptr->topic_root, "~/%s", rbuf_ptr->own_name);
+    strcpy(rbuf_ptr->model_name, model_name);
+    strcpy(rbuf_ptr->own_name, own_name);
+    rbuf_ptr->spawn_location = _location;
+    rbuf_ptr->spawn_direction = _direction;
+}
+
+//#######################################################################
+//  GETSTARTPOSES Command
+
+void UC_GETSTARTPOSES_give_start_poses(USARcommand* rbuf_ptr)
 {
  // Defined on USARSim Manual P.43
  char response[128]; // should be enough
@@ -92,41 +132,11 @@ void give_start_poses(USARrobot* rbuf_ptr)
         perror("not whole NFO message written");
     }
 }
-/* MEMO AREA
-        rbuf[rbuf_num-1].Msg.Request = 0;
-        rbuf[rbuf_num-1].Spawn.Done  = 1;
-        if(0 == rp->Spawn.Request)
-        {
-            rp->Spawn.Request = 1;
-            rp->Msg.Request   = 1;
-        }
-        if(1==rbuf[rbuf_num-1].Spawn.Request)
-   MEMO AREA */
 
-void set_spawn_param(USARrobot* rbuf_ptr, char* own_name, char* model_name,
-   float x, float y, float z, float q1, float q2, float q3)
-{
-    gazebo::math::Vector3 _location(x, y, z);
-    gazebo::math::Quaternion _direction(q1, q2, q3);
-    sprintf(rbuf_ptr->topic_root, "~/%s", rbuf_ptr->own_name);
-    strcpy(rbuf_ptr->model_name, model_name);
-    strcpy(rbuf_ptr->own_name, own_name);
-    rbuf_ptr->spawn_location = _location;
-    rbuf_ptr->spawn_direction = _direction;
-}
+//#######################################################################
+//  USAR Command event loop
 
-enum USAR_COMMAND
-{
-   UC_NOOP    = 0,
-   UC_INIT    = 1,
-   UC_SET     = 2,
-   UC_GETCONF = 3,
-   UC_GETGEO  = 4,
-   UC_DRIVE   = 5,
-   UC_GETSTARTPOSES = 6
-};
-
-int check_command_from_USARclient(USARrobot* rbuf_ptr)
+int check_command_from_USARclient(USARcommand* rbuf_ptr)
 {
 //  1.read 1 line from rbuf_ptr->socket
 //  2.recognize a command
@@ -152,7 +162,7 @@ int check_command_from_USARclient(USARrobot* rbuf_ptr)
        
         if(0 == rbuf_ptr->Spawned)
         {
-            set_spawn_param(rbuf_ptr, (char*)"Robo_A"
+            UC_INIT_set_spawn_param(rbuf_ptr, (char*)"Robo_A"
                 , (char*)"pioneer3at_with_sensors", 1, -2, 0, 0, 0, 0);
             return UC_INIT;
         }
@@ -165,24 +175,24 @@ int check_command_from_USARclient(USARrobot* rbuf_ptr)
     }
 }
 
-void *child_connection(void* rbuf_ptr)
+void *usarcommand_client_connection(void* rbuf_ptr)
 {
-    USARrobot*  rp = (USARrobot*)rbuf_ptr;
+    USARcommand*  rp = (USARcommand*)rbuf_ptr;
 SCK_TXT(rp->socket, (char*)"USARGazebo:Message from child_connection\n");
     while(1)
     {
         switch(check_command_from_USARclient(rp))
         {
-        case UC_INIT : spawn_a_robot(rp);
+        case UC_INIT : UC_INIT_spawn_a_robot(rp);
                        break;
-        case UC_GETSTARTPOSES : give_start_poses(rp);
+        case UC_GETSTARTPOSES : UC_GETSTARTPOSES_give_start_poses(rp);
                        break;
         }
     }
     return 0;
 }
 
-void *accept_loop(void* dummy)
+void *usarcommand_accept_loop(void* dummy)
 {
     pthread_t          thread_hnd;
     struct sockaddr_in server, client;
@@ -216,7 +226,7 @@ void *accept_loop(void* dummy)
                 printf("USARGazebo:Connection accepted\n");
 SCK_TXT(rbuf[rbuf_num].socket, (char*)"USARGazebo:Message from accept_loop:assigned a new handler\n");
                 if(0 > pthread_create(&thread_hnd, NULL
-                              , child_connection, (void*)&rbuf[rbuf_num]))
+                      , usarcommand_client_connection, (void*)&rbuf[rbuf_num]))
                 {
                     perror("Could not create thread\n");
                     exit(-1);
@@ -248,6 +258,9 @@ struct USARimage
 USARimage       ibuf[MAX_IMAGES];
 int             ibuf_num=0;
 
+//#######################################################################
+// SaveAsPPM saves an image for debug
+
 void    SaveAsPPM(char* filename, ConstImageStampedPtr &_msg)
 {
   unsigned char* ip = (unsigned char*)_msg->image().data().c_str();
@@ -258,8 +271,10 @@ void    SaveAsPPM(char* filename, ConstImageStampedPtr &_msg)
   fclose(fp);
 }
 
-/////////////////////////////////////////////////
+//#######################################################################
 // Function is called everytime a message is received.
+// 
+
 void imageserver_callback(ConstImageStampedPtr& _msg)
 {
   static int filenumber=0;
@@ -270,7 +285,7 @@ void imageserver_callback(ConstImageStampedPtr& _msg)
   SaveAsPPM(filename, _msg);
 }
 
-void *imageserver_child_connection(void* ibuf_ptr)
+void *imageserver_client_connection(void* ibuf_ptr)
 {
     USARimage*  ip = (USARimage*)ibuf_ptr;
 SCK_TXT(ip->socket, (char*)"USARGazeboImageServer:Message from imageserver_child_connection\n");
@@ -320,7 +335,7 @@ void *imageserver_accept_loop(void* dummy)
                 printf("USARGazeboImageServer:Connection accepted\n");
 SCK_TXT(ibuf[ibuf_num].socket, (char*)"USARGazeboImageServer:Message from imageserver_accept_loop:assigned a new handler\n");
                 if(0 > pthread_create(&thread_hnd, NULL
-                              , imageserver_child_connection
+                              , imageserver_client_connection
                               , (void*)&ibuf[ibuf_num]))
                 {
                     perror("Could not create image server thread\n");
@@ -378,7 +393,8 @@ namespace gazebo
     // \brief Called once after Load
     private: void Init()
     {
-        if(pthread_create(&thread_hnd, NULL, accept_loop, (void*)NULL) < 0)
+        if(pthread_create(&thread_hnd, NULL
+            , usarcommand_accept_loop, (void*)NULL) < 0)
         {
             perror("could not create thread\n");
         }
