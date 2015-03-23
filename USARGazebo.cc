@@ -50,8 +50,8 @@ enum USAR_COMMAND
    UC_GETSTARTPOSES = 6
 };
 
-#define MAX_ROBOTS      16 // Depend on USARsim Manual P.50
-USARcommand       rbuf[MAX_ROBOTS];
+#define MAX_COMMAND_CLIENTS      16 // Depend on USARsim Manual P.50
+USARcommand       rbuf[MAX_COMMAND_CLIENTS];
 int             rbuf_num=0;
 
 //#######################################################################
@@ -212,13 +212,13 @@ void *usarcommand_accept_loop(void* dummy)
         return 0;
     }
 //While ?
-    listen(portal_socket, MAX_ROBOTS);
+    listen(portal_socket, MAX_COMMAND_CLIENTS);
     printf("USARGazebo:Waiting for connection\n");
     c = sizeof(struct sockaddr_in);
     rbuf[rbuf_num].Init();
     while(1)
     {
-        if(MAX_ROBOTS > rbuf_num)
+        if(MAX_COMMAND_CLIENTS > rbuf_num)
         {
             if((rbuf[rbuf_num].socket = accept(portal_socket
                             , (struct sockaddr *)&client, (socklen_t*)&c)))
@@ -254,8 +254,8 @@ struct USARimage
     char model_name[100], own_name[100], topic_root[100];
 };
 
-#define MAX_IMAGES      10 // Depend on USARsim Manual ?
-USARimage       ibuf[MAX_IMAGES];
+#define MAX_IMAGE_CLIENTS      10 // Depend on USARsim Manual ?
+USARimage       ibuf[MAX_IMAGE_CLIENTS];
 int             ibuf_num=0;
 
 //#######################################################################
@@ -322,12 +322,12 @@ void *imageserver_accept_loop(void* dummy)
         return 0;
     }
 //While ?
-    listen(portal_socket, MAX_IMAGES);
+    listen(portal_socket, MAX_IMAGE_CLIENTS);
     printf("USARGazeboImageServer:Waiting for connection\n");
     c = sizeof(struct sockaddr_in);
     while(1)
     {
-        if(MAX_IMAGES > ibuf_num)
+        if(MAX_IMAGE_CLIENTS > ibuf_num)
         {
             if((ibuf[ibuf_num].socket = accept(portal_socket
                             , (struct sockaddr *)&client, (socklen_t*)&c)))
