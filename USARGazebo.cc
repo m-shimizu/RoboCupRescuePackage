@@ -192,7 +192,7 @@ SCK_TXT(rp->socket, (char*)"USARGazebo:Message from child_connection\n");
     return 0;
 }
 
-void *usarcommand_accept_loop(void* dummy)
+void *usarcommand_accept_client_loop(void* dummy)
 {
     pthread_t          thread_hnd;
     struct sockaddr_in server, client;
@@ -248,15 +248,22 @@ SCK_TXT(rbuf[rbuf_num].socket, (char*)"USARGazebo:Message from accept_loop:assig
 //  Image Server
 //#######################################################################
 
+struct USARimagedata
+{
+};
+
 struct USARimage
 {
-    int socket;
-    char model_name[100], own_name[100], topic_root[100];
+  int socket;
+  int number;
+  char model_name[100], own_name[100], topic_root[100];
+  void imageserver_callback(ConstImageStampedPtr& _msg);
 };
 
 #define MAX_IMAGE_CLIENTS      10 // Depend on USARsim Manual ?
 USARimage       ibuf[MAX_IMAGE_CLIENTS];
 int             ibuf_num=0;
+int	The_Last_Connected_Image_Client = 0;
 
 //#######################################################################
 // SaveAsPPM saves an image for debug
@@ -275,12 +282,16 @@ void    SaveAsPPM(char* filename, ConstImageStampedPtr &_msg)
 // Function is called everytime a message is received.
 // 
 
-void imageserver_callback(ConstImageStampedPtr& _msg)
+static int Connected_Image_Client_No = -1;
+
+void USARimage::imageserver_callback(ConstImageStampedPtr& _msg)
 {
+// For checking to treate an image data
   static int filenumber=0;
   char filename[100];
   if(filenumber>10)
     return;
+printf("ibuf.number = %d\n", number);
   sprintf(filename, "./tmp%02d.PPM", (filenumber++)%10);
   SaveAsPPM(filename, _msg);
 }
@@ -293,7 +304,12 @@ SCK_TXT(ip->socket, (char*)"USARGazeboImageServer:Message from imageserver_child
     node->Init();
     gazebo::transport::SubscriberPtr sub 
         = node->Subscribe("~/pioneer3at_with_sensors/chassis/r_camera/image"
+          , &USARimage::imageserver_callback, ip);
+/*
+    gazebo::transport::SubscriberPtr sub 
+        = node->Subscribe("~/pioneer3at_with_sensors/chassis/r_camera/image"
           , imageserver_callback);
+*/
     while(1)
         gazebo::common::Time::MSleep(10);
     return 0;
@@ -302,7 +318,7 @@ SCK_TXT(ip->socket, (char*)"USARGazeboImageServer:Message from imageserver_child
 //      this->usarsimSub = this->node->Subscribe("~/usarsim",
 //                                             &USARGazebo::OnUsarSim, this);
 
-void *imageserver_accept_loop(void* dummy)
+void *imageserver_accept_client_loop(void* dummy)
 {
     pthread_t          thread_hnd;
     struct sockaddr_in server, client;
@@ -334,6 +350,7 @@ void *imageserver_accept_loop(void* dummy)
             {
                 printf("USARGazeboImageServer:Connection accepted\n");
 SCK_TXT(ibuf[ibuf_num].socket, (char*)"USARGazeboImageServer:Message from imageserver_accept_loop:assigned a new handler\n");
+                ibuf[ibuf_num].number=123;
                 if(0 > pthread_create(&thread_hnd, NULL
                               , imageserver_client_connection
                               , (void*)&ibuf[ibuf_num]))
@@ -394,12 +411,12 @@ namespace gazebo
     private: void Init()
     {
         if(pthread_create(&thread_hnd, NULL
-            , usarcommand_accept_loop, (void*)NULL) < 0)
+            , usarcommand_accept_client_loop, (void*)NULL) < 0)
         {
             perror("could not create thread\n");
         }
         if(pthread_create(&imageserver_thread_hnd, NULL
-            , imageserver_accept_loop, (void*)NULL) < 0)
+            , imageserver_accept_client_loop, (void*)NULL) < 0)
         {
             perror("imageserver could not create thread\n");
         }
