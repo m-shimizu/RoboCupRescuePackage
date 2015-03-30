@@ -16,60 +16,6 @@
 #define SCK_TXT(S,T) write(S, T, strlen(T))
 #endif
 
-#ifdef __DO_NOT_COMPILE__THIS_IS_A_SAMPLE_CODE__
-//////////////////////////////////////////////////////////////////
-// Sample_Child_Session : Copy this class to make new child_session
-struct Sample_Child_Session
-{
-  //////////////////////////////////////////////////////////////////
-  // Sample_Child_Session.Variables
-  boost::asio::io_service       _ioservice;
-  boost::asio::ip::tcp::socket  _socket;
-  boost::asio::streambuf        _buffer;
-  boost::thread                 _thread;
-  // Add your own variables here
-  //////////////////////////////////////////////////////////////////
-  // Sample_Child_Session.Constructor
-  Sample_Child_Session(void) : _socket(_ioservice) {}
-  //////////////////////////////////////////////////////////////////
-  // Sample_Child_Session.Child_Session_Loop_Core
-  void Child_Session_Loop_Core(void)
-  {
-    boost::system::error_code err;
-//std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
-    boost::asio::read_until(_socket, _buffer , "\r\n", err);
-//std::cout << "Child_Session_Loop b [" << this << "]" << std::endl;
-/* SAMPLE CODE : Display received data for debug
-    std::iostream st(&_buffer);
-    std::stringstream s;
-    s << st.rdbuf();
-    std::cout << CString(s.str().c_str()) << std::endl;
-    st << s.str() << std::endl;
-*/
-// SAMPLE CODE : Sendback received data for debug
-    boost::asio::write(_socket, _buffer);
-//
-//std::cout << "Child_Session_Loop c [" << this << "]" << std::endl;
-//std::cout << "Child_Session_Loop d [" << this << "]" << std::endl;
-  }
-  //////////////////////////////////////////////////////////////////
-  // Sample_Child_Session.Accept_Process
-  void Accept_Process(void)
-  {
-//std::cout << "Accept_Process a [" << this << "]" << std::endl;
-// SAMPLE CODE : Sendback Accepted Acknowledgment for debug
-    boost::asio::streambuf  ack_comment;
-    std::iostream st(&ack_comment);
-    st << "+ -- Accepted ["  << this << "]" << std::endl;;
-    boost::asio::write(_socket, ack_comment);
-//std::cout << "Accept_Process b [" << this << "]" << std::endl;
-    while(1)
-      Child_Session_Loop_Core();
-//std::cout << "Accept_Process c [" << this << "]" << std::endl;
-  }
-};
-#endif
-
 //#######################################################################
 //  Command Server
 //#######################################################################
@@ -95,23 +41,8 @@ struct RD
 
 //#######################################################################
 //  Command Server Class Define
-
-/*
-struct USARcommand
-{
-//  int  socket;
-  RD   Msg, Spawn;
-  int  Spawned;
-  char model_name[100], own_name[100], topic_root[100];
-  gazebo::math::Vector3 spawn_location;
-  gazebo::math::Quaternion spawn_direction;
-  void Init(void) { }
-       USARcommand(void) : Spawned(0), Msg(), Spawn() {Init();}
-};
-*/
-
 //////////////////////////////////////////////////////////////////
-// USARcommand : Copy this class to make new child_session
+// USARcommand 
 struct USARcommand
 {
   //////////////////////////////////////////////////////////////////
@@ -182,43 +113,84 @@ struct USARcommand
   // USARcommand.
   int check_command_from_USARclient(void);
   void UC_INIT_spawn_a_robot(void);
-  void UC_INIT_set_spawn_param(char* own_name, char* model_name
+  void UC_INIT_record_spawn_param(char* own_name, char* model_name
                    , float x, float y, float z, float q1, float q2, float q3);
   void UC_GETSTARTPOSES_give_start_poses(void);
 };
 
-//#define      MAX_COMMAND_CLIENTS    16 // Depend on USARsim Manual P.50
-//USARcommand  rbuf[MAX_COMMAND_CLIENTS];
-//int          rbuf_num=0;
+//#######################################################################
+//  USAR Command fetch
+int USARcommand::check_command_from_USARclient(void)
+{
+//  1.read 1 line from _socket
+//  2.recognize a command
+//  3.read parameters and set it into member variables
+//  4.if need, set or reset flag
+  int nread;
+  boost::system::error_code err;
+  nread = boost::asio::read_until(_socket, _buffer , "\r\n", err);
+//std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
+/* error routine : anyone write this with boost....
+  if(nread < 0) {
+	perror("Could not read socket 3000");
+    boost::asio::close(_socket); 
+	pthread_detach(pthread_self());
+  } else if(nread == 0) {
+	perror("EOF, should break connection");
+    boost::asio::close(_socket);
+// could not perform rbuf_num--, because there can be robots with a higher number
+	pthread_detach(pthread_self());
+  }
+*/
+  std::iostream st(&_buffer);
+  std::stringstream s;
+  s << st.rdbuf();
+printf("COMMAND = %s\n", s.str().c_str() );
+  if(0 == strncmp(s.str().c_str(),"INIT",4))
+  {
+    if(0 == Spawned)
+    {
+      UC_INIT_record_spawn_param((char*)"Robo_A"
+        , (char*)"pioneer3at_with_sensors", 1, -2, 0, 0, 0, 0);
+      return UC_INIT;
+    }
+  }
+  else if(0 == strncmp(s.str().c_str(),"GETSTARTPOSES",13))
+  {
+//    perror("GETSTARTPOSES, should give spawn_location");
+    return UC_GETSTARTPOSES;
+  }
+  return UC_NOOP;
+}
 
 //#######################################################################
 //  USARcommand.UC_INIT_spawn_a_robot
 void USARcommand::UC_INIT_spawn_a_robot(void)
 {
   char	model_cmd[100];
-  // Already a robot has been spawned, then return
+    // Already a robot has been spawned, then return
   if(0 != Spawned)
     return;
-  // Create a new transport node
+    // Create a new transport node
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
-  // Initialize the node with the world name
+    // Initialize the node with the world name
   node->Init();
-  // Create a publisher on the ~/factory topic
+    // Create a publisher on the ~/factory topic
   gazebo::transport::PublisherPtr factoryPub
     = node->Advertise<gazebo::msgs::Factory>("~/factory");
-  // Create the message
+    // Create the message
   gazebo::msgs::Factory msg;
-  // Prepare command
+    // Prepare command
   sprintf(model_cmd, "model://%s", model_name);
-  // Model file to load
+    // Model file to load
   msg.set_sdf_filename(model_cmd);
- // msg.set_edit_name(own_name);
-  // Pose to initialize the model to
+   // msg.set_edit_name(own_name);
+    // Pose to initialize the model to
   gazebo::msgs::Set(msg.mutable_pose()
     , gazebo::math::Pose(spawn_location, spawn_direction));
-  // Send the message
+    // Send the message
   factoryPub->Publish(msg);
-  // Set Spawned flag
+    // Set Spawned flag
   Spawned = 1;
 }
 
@@ -234,15 +206,15 @@ void USARcommand::UC_INIT_spawn_a_robot(void)
    MEMO AREA */
 
 //#######################################################################
-//  USARcommand.UC_INIT_set_spawn_param
-void USARcommand::UC_INIT_set_spawn_param(char* own_name, char* model_name
+//  USARcommand.UC_INIT_record_spawn_param
+void USARcommand::UC_INIT_record_spawn_param(char* _own_name, char* _model_name
                    , float x, float y, float z, float q1, float q2, float q3)
 {
   gazebo::math::Vector3 _location(x, y, z);
   gazebo::math::Quaternion _direction(q1, q2, q3);
   sprintf(topic_root, "~/%s", own_name);
-  strcpy(model_name, model_name);
-  strcpy(own_name, own_name);
+  strcpy(model_name, _model_name);
+  strcpy(own_name, _own_name);
   spawn_location = _location;
   spawn_direction = _direction;
 }
@@ -274,54 +246,6 @@ void USARcommand::UC_GETSTARTPOSES_give_start_poses(void)
  //  perror("we should send the string NFO {StartPoses #} {Name1 x,y,z a,b,c} over the socket");
   sprintf(response, "NFO {StartPoses 1}{PlayerStart %g, %g, %g 0,0,0}", spawn_location[0], spawn_location[1], spawn_location[2]);
 */
-}
-
-//#######################################################################
-//  USAR Command event loop
-
-int USARcommand::check_command_from_USARclient(void)
-{
-//  1.read 1 line from _socket
-//  2.recognize a command
-//  3.read parameters and set it into member variables
-//  4.if need, set or reset flag
-  int nread;
-  boost::system::error_code err;
-  nread = boost::asio::read_until(_socket, _buffer , "\r\n", err);
-//std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
-
-/* error routine : anyone write this with boost....
-  if(nread < 0) {
-	perror("Could not read socket 3000");
-    boost::asio::close(_socket); 
-	pthread_detach(pthread_self());
-  } else if(nread == 0) {
-	perror("EOF, should break connection");
-    boost::asio::close(_socket);
-// could not perform rbuf_num--, because there can be robots with a higher number
-	pthread_detach(pthread_self());
-  }
-*/
-  std::iostream st(&_buffer);
-  std::stringstream s;
-  s << st.rdbuf();
-printf("COMMAND = %s\n", s.str().c_str() );
-  if(0 == strncmp(s.str().c_str(),"INIT",4))
-  {
-     
-    if(0 == Spawned)
-    {
-      UC_INIT_set_spawn_param((char*)"Robo_A", (char*)"pioneer3at_with_sensors"
-        , 1, -2, 0, 0, 0, 0);
-      return UC_INIT;
-    }
-  }
-  else if(0 == strncmp(s.str().c_str(),"GETSTARTPOSES",13))
-  {
-//    perror("GETSTARTPOSES, should give spawn_location");
-    return UC_GETSTARTPOSES;
-  }
-  return UC_NOOP;
 }
 
 //#######################################################################
