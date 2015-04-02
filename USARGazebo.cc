@@ -391,7 +391,7 @@ namespace gazebo
   /// \brief Destructor
   public: virtual ~USARGazebo()
   {
-//    this->connections.clear();
+    this->connections.clear();
   }
 
   ///////////////////////////////////////////////
@@ -408,12 +408,31 @@ namespace gazebo
     this->factoryPub = this->node->Advertise<msgs::Factory>("~/factory");
     this->usarsimSub = this->node->Subscribe("~/usarsim",
                        &USARGazebo::OnUsarSim, this);
-    this->connections.push_back(event::Events::ConnectPreRender(
-                   boost::bind(&USARGazebo::Update, this)));
 */
+    this->connections.push_back(event::Events::ConnectPreRender(
+                       boost::bind(&USARGazebo::Send_SENS, this)));
   }
 
-  pthread_t thread_hnd, imageserver_thread_hnd;
+
+  /////////////////////////////////////////////
+  /// \brief Called every PreRender event. See the Load function.
+  private: void Send_SENS()
+  { // This function is not called , why?
+  // Add codes to send SENS and other status data here
+  // Because they have to be in a serial
+    for(typename std::set<USARcommand*>::iterator
+      i = UCp->_Child_Session_list.begin(); 
+        i != UCp->_Child_Session_list.end(); i++)
+    { // i is a pointer of each USARcommand
+      // 1. Check robot's sensors from topics list
+      // 2. send SENS of each sensors
+      USARcommand* child_ucp = (USARcommand*)&*i;
+if(child_ucp->Spawned==1)
+printf("%s\n", child_ucp->own_name);
+    }
+printf("A\n");
+  }
+
   /////////////////////////////////////////////
   // \brief Called once after Load
   private: void Init()

@@ -22,12 +22,12 @@ template <typename Child_Session> class Server_Framework
   //////////////////////////////////////////////////////////////////
   // Server_Framework.Variables
 private:
+public:
   boost::asio::io_service         _ioservice;
   boost::asio::ip::tcp::acceptor  _acceptor;
   std::set<Child_Session*>        _Child_Session_list;
   Child_Session                  *_new_Child_Sessionp;
   boost::thread                   _thread;
-public:
 
   //////////////////////////////////////////////////////////////////
   // Server_Framework.Make_A_Child_Session_and_Accept_Loop
