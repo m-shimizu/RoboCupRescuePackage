@@ -47,6 +47,7 @@ struct USARcommand
 {
   //////////////////////////////////////////////////////////////////
   // USARcommand.Variables
+  Server_Framework<USARcommand>&_parent;
   boost::asio::io_service       _ioservice;
   boost::asio::ip::tcp::socket  _socket;
   boost::asio::streambuf        _buffer;
@@ -61,7 +62,8 @@ struct USARcommand
   //////////////////////////////////////////////////////////////////
   // USARcommand.Constructor
   void Init(void) { }
-  USARcommand(void) : _socket(_ioservice), Spawned(0), Msg(), Spawn() {Init();}
+  USARcommand(Server_Framework<USARcommand>&parent) : 
+    _parent(parent), _socket(_ioservice), Spawned(0), Msg(), Spawn() {Init();}
 
   //////////////////////////////////////////////////////////////////
   // USARcommand.Child_Session_Loop_Core
@@ -78,9 +80,9 @@ struct USARcommand
     std::cout << CString(s.str().c_str()) << std::endl;
     st << s.str() << std::endl;
 */
-// SAMPLE CODE : Sendback received data for debug
+/* SAMPLE CODE : Sendback received data for debug
     boost::asio::write(_socket, _buffer);
-//
+*/
 //std::cout << "Child_Session_Loop c [" << this << "]" << std::endl;
 //std::cout << "Child_Session_Loop d [" << this << "]" << std::endl;
   }
@@ -90,11 +92,12 @@ struct USARcommand
   void Accept_Process(void)
   {
 //std::cout << "Accept_Process a [" << this << "]" << std::endl;
-// SAMPLE CODE : Sendback Accepted Acknowledgment for debug
+/* SAMPLE CODE : Sendback Accepted Acknowledgment for debug
     boost::asio::streambuf  ack_comment;
     std::iostream st(&ack_comment);
     st << "+ -- Accepted ["  << this << "]" << std::endl;;
     boost::asio::write(_socket, ack_comment);
+*/
 //std::cout << "Accept_Process b [" << this << "]" << std::endl;
     while(1)
     {
@@ -110,7 +113,7 @@ struct USARcommand
 //std::cout << "Accept_Process c [" << this << "]" << std::endl;
   }
   //////////////////////////////////////////////////////////////////
-  // USARcommand.
+  // USARcommand.functions
   int check_command_from_USARclient(void);
   void UC_INIT_spawn_a_robot(void);
   void UC_INIT_record_spawn_param(char* own_name, char* model_name
@@ -142,10 +145,11 @@ int USARcommand::check_command_from_USARclient(void)
 	pthread_detach(pthread_self());
   }
 */
+// DEBUG information output  
   std::iostream st(&_buffer);
   std::stringstream s;
   s << st.rdbuf();
-printf("COMMAND = %s\n", s.str().c_str() );
+  printf("COMMAND = %s\n", s.str().c_str() );
   if(0 == strncmp(s.str().c_str(),"INIT",4))
   {
     if(0 == Spawned)
@@ -276,6 +280,7 @@ struct USARimage
 {
   //////////////////////////////////////////////////////////////////
   // USARimage.Variables
+  Server_Framework<USARimage>  &_parent;
   boost::asio::io_service       _ioservice;
   boost::asio::ip::tcp::socket  _socket;
   boost::asio::streambuf        _buffer;
@@ -290,7 +295,8 @@ struct USARimage
   //////////////////////////////////////////////////////////////////
   // USARimage.Constructor
   void Init(void) { }
-  USARimage(void): _socket(_ioservice), flag_OK(0), flag_U(0) {Init();}
+  USARimage(Server_Framework<USARimage>&parent): 
+      _parent(parent), _socket(_ioservice), flag_OK(0), flag_U(0) {Init();}
 
   //////////////////////////////////////////////////////////////////
   // USARimage.Child_Session_Loop_Core
