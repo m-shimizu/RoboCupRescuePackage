@@ -389,7 +389,10 @@ namespace gazebo
   {
   /////////////////////////////////////////////
   /// \brief Destructor
-  public: virtual ~USARGazebo()
+
+  public: 
+   USARGazebo(void):counter1(0){}
+  virtual ~USARGazebo()
   {
     this->connections.clear();
   }
@@ -409,7 +412,7 @@ namespace gazebo
     this->usarsimSub = this->node->Subscribe("~/usarsim",
                        &USARGazebo::OnUsarSim, this);
 */
-    this->connections.push_back(event::Events::ConnectPreRender(
+    this->connections.push_back(event::Events::ConnectWorldUpdateBegin(
                        boost::bind(&USARGazebo::Send_SENS, this)));
   }
 
@@ -426,11 +429,13 @@ namespace gazebo
     { // i is a pointer of each USARcommand
       // 1. Check robot's sensors from topics list
       // 2. send SENS of each sensors
-      USARcommand* child_ucp = (USARcommand*)&*i;
-if(child_ucp->Spawned==1)
-printf("%s\n", child_ucp->own_name);
+      USARcommand* child_ucp = (USARcommand*)&**i;
+    /*SAMPLE CODE 
+      if(child_ucp->Spawned==1)
+        printf("name = %s\n", child_ucp->own_name);
+      child_ucp->Spawned=0;
+      */
     }
-printf("A\n");
   }
 
   /////////////////////////////////////////////
@@ -454,6 +459,7 @@ printf("A\n");
   private: std::vector<event::ConnectionPtr> connections;
   public: Server_Framework<USARcommand> *UCp;
   public: Server_Framework<USARimage>   *UIp;
+  int counter1;
   };
   // Register this plugin with the simulator
   GZ_REGISTER_WORLD_PLUGIN(USARGazebo)

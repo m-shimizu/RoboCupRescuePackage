@@ -40,11 +40,11 @@ public:
 std::cout << "Made a child session [" << _new_Child_Sessionp<<"]"<<std::endl;
       boost::system::error_code err;
       _acceptor.accept(_new_Child_Sessionp->_socket, err);
-std::cout << "After accept\n";
+//std::cout << "After accept\n";
       _new_Child_Sessionp->_thread = boost::thread(
                              boost::bind(&Child_Session::Accept_Process
                                          , _new_Child_Sessionp));
-std::cout << "After thread\n";
+//std::cout << "After thread\n";
     }
   }
 
