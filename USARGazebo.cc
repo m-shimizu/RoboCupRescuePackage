@@ -128,6 +128,27 @@ struct USARcommand
 // USARcommand.UC_GET_TOPICS
 void USARcommand::UC_GET_TOPICS(void)
 {
+ /* SAMPLE CODE to get a list of topics from https://bitbucket.org/osrf/gazebo/src/5eed0402ea08b3dff261d25ef8da82db426bbab6/tools/gz_topic.cc?at=default#cl-87
+  std::string data;
+  msgs::Packet packet;
+  msgs::Request request;
+  msgs::GzString_V topics;
+  transport::ConnectionPtr connection = transport::connectToMaster();
+  if(connection)
+  {
+    request.set_id(0);
+    request.set_request("get_topics");
+    connection->EnqueueMsg(msgs::Package("request", request), true);
+    connection->Read(data);
+    packet.ParseFromString(data);
+    topics.ParseFromString(packet.serialized_data());
+    for (int i = 0; i < topics.data_size(); ++i)
+    {
+      std::cout << topics.data(i) << std::endl;
+    }
+  }
+  connection.reset();
+*/
 }
 
 //////////////////////////////////////////////////////////////////
