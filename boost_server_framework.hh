@@ -37,7 +37,7 @@ public:
     {
       _new_Child_Sessionp = new Child_Session(*this);
       _Child_Session_list.insert(_new_Child_Sessionp);
-std::cout << "Made a child session [" << _new_Child_Sessionp<<"]"<<std::endl;
+//std::cout << "Made a child session [" << _new_Child_Sessionp<<"]"<<std::endl;
       boost::system::error_code err;
       _acceptor.accept(_new_Child_Sessionp->_socket, err);
 //std::cout << "After accept\n";
@@ -133,11 +133,12 @@ struct Sample_Child_Session
   void Accept_Process(void)
   {
 //std::cout << "Accept_Process a [" << this << "]" << std::endl;
-// SAMPLE CODE : Sendback Accepted Acknowledgment for debug
+/* SAMPLE CODE : Sendback Accepted Acknowledgment for debug
     boost::asio::streambuf  ack_comment;
     std::iostream st(&ack_comment);
     st << "+ -- Accepted ["  << this << "]" << std::endl;;
     boost::asio::write(_socket, ack_comment);
+*/
 //std::cout << "Accept_Process b [" << this << "]" << std::endl;
     while(1)
       Child_Session_Loop_Core();

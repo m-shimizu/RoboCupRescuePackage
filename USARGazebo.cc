@@ -101,7 +101,7 @@ struct USARcommand
 //std::cout << "Accept_Process b [" << this << "]" << std::endl;
     while(1)
     {
-      switch(check_command_from_USARclient())
+      switch(UC_check_command_from_USARclient())
       {
       case UC_INIT : UC_INIT_spawn_a_robot();
                break;
@@ -112,18 +112,42 @@ struct USARcommand
     }
 //std::cout << "Accept_Process c [" << this << "]" << std::endl;
   }
+
   //////////////////////////////////////////////////////////////////
   // USARcommand.functions
-  int check_command_from_USARclient(void);
+  int UC_check_command_from_USARclient(void);
   void UC_INIT_spawn_a_robot(void);
   void UC_INIT_record_spawn_param(char* own_name, char* model_name
                    , float x, float y, float z, float q1, float q2, float q3);
   void UC_GETSTARTPOSES_give_start_poses(void);
+  void UC_SENS(void);
+  void UC_GET_TOPICS(void);
 };
+
+//////////////////////////////////////////////////////////////////
+// USARcommand.UC_GET_TOPICS
+void USARcommand::UC_GET_TOPICS(void)
+{
+}
+
+//////////////////////////////////////////////////////////////////
+// USARcommand.UC_SENS
+void USARcommand::UC_SENS(void)
+{
+  // 1. Check robot's sensors from topics list
+  UC_GET_TOPICS();
+  // 2. send SENS of each sensors
+  // SAMPLE CODE For debug
+  if(1 == Spawned)
+  {
+    printf("robot name = %s\n", own_name);
+  }
+  Spawned = 0;
+}
 
 //#######################################################################
 //  USAR Command fetch
-int USARcommand::check_command_from_USARclient(void)
+int USARcommand::UC_check_command_from_USARclient(void)
 {
 //  1.read 1 line from _socket
 //  2.recognize a command
@@ -188,7 +212,8 @@ void USARcommand::UC_INIT_spawn_a_robot(void)
   sprintf(model_cmd, "model://%s", model_name);
     // Model file to load
   msg.set_sdf_filename(model_cmd);
-   // msg.set_edit_name(own_name);
+    // Set this robot's own name
+  // msg.set_edit_name(own_name);    Please fix this function! > Dr.Nate
     // Pose to initialize the model to
   gazebo::msgs::Set(msg.mutable_pose()
     , gazebo::math::Pose(spawn_location, spawn_direction));
@@ -427,14 +452,8 @@ namespace gazebo
       i = UCp->_Child_Session_list.begin(); 
         i != UCp->_Child_Session_list.end(); i++)
     { // i is a pointer of each USARcommand
-      // 1. Check robot's sensors from topics list
-      // 2. send SENS of each sensors
       USARcommand* child_ucp = (USARcommand*)&**i;
-    /*SAMPLE CODE 
-      if(child_ucp->Spawned==1)
-        printf("name = %s\n", child_ucp->own_name);
-      child_ucp->Spawned=0;
-      */
+      child_ucp->UC_SENS();
     }
   }
 
