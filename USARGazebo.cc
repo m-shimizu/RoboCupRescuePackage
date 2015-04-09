@@ -277,7 +277,7 @@ void USARcommand::UC_GETSTARTPOSES_give_start_poses(void)
   int nwritten;
   boost::asio::streambuf response;
   std::iostream st_response(&response);
-  st_response << "NFO {StartPoses 1}{PlayerStart %g, %g, %g" << ", " << spawn_location[0] << ", " << spawn_location[1] << ", " << spawn_location[2] << " 0,0,0}";
+  st_response << "NFO {StartPoses 1}{PlayerStart " << spawn_location[0] << ", " << spawn_location[1] << ", " << spawn_location[2] << " 0,0,0}";
   nwritten = boost::asio::write(_socket, _buffer);
   std::stringstream s;
   s << st_response.rdbuf();
@@ -334,8 +334,8 @@ struct USARimage
   // Add your own variables here
   int  flag_OK, flag_U;
   char model_name[100], own_name[100], topic_root[100];
-  void send_full_size_image(void);
-  void send_rectangle_area_image(void);
+  void send_full_size_image(ConstImageStampedPtr& _msg);
+  void send_rectangle_area_image(ConstImageStampedPtr& _msg);
   void imageserver_callback(ConstImageStampedPtr& _msg);
 
   //////////////////////////////////////////////////////////////////
@@ -360,6 +360,18 @@ struct USARimage
     st << s.str() << std::endl;
 */
 // OK or U command should be checked here`
+    std::iostream st(&_buffer);
+    std::stringstream s;
+    s << st.rdbuf();
+//printf("COMMAND = %s\n", s.str().c_str() );
+    if(0 == strncmp(s.str().c_str(),"OK",2))
+    {
+      flag_OK = 1;
+    }
+    else if(0 == strncmp(s.str().c_str(),"U[",2))
+    {
+      flag_U = 1;
+    }
 // SAMPLE CODE : Sendback received data for debug
     boost::asio::write(_socket, _buffer);
 //
@@ -372,12 +384,12 @@ struct USARimage
   void Accept_Process(void)
   {
 //std::cout << "Accept_Process a [" << this << "]" << std::endl;
-// SAMPLE CODE : Sendback Accepted Acknowledgment for debug
+/* SAMPLE CODE : Sendback Accepted Acknowledgment for debug
     boost::asio::streambuf  ack_comment;
     std::iostream st(&ack_comment);
     st << "+ -- Accepted ["  << this << "]" << std::endl;;
     boost::asio::write(_socket, ack_comment);
-
+*/
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
   gazebo::transport::SubscriberPtr sub 
@@ -398,29 +410,29 @@ struct USARimage
 void USARimage::imageserver_callback(ConstImageStampedPtr& _msg)
 {
   if(flag_OK)
-    send_full_size_image();
-  else
-    send_rectangle_area_image();
-/* For checking to treate an image data
-  static int filenumber=0;
-  char filename[100];
-  if(filenumber>10)
-  return;
-  sprintf(filename, "./tmp%02d.PPM", (filenumber++)%10);
-  SaveAsPPM(filename, _msg);
-*/
+    send_full_size_image(_msg);
+  else if(flag_U)
+    send_rectangle_area_image( _msg);
 }
 
 //#######################################################################
 // Send camera image
 // 
 
-void USARimage::send_full_size_image(void)
+void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
 {
   flag_OK = 0;
+// For checking to treate an image data
+  static int filenumber=0;
+  char filename[100];
+  if(filenumber>10)
+  return;
+  sprintf(filename, "./tmp%02d.PPM", (filenumber++)%10);
+  SaveAsPPM(filename, _msg);
+
 }
 
-void USARimage::send_rectangle_area_image(void)
+void USARimage::send_rectangle_area_image(ConstImageStampedPtr& _msg)
 {
   flag_U = 0;
 }
