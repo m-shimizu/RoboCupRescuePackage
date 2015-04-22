@@ -105,7 +105,8 @@ A package adding USARSim interface to Gazebo
     |++++++++++++++++++++++++++++++++++|
 
 ### Change log
-    * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image. Those have limitation on it's function.
+    * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image.   
+                   Those have limitation on it's function.
     * 12/ 3/2015 : Adding a limited ImageServer in USARGazebo.cc
                    Now sending image data on TCP/IP is not realized,
                    but you can see image files.
