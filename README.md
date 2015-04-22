@@ -19,6 +19,9 @@ A package adding USARSim interface to Gazebo
         3rd step: Gazebo5 installation with running over "broken dependency error"
         $ sudo dpkg --configure -a  
         $ sudo apt-get install -f  
+	$ sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-latest.list'
+	$ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+	$ sudo apt-get update
         $ sudo apt-get install libgazebo5 libgazebo5-dev  
         $ sudo apt-get install gazebo5  
 

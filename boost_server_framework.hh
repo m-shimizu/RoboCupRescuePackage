@@ -1,12 +1,22 @@
-/* Descriptions for this sample code.
-1. How to compile this sample code.
-gcc -o a boost_server.cc -D__SAMPLE_MAIN__ -lboost_system-mt -lboost_thread-mt
+// Desctiption: 
+// This program's a framework of sync mode server to having some children sessions which are written in separated classes.
+// At the bottom of thie file, you can see a sample code for using this program.
+//
+// Author : Masaru Shimizu
+// E-Mail : shimizu@sist.chukyo-u.ac.jp
+// Date   : 4.2015
+//
 
-2. Realized points.
+#ifndef BSTSVRFRMWK_HH
+#define BSTSVRFRMWK_HH
+
+/*
+ Realized points of this server framework.
  a. Server function
  b. Separated Server Framework and Child Session
  c. Realized the separation with template of C++
 */
+
 #include <set>
 #include <iostream>
 #include <boost/asio.hpp>
@@ -84,6 +94,17 @@ public:
 };
 
 #ifdef __SAMPLE_MAIN__
+
+/*
+# How to compile this sample code.
+gcc -o a boost_server.cc -D__SAMPLE_MAIN__ -lboost_system-mt -lboost_thread-mt
+
+# Realized points of this server framework.
+ a. Server function
+ b. Separated Server Framework and Child Session
+ c. Realized the separation with template of C++
+*/
+
 //////////////////////////////////////////////////////////////////
 // Sample_Child_Session : 
 //   COPY THIS CLASS and MODIFY to create your own child_session
@@ -154,4 +175,6 @@ int main(void)
     sleep(10);
   return 0;
 }
+#endif
+
 #endif

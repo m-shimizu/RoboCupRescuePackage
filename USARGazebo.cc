@@ -1,7 +1,18 @@
+// Desctiption: 
+// This program's a translator between USARSim protocol and Gazebo protocol.
+// This file is a primaly file of this program. 
+// You can add some codes for treating USARsim protocal which you need in this file by copying and editing alread existing other codes of USARSim protcol.
+//
+// Author : Prof.Arnoud Visser, Dr.Nate Koenig, Masaru Shimizu
+// E-Mail : shimizu@sist.chukyo-u.ac.jp
+// Date   : 4.2015
+//
+
 #include "gazebo/physics/physics.hh"
 #include "gazebo/common/common.hh"
 #include "gazebo/gazebo.hh"
 #include "boost_server_framework.hh"
+#include "break_usar_command_into_params.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -20,6 +31,8 @@
 //  Command Server
 //#######################################################################
 
+//////////////////////////////////////////////////////////////////
+// Useful flags 
 struct RD
 {
   char  Request;
@@ -28,137 +41,6 @@ struct RD
   RD(void) : Request(0), Done(0) { Init(); }
 };
 
-struct UC_Param
-{
-  char _Name[20];
-  char _Value[50];
-  void Disp(void) { std::cout << _Name << " " << _Value << std::endl; }
-};
-
-#ifndef _MIN
-#define _MIN(X,Y) (((X)<(Y))?(X):(Y))
-#endif
-
-struct Break_UC_Command_Into_Params
-{
-  int                 _Err_flag;
-  UC_Param*           _ucpp;
-  std::set<UC_Param*> _UC_Param_list;
-  ~Break_UC_Command_Into_Params() { Remove_all(); }
-  Break_UC_Command_Into_Params(void) { Init(); }
-  Break_UC_Command_Into_Params(char* cb) { Init(); Break_Into(cb); }
-  void Init(void) { _Err_flag = 0; _UC_Param_list.clear(); }
-  void Break_Into(char* _cmdbuf)
-  {
-  // 1st : copy command string 
-    char* cmdbuf = new char[strlen(_cmdbuf)];
-    int   _in_brace = 0, _after_space = 0, _Name_len, _Value_len;
-    char* _Name_Start = NULL;
-    char* _Value_Start = NULL;
-    UC_Param _tmp;
-    for(int i = 0; cmdbuf[i] != 0; i++)
-    {
-      if(0 == _in_brace && '{' != cmdbuf[i])
-        continue;
-      else if('{' == cmdbuf[i])
-      {
-        _in_brace++;
-	continue;
-      }
-      else if(0 < _in_brace && NULL == _Name_Start)
-      {
-        _Name_Start = &cmdbuf[i];
-	continue;
-      }
-      else if(0 < _in_brace && isspace(cmdbuf[i]))
-      {
-        _after_space++;
-	if(0 < _in_brace && 1 == _after_space && NULL != _Name_Start)
-	{
-	  _Name_len = (int)(&cmdbuf[i] - _Name_Start);
-	  strncpy(_tmp._Name, _Name_Start
-	            , _MIN(_Name_len, sizeof(_tmp._Name)-1));
-          _tmp._Name[_MIN(_Name_len, sizeof(_tmp._Name)-1)] = 0;
-	}
-	continue;
-      }
-      else if(0 < _in_brace && 0 < _after_space && NULL == _Value_Start)
-      {
-        _Value_Start = &cmdbuf[i];
-	continue;
-      }
-      else if(0 < _in_brace && '}' == cmdbuf[i])
-      {
-        _in_brace--;
-	if(0 == _in_brace && NULL != _Value_Start)
-	{
-	  _Value_len = (int)(&cmdbuf[i] - _Value_Start);
-	  strncpy(_tmp._Value, _Value_Start
-	            , _MIN(_Value_len, sizeof(_tmp._Value)-1));
-          _tmp._Value[_MIN(_Value_len, sizeof(_tmp._Value)-1)] = 0;
-          Add_Param(_tmp);
-	  _Name_Start = _Value_Start = NULL;
-	  _after_space = 0;
-	  continue;
-	}
-	else if(0 > _in_brace)
-	{
-	  _Err_flag = -1;
-	  Remove_all();
-	  delete cmdbuf;
-	  return;
-	}
-	continue;
-      }
-/*      else
-      {
-        if(0 < _in_brace)
-	{
-	}
-      }*/
-    }
-    if(0 != _in_brace || NULL != _Name_Start || NULL != _Value_Start)
-    {
-      _Err_flag = -2;
-      Remove_all();
-      delete cmdbuf;
-      return;
-    }
-    Disp();
-  }
-  void Add_Param(UC_Param& up)
-  {
-    UC_Param* _newp;
-    _newp = new UC_Param;
-    *_newp = up;
-_newp->Disp();
-    _UC_Param_list.insert(_newp);
-  }
-  void Remove_all(void)
-  {
-    for(typename std::set<UC_Param*>::iterator
-      i = _UC_Param_list.begin(); i != _UC_Param_list.end(); i++)
-        delete *i;
-    Init();
-  }
-  int Size(void)
-  {
-    return _UC_Param_list.size();
-  }
-  void Disp(void)
-  {
-    std::cout << "The number of elements : " << Size() << std::endl;
-    for(typename std::set<UC_Param*>::iterator
-      i = _UC_Param_list.begin(); i != _UC_Param_list.end(); i++)
-    {
-      UC_Param* upp = *i;
-      upp->Disp();
-    }
-  }
-};
-
-//#######################################################################
-//  Command Server Class Define
 //////////////////////////////////////////////////////////////////
 // USARcommand 
 struct USARcommand
@@ -171,7 +53,7 @@ struct USARcommand
   boost::asio::streambuf        _buffer;
   boost::thread                 _thread;
   // Add your own variables here
-  RD   Msg, Spawn;
+//  RD   Msg, Spawn;
   int  Spawned;
   char model_name[100], own_name[100], topic_root[100];
   char*ucbuf; // a pointer of USARSim command string buffer in GameBot protocol
@@ -182,7 +64,8 @@ struct USARcommand
   // USARcommand.Constructor
   void Init(void) { }
   USARcommand(Server_Framework<USARcommand>&parent) : 
-    _parent(parent), _socket(_ioservice), Spawned(0), Msg(), Spawn() 
+    _parent(parent), _socket(_ioservice), Spawned(0), ucbuf(NULL)
+//    , Msg(), Spawn() 
   { Init(); }
 
   //////////////////////////////////////////////////////////////////
@@ -233,7 +116,7 @@ struct USARcommand
   }
 
   //////////////////////////////////////////////////////////////////
-  // Send_SENS
+  // Send_SENS   ## UNDER CONSTRUCTION ##
   void Send_SENS(void)
   {
     if(0 == Spawned)
@@ -242,7 +125,7 @@ struct USARcommand
     Get_Topics_List();
       // 2. send SENS of each sensors
       // SAMPLE CODE For debug
-    // A code for Debugging
+    // Sample codes for Debugging
     if(1 == Spawned)
     {
       printf("robot name = %s\n", own_name);
@@ -260,27 +143,51 @@ struct USARcommand
 // UC_INIT
 struct UC_INIT
 {
-  //#######################################################################
+  //////////////////////////////////////////////////////////////////
   //  Variables
   USARcommand& _parent;
-  //#######################################################################
+  //////////////////////////////////////////////////////////////////
   //  The constructor
   UC_INIT(USARcommand& parent) : _parent(parent)
   {
-      // Record this robot information
-    read_params_from_uc_command();
-    record_robot_param((char*)"Robo_A"
-      , (char*)"pioneer3at_with_sensors", 1, -2, 0, 0, 0, 0);
-      // Spawn a robot
-    spawn_a_robot();
+    if(1 == _parent.Spawned)
+      return;
+    if(1 == read_params_from_usar_command())
+      spawn_a_robot();
   }
-  //#######################################################################
-  //  read_params_from_uc_command
-  void read_params_from_uc_command(void)
+  //////////////////////////////////////////////////////////////////
+  //  read_params_from_usar_command
+  int read_params_from_usar_command(void)
   {
-    Break_UC_Command_Into_Params BUCIP(_parent.ucbuf);
+    float                        x = 0, y = 0, z = 0, r = 0, p = 0, yaw = 0;
+    char*                        rtn;
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+//BUCIP.Disp();
+    if(BIE_GOOD != BUCIP.Error_code())
+      return -2;
+    rtn = BUCIP.Search("Location");
+    if(NULL != rtn)
+      sscanf(rtn, "%f,%f,%f", &x, &y, &z);
+    rtn = BUCIP.Search("Rotation");
+    if(NULL != rtn)
+      sscanf(rtn, "%f,%f,%f", &r, &p, &yaw);
+    rtn = BUCIP.Search("ClassName");
+    if(NULL != rtn)
+    {
+      rtn = BUCIP.Search("Name");
+      if(NULL != rtn)
+        record_robot_param(BUCIP.Search("Name"), BUCIP.Search("ClassName")
+          ,x, y, z, r, p, yaw);
+      else
+        record_robot_param(BUCIP.Search("ClassName"), BUCIP.Search("ClassName")
+          ,x, y, z, r, p, yaw);
+      return 1;
+    }
+    return -1;
+//  Sample command : INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}
   }
-  //#######################################################################
+
+  //////////////////////////////////////////////////////////////////
   //  spawn_a_robot
   void spawn_a_robot(void)
   {
@@ -311,7 +218,7 @@ struct UC_INIT
       // Set Spawned flag
     _parent.Spawned = 1;
   }
-  //#######################################################################
+  //////////////////////////////////////////////////////////////////
   //  record_robot_param
   void record_robot_param(char* _own_name, char* _model_name
                      , float x, float y, float z, float q1, float q2, float q3)
@@ -344,10 +251,10 @@ struct UC_INIT
 //   Defined on USARSim Manual P.43
 struct UC_GETSTARTPOSES
 {
-  //#######################################################################
+  //////////////////////////////////////////////////////////////////
   //  Variables
   USARcommand& _parent;
-  //#######################################################################
+  //////////////////////////////////////////////////////////////////
   //  The constructor
   UC_GETSTARTPOSES(USARcommand& parent) : _parent(parent)
   {
@@ -384,8 +291,8 @@ struct UC_GETSTARTPOSES
   }
 };
 
-//#######################################################################
-//  USAR Command fetch
+//////////////////////////////////////////////////////////////////
+//  USAR Command fetch    ## DO NOT MOVE THIS FUNCTION FROM HERE ##
 void USARcommand::UC_check_command_from_USARclient(void)
 {
   int nread;
@@ -411,7 +318,10 @@ void USARcommand::UC_check_command_from_USARclient(void)
   std::iostream st(&_buffer);
   std::stringstream s;
   s << st.rdbuf();
-  ucbuf = (char*)s.str().c_str();
+  if(NULL != ucbuf)
+    delete ucbuf;
+  ucbuf = new char[strlen((char*)s.str().c_str())+1];
+  strcpy(ucbuf, (char*)s.str().c_str());
 // DEBUG information output  
 printf("COMMAND = %s\n", ucbuf );
   if(0 == strncmp(ucbuf, "INIT", 4))
@@ -422,13 +332,15 @@ printf("COMMAND = %s\n", ucbuf );
   {
     UC_GETSTARTPOSES UC_getstartposes(*this);
   }
+  delete ucbuf;
+  ucbuf = NULL;
 }
 
 //#######################################################################
 //  Image Server
 //#######################################################################
 
-//#######################################################################
+//////////////////////////////////////////////////////////////////
 // SaveAsPPM saves an image for debug
 // 
 
@@ -442,7 +354,7 @@ void  SaveAsPPM(char* filename, ConstImageStampedPtr &_msg)
   fclose(fp);
 }
 
-//#######################################################################
+//////////////////////////////////////////////////////////////////
 // A structure for transferring image data
 // 
 
@@ -529,10 +441,8 @@ struct USARimage
   }
 };
 
-//#######################################################################
+//////////////////////////////////////////////////////////////////
 // Function is called everytime a message is received on topics
-// 
-
 void USARimage::imageserver_callback(ConstImageStampedPtr& _msg)
 {
   if(flag_OK)
@@ -541,10 +451,8 @@ void USARimage::imageserver_callback(ConstImageStampedPtr& _msg)
     send_rectangle_area_image( _msg);
 }
 
-//#######################################################################
+//////////////////////////////////////////////////////////////////
 // Send camera image
-// 
-
 void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
 {
   flag_OK = 0;
