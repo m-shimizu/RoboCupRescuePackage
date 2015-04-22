@@ -93,12 +93,12 @@ A package adding USARSim interface to Gazebo
 * Command recognizer(restarting of development)
 
 ### Workable USARSim command
-* USARSim commands
-    INIT (limited)  
-    DRIVE (limited)  
-    GETSTARTPOSES (this returns constant strings now)  
-* Image Server
-    OK (Raw Image Data only)  
+* USARSim commands  
+    - INIT (limited)  
+    - DRIVE (limited)  
+    - GETSTARTPOSES (this returns constant strings now)  
+* Image Server  
+    - OK (Raw Image Data only)  
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
