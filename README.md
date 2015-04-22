@@ -74,12 +74,12 @@ A package adding USARSim interface to Gazebo
 ## Status at 2015.4.22
 
 ### Current Function 
-* Waiting for a socket connection at port 3000  
+* Waiting for a socket connection at port 3000 and port 5003
 * You can spawn a robot into a gazebo with "INIT" command like next line:  
     INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}  
 * You can drive the robot with "DRIVE" command like next line:  
     DRIVE {Right 0.5}{Left 0.5}  
-* You can get an image of camera embeded on the robot with following steps. But now you can not choose camera.  
+* You can get a frame image of camera embeded on the robot with following steps. But now you can not choose camera.  
     1. Make a tcp socket connection at port 5003  
     2. Send "OK"  
     3. Get one frame raw image data from camera  
