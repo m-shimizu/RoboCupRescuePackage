@@ -85,10 +85,8 @@ A package adding USARSim interface to Gazebo
     3. Get one frame raw image data from camera  
 
 ### Current Constructing Point  
-* Find a method to transfer camera image and other sensor data.  
-    ** Made a robot model which have cameras and a range sensor.  
-    ** Making a prototype new ImageServer.  
-* Command recognizer(restarting of development)
+* Writing codes for sending back sensor data.  
+    ** Sample world of this project has a robot model which have two cameras and a range sensor.  
 
 ### Workable USARSim command
 * USARSim commands  
