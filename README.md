@@ -52,13 +52,11 @@ A package adding USARSim interface to Gazebo
         
         * At Terminal2
         $ telnet localhost 3000
-        (and you can see spawing a robot into a gazebo window)
+        (and you can use some commands : GETSTARTPOSES, INIT, DRIVE)
         
         * At Terminal3  
         $ telnet localhost 5003  
-        (and you can see 10 image files in RoboCupRescuePackage directory)  
-        (It's for checking of read image data from Gazebo image topic)  
-        (Sending Image data on TCP/IP as USARSim Imageserver is now constructing)  
+        (and you can get a frame raw camara image data, after you send "OK")  
         
         * Temporally method to control robot
         (After a robot spawned by abave method, open another terminal)
