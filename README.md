@@ -73,11 +73,17 @@ A package adding USARSim interface to Gazebo
         
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.
 
-## Status at 2015.3.12
+## Status at 2015.4.22
 
 ### Current Function 
 * Waiting for a socket connection at port 3000
-* When accepting a socket connection, spawn a robot into a gazebo
+* You can spawn a robot into a gazebo with "INIT" command like next line:
+    INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}
+* You can drive the robot with "DRIVE" command like next line:
+    DRIVE {Right 0.5}{Left 0.5}
+* You can get an image of camera embeded on the robot with following steps. But now you can not choose camera.
+    1. Make a tcp socket connection at port 5003
+    2. Send "OK"
 
 ### Current Constructing Point
 * Find a method to transfer camera image and other sensor data.  
@@ -90,9 +96,10 @@ A package adding USARSim interface to Gazebo
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
-    |++++++++++++++++++++++++|
+    |++++++++++++++++++++++++++++++++++|
 
 ### Change log
+    * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image. Those have limitation on it's function.
     * 12/ 3/2015 : Adding a limited ImageServer in USARGazebo.cc
                    Now sending image data on TCP/IP is not realized,
                    but you can see image files.

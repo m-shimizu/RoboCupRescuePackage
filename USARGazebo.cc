@@ -56,6 +56,7 @@ struct USARcommand
   boost::asio::ip::tcp::socket  _socket;
   boost::asio::streambuf        _buffer;
   boost::thread                 _thread;
+  gazebo::transport::NodePtr    _node;
   // Add your own variables here
 //  RD   Msg, Spawn;
   int                           Spawned;
@@ -81,20 +82,17 @@ struct USARcommand
   // USARcommand.Accept_Process
   void Accept_Process(void)
   {
+    _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+    _node->Init();
 //std::cout << "Accept_Process a [" << this << "]" << std::endl;
 /* SAMPLE CODE : Sendback Accepted Acknowledgment for debug
     boost::asio::streambuf  ack_comment;
-    std::iostream st(&ack_comment);
+    std::iostream           st(&ack_comment);
     st << "+ -- Accepted ["  << this << "]" << std::endl;;
     boost::asio::write(_socket, ack_comment);
 */
-//std::cout << "Accept_Process b [" << this << "]" << std::endl;
     while(1)
-    {
       UC_check_command_from_USARclient();
-//    Child_Session_Loop_Core();
-    }
-//std::cout << "Accept_Process c [" << this << "]" << std::endl;
   }
 
   //////////////////////////////////////////////////////////////////
@@ -210,13 +208,9 @@ struct UC_INIT
       // Already a robot has been spawned, then return
     if(1 == _parent.Spawned)
       return;
-      // Create a new transport node
-    gazebo::transport::NodePtr node(new gazebo::transport::Node());
-      // Initialize the node with the world name
-    node->Init();
       // Create a publisher on the ~/factory topic
     gazebo::transport::PublisherPtr factoryPub
-      = node->Advertise<gazebo::msgs::Factory>("~/factory");
+      = _parent._node->Advertise<gazebo::msgs::Factory>("~/factory");
       // Create the message
     gazebo::msgs::Factory msg;
       // Prepare command
@@ -305,16 +299,12 @@ struct UC_DRIVE
       // Already a robot has been spawned, then return
     if(1 == _parent.Spawned)
       return;
-      // Create a new transport node
-    gazebo::transport::NodePtr node(new gazebo::transport::Node());
-      // Initialize the node with the world name
-    node->Init();
       // Prepare topic name for drive command
  // sprintf(_TopicName, "~/%s/vel_cmd", _parent.own_name);
     sprintf(_TopicName, "~/%s/vel_cmd", _parent.model_name);
       // Create a publisher on the ~/factory topic
     gazebo::transport::PublisherPtr _pub_vel_cmd 
-      = node->Advertise<gazebo::msgs::Pose>(_TopicName);
+      = _parent._node->Advertise<gazebo::msgs::Pose>(_TopicName);
       // Wait for finishing the connection
  // _pub_vel_cmd->WaitForConnection();
       // Calc speed and turn
@@ -454,89 +444,91 @@ void  SaveAsPPM(char* filename, ConstImageStampedPtr &_msg)
 }
 
 //////////////////////////////////////////////////////////////////
-// A structure for transferring image data
-// 
-
-//////////////////////////////////////////////////////////////////
-// USARimage
+// USARimage : A structure for transferring image data
 struct USARimage
 {
   //////////////////////////////////////////////////////////////////
   // USARimage.Variables
-  Server_Framework<USARimage>  &_parent;
-  boost::asio::io_service       _ioservice;
-  boost::asio::ip::tcp::socket  _socket;
-  boost::asio::streambuf        _buffer;
-  boost::thread                 _thread;
+  Server_Framework<USARimage>     &_parent;
+  boost::asio::io_service          _ioservice;
+  boost::asio::ip::tcp::socket     _socket;
+  boost::asio::streambuf           _buffer;
+  boost::thread                    _thread;
+  gazebo::transport::NodePtr       _node;
+  gazebo::transport::SubscriberPtr _sub_camera_image;
   // Add your own variables here
   int  flag_OK, flag_U;
-  char model_name[100], own_name[100], topic_root[100];
+  char model_name[100], own_name[100], topic_camera[100];
   void send_full_size_image(ConstImageStampedPtr& _msg);
   void send_rectangle_area_image(ConstImageStampedPtr& _msg);
   void imageserver_callback(ConstImageStampedPtr& _msg);
 
   //////////////////////////////////////////////////////////////////
-  // USARimage.Constructor
+  // Initialize some thing..
   void Init(void) { }
-  USARimage(Server_Framework<USARimage>&parent): 
-      _parent(parent), _socket(_ioservice), flag_OK(0), flag_U(0) {Init();}
+
+  //////////////////////////////////////////////////////////////////
+  // USARimage.Constructor
+  USARimage(Server_Framework<USARimage>&parent)
+    : _parent(parent), _socket(_ioservice), flag_OK(0), flag_U(0)
+  { Init(); }
 
   //////////////////////////////////////////////////////////////////
   // USARimage.Child_Session_Loop_Core
   void Child_Session_Loop_Core(void)
   {
     boost::system::error_code err;
-//std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
     boost::asio::read_until(_socket, _buffer , "\r\n", err);
-//std::cout << "Child_Session_Loop b [" << this << "]" << std::endl;
+      // OK or U command should be checked here`
+    std::iostream st(&_buffer);
+    std::stringstream s;
+    s << st.rdbuf();
+    if(0 == strNcmp(s.str().c_str(), "OK"))
+    {
+      flag_OK = 1;
+    }
+    else if(0 == strNcmp(s.str().c_str(), "U["))
+    {
+      flag_U = 1;
+    }
 /* SAMPLE CODE : Display received data for debug
     std::iostream st(&_buffer);
     std::stringstream s;
     s << st.rdbuf();
     std::cout << CString(s.str().c_str()) << std::endl;
-    st << s.str() << std::endl;
-*/
-// OK or U command should be checked here`
-    std::iostream st(&_buffer);
-    std::stringstream s;
-    s << st.rdbuf();
-//printf("COMMAND = %s\n", s.str().c_str() );
-    if(0 == strncmp(s.str().c_str(),"OK",2))
-    {
-      flag_OK = 1;
-    }
-    else if(0 == strncmp(s.str().c_str(),"U[",2))
-    {
-      flag_U = 1;
-    }
+    st << s.str() << std::endl; */
 // SAMPLE CODE : Sendback received data for debug
-    boost::asio::write(_socket, _buffer);
-//
-//std::cout << "Child_Session_Loop c [" << this << "]" << std::endl;
-//std::cout << "Child_Session_Loop d [" << this << "]" << std::endl;
+//    boost::asio::write(_socket, _buffer);
   }
 
   //////////////////////////////////////////////////////////////////
   // USARimage.Accept_Process
   void Accept_Process(void)
   {
-//std::cout << "Accept_Process a [" << this << "]" << std::endl;
-/* SAMPLE CODE : Sendback Accepted Acknowledgment for debug
-    boost::asio::streambuf  ack_comment;
-    std::iostream st(&ack_comment);
-    st << "+ -- Accepted ["  << this << "]" << std::endl;;
-    boost::asio::write(_socket, ack_comment);
-*/
-  gazebo::transport::NodePtr node(new gazebo::transport::Node());
-  node->Init();
-  gazebo::transport::SubscriberPtr sub 
-    = node->Subscribe("~/pioneer3at_with_sensors/chassis/r_camera/image"
-      , &USARimage::imageserver_callback, this);
-
-//std::cout << "Accept_Process b [" << this << "]" << std::endl;
+    _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
+    _node->Init();
+      // Set topic name of camera
+    // You can change camera by each child session, 
+    // if we could change the hand-shaking rule of sending cameara image data.
+    // For example...
+    // After connecting, send camera topic name like following at first at once.
+    // "~/pioneer3at_with_sensors/chassis/r_camera/image"
+    /* We can get the sent camera topic name by following codes.
+    boost::system::error_code err;
+    boost::asio::read_until(_socket, _buffer, "\r\n", err);
+    std::iostream st(&_buffer);
+    std::stringstream s;
+    s << st.rdbuf();
+    sprintf(topic_camera, "%s", s.str().c_str());
+    */
+      // Now we can not get camera topic name by current hand-shaking rule
+      // , I wrote following line instead.
+    sprintf(topic_camera, "%s"
+                      , "~/pioneer3at_with_sensors/chassis/r_camera/image");
+    _sub_camera_image 
+      = _node->Subscribe(topic_camera, &USARimage::imageserver_callback, this);
     while(1)
       Child_Session_Loop_Core();
-//std::cout << "Accept_Process c [" << this << "]" << std::endl;
   }
 };
 
@@ -555,14 +547,31 @@ void USARimage::imageserver_callback(ConstImageStampedPtr& _msg)
 void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
 {
   flag_OK = 0;
-// For checking to treate an image data
+  int            ImageSize = 3 * _msg->image().width() * _msg->image().height();
+  unsigned char* ip = (unsigned char*)_msg->image().data().c_str();
+  unsigned char* ImageBuf = new unsigned char[5 + ImageSize];
+    // Set Image format type <= 0
+  ImageBuf[0] = 0; // Raw Data
+    // Set imagesize
+  *(unsigned long int*)&ImageBuf[1] = ImageSize; // Image Size
+    // Repacking into USARImage Raw Format
+  for(int i = 0; i < _msg->image().width() * _msg->image().height(); i++)
+  {
+    ImageBuf[5+i*3+0] /*Blue */ = ip[i*3+2]/*Blue*/;
+    ImageBuf[5+i*3+1] /*Red  */ = ip[i*3+0]/*Red*/;
+    ImageBuf[5+i*3+2] /*Green*/ = ip[i*3+1]/*Green*/;
+  }
+    // Send USAR Image Data
+  boost::asio::write(_socket,boost::asio::buffer((void*)ImageBuf,5+ImageSize));
+    // Free ImageBuf
+  delete ImageBuf;
+/* For checking to treate an image data
   static int filenumber=0;
   char filename[100];
   if(filenumber>10)
-  return;
+    return;
   sprintf(filename, "./tmp%02d.PPM", (filenumber++)%10);
-  SaveAsPPM(filename, _msg);
-
+  SaveAsPPM(filename, _msg); */
 }
 
 void USARimage::send_rectangle_area_image(ConstImageStampedPtr& _msg)
@@ -633,14 +642,14 @@ namespace gazebo
 
 private:
   /// \brief Gazebo communication node
-  transport::NodePtr node;
+  gazebo::transport::NodePtr node;
   /// \brief Gazebo factory publisher
-  transport::PublisherPtr factoryPub;
+  gazebo::transport::PublisherPtr factoryPub;
   /// \brief Gazebo subscriber to the ~/usarsim topic.
   /// This is a stand-in for the usarsim interface
-  transport::SubscriberPtr usarsimSub;
+  gazebo::transport::SubscriberPtr usarsimSub;
   /// \brief Keep a pointer to the world.
-  physics::WorldPtr world;
+  gazebo::physics::WorldPtr world;
   /// \brief All the event connections.
   std::vector<event::ConnectionPtr> connections;
 public:
