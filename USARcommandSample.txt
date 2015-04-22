@@ -1,0 +1,2 @@
+INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}
+DRIVE {RIGHT 1.0}{LEFT 1.0}

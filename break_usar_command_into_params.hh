@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////
 // Means of error codes
-enum Break_USAR_Command_Into_Params_ERR_CODE
+enum Break_USAR_Command_Into_Params_Error_Code
 {
   BIE_GOOD         =  0,
   BIE_NO_COMMAND   = -1,
@@ -98,7 +98,7 @@ struct Break_USAR_Command_Into_Params
       i = _UC_Param_list.begin(); i != _UC_Param_list.end(); i++)
     {
       UC_Param* upp = *i;
-      if(0 == strncmp(upp->_Name, name, strlen(name)))
+      if(0 == strncasecmp(upp->_Name, name, strlen(name)))
         return upp->_Value;
     }
     return NULL;

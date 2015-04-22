@@ -1,16 +1,20 @@
 // Desctiption: 
 // This program's a translator between USARSim protocol and Gazebo protocol.
 // This file is a primaly file of this program. 
-// You can add some codes for treating USARsim protocal which you need in this file by copying and editing alread existing other codes of USARSim protcol.
+// You can add some codes for treating USARsim command which you need in this file by copying and editing alread existing other codes of USARSim protcol.
+// UC_INIT class is a good sample code for adding a new code for treating a new USARSim command.
 //
 // Author : Prof.Arnoud Visser, Dr.Nate Koenig, Masaru Shimizu
 // E-Mail : shimizu@sist.chukyo-u.ac.jp
 // Date   : 4.2015
 //
 
-#include "gazebo/physics/physics.hh"
-#include "gazebo/common/common.hh"
-#include "gazebo/gazebo.hh"
+#include <gazebo/gazebo.hh>
+#include <gazebo/common/common.hh>
+#include <gazebo/msgs/msgs.hh>
+#include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/math/gzmath.hh>
 #include "boost_server_framework.hh"
 #include "break_usar_command_into_params.hh"
 
@@ -54,15 +58,20 @@ struct USARcommand
   boost::thread                 _thread;
   // Add your own variables here
 //  RD   Msg, Spawn;
-  int  Spawned;
-  char model_name[100], own_name[100], topic_root[100];
-  char*ucbuf; // a pointer of USARSim command string buffer in GameBot protocol
-  gazebo::math::Vector3 spawn_location;
-  gazebo::math::Quaternion spawn_direction;
+  int                           Spawned;
+  char                          model_name[100], own_name[100], topic_root[100];
+  char*                         ucbuf; // a pointer of USARSim command string
+  gazebo::math::Vector3         spawn_location;
+  gazebo::math::Quaternion      spawn_direction;
+
+  //////////////////////////////////////////////////////////////////
+  // Initialize something...
+  void Init(void)
+  {
+  }
 
   //////////////////////////////////////////////////////////////////
   // USARcommand.Constructor
-  void Init(void) { }
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), Spawned(0), ucbuf(NULL)
 //    , Msg(), Spawn() 
@@ -139,6 +148,13 @@ struct USARcommand
   void UC_check_command_from_USARclient(void);
 };
 
+enum USAR_Command_Error_Code
+{
+  UCE_GOOD                        = 0,
+  UCE_INCLUDING_BROKEN_BRACE      = 1,
+  UCE_MISSING_NECESSARY_PARAMETER = 2
+};
+
 //////////////////////////////////////////////////////////////////
 // UC_INIT
 struct UC_INIT
@@ -152,7 +168,7 @@ struct UC_INIT
   {
     if(1 == _parent.Spawned)
       return;
-    if(1 == read_params_from_usar_command())
+    if(UCE_GOOD == read_params_from_usar_command())
       spawn_a_robot();
   }
   //////////////////////////////////////////////////////////////////
@@ -164,7 +180,7 @@ struct UC_INIT
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
 //BUCIP.Disp();
     if(BIE_GOOD != BUCIP.Error_code())
-      return -2;
+      return UCE_INCLUDING_BROKEN_BRACE;
     rtn = BUCIP.Search("Location");
     if(NULL != rtn)
       sscanf(rtn, "%f,%f,%f", &x, &y, &z);
@@ -181,12 +197,11 @@ struct UC_INIT
       else
         record_robot_param(BUCIP.Search("ClassName"), BUCIP.Search("ClassName")
           ,x, y, z, r, p, yaw);
-      return 1;
+      return UCE_GOOD;
     }
-    return -1;
+    return UCE_MISSING_NECESSARY_PARAMETER;
 //  Sample command : INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}
   }
-
   //////////////////////////////////////////////////////////////////
   //  spawn_a_robot
   void spawn_a_robot(void)
@@ -234,16 +249,96 @@ struct UC_INIT
     _parent.spawn_location = _location;
     _parent.spawn_direction = _direction;
   }
-  /* MEMO AREA
-      rbuf[rbuf_num-1].Msg.Request = 0;
-      rbuf[rbuf_num-1].Spawn.Done  = 1;
-      if(0 == rp->Spawn.Request)
-      {
-        rp->Spawn.Request = 1;
-        rp->Msg.Request   = 1;
-      }
-      if(1==rbuf[rbuf_num-1].Spawn.Request)
-     MEMO AREA */
+};
+
+//////////////////////////////////////////////////////////////////
+// UC_DRIVE.DRIVE_TYPE
+enum DRIVE_TYPE
+{
+  RT_DiffarentialDrive = 1,
+  RT_SkidsteerDrive    = 2
+};
+
+//////////////////////////////////////////////////////////////////
+// Definition of UC_DRIVE class
+struct UC_DRIVE
+{
+  //////////////////////////////////////////////////////////////////
+  //  Variables
+  USARcommand& _parent;
+  float        _left_power, _right_power;
+  //////////////////////////////////////////////////////////////////
+  //  The constructor
+  UC_DRIVE(USARcommand& parent)
+    : _parent(parent), _left_power(0), _right_power(0)
+  {
+    if(1 == _parent.Spawned)
+      return;
+    if(UCE_GOOD == read_params_from_usar_command())
+      drive_a_robot();
+  }
+  //////////////////////////////////////////////////////////////////
+  //  read_params_from_usar_command
+  int read_params_from_usar_command(void)
+  {
+    char*                        rtn;
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+//BUCIP.Disp();
+    if(BIE_GOOD != BUCIP.Error_code())
+      return UCE_INCLUDING_BROKEN_BRACE;
+    rtn = BUCIP.Search("LEFT");
+    if(NULL != rtn)
+      sscanf(rtn, "%f", &_left_power);
+    rtn = BUCIP.Search("RIGHT");
+    if(NULL != rtn)
+      sscanf(rtn, "%f", &_right_power);
+    return UCE_GOOD;
+//  Sample command : DRIVE {RIGHT 2.0}{LEFT 2.0}
+  }
+  //////////////////////////////////////////////////////////////////
+  //  drive_a_robot
+  void drive_a_robot(void)
+  {
+    char  _TopicName[100];
+    float _speed = 0, _turn = 0;
+    int   _RobotType = RT_SkidsteerDrive;
+      // Already a robot has been spawned, then return
+    if(1 == _parent.Spawned)
+      return;
+      // Create a new transport node
+    gazebo::transport::NodePtr node(new gazebo::transport::Node());
+      // Initialize the node with the world name
+    node->Init();
+      // Prepare topic name for drive command
+ // sprintf(_TopicName, "~/%s/vel_cmd", _parent.own_name);
+    sprintf(_TopicName, "~/%s/vel_cmd", _parent.model_name);
+      // Create a publisher on the ~/factory topic
+    gazebo::transport::PublisherPtr _pub_vel_cmd 
+      = node->Advertise<gazebo::msgs::Pose>(_TopicName);
+      // Wait for finishing the connection
+ // _pub_vel_cmd->WaitForConnection();
+      // Calc speed and turn
+    _speed = (_right_power + _left_power) / 2.0;
+    _turn  = -_right_power + _left_power;
+      // Adjust parameters by robot drive type
+    switch(_RobotType)
+    {
+      case RT_DiffarentialDrive:
+        // Pioneer 2DX(Skidsteer); Turn > 0 then robot turn clock wise
+        //_turn = _turn;
+        break;
+      case RT_SkidsteerDrive   : 
+        // Pioneer 3AT(Diffarential); Turn < 0 then robot turn clock wise
+        _turn = -_turn;
+        break;
+    }
+      // Set the message
+    gazebo::math::Pose pose(_speed, 0, 0, 0, 0, _turn);
+    gazebo::msgs::Pose msg;
+    gazebo::msgs::Set(&msg, pose);
+      // Send the message
+    _pub_vel_cmd->Publish(msg);
+  }
 };
 
 //////////////////////////////////////////////////////////////////
@@ -291,30 +386,35 @@ struct UC_GETSTARTPOSES
   }
 };
 
+#define strNcmp(B,C) strncasecmp(B,C,strlen(C))
+
 //////////////////////////////////////////////////////////////////
 //  USAR Command fetch    ## DO NOT MOVE THIS FUNCTION FROM HERE ##
 void USARcommand::UC_check_command_from_USARclient(void)
 {
   int nread;
   boost::system::error_code err;
+    // Get an USAR command string
   nread = boost::asio::read_until(_socket, _buffer , "\r\n", err);
 //std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
-   // error routine : anyone write this with boost....
+    // error routine : anyone write this with boost....
   if(nread < 0)
   {
     perror("Could not read socket 3000");
-//  close(_socket);
+//  close(_socket); // I do not know the "close" function in boost library.
     _parent.Remove_Child_Session(this); // from child session list
+                                        //  but can I do this here really?
     _thread.join();
-//  pthread_detach(pthread_self());
   } 
   else if(nread == 0) 
   {
     perror("EOF, should break connection");
-//  close(_socket);
+//  close(_socket); // I do not know the "close" function in boost library.
     _parent.Remove_Child_Session(this); // from child session list
-//  pthread_detach(pthread_self());
+                                        //  but can I do this here really?
+    _thread.join();
   }
+    // Make a copy of the USAR command string for keeping it local
   std::iostream st(&_buffer);
   std::stringstream s;
   s << st.rdbuf();
@@ -323,15 +423,14 @@ void USARcommand::UC_check_command_from_USARclient(void)
   ucbuf = new char[strlen((char*)s.str().c_str())+1];
   strcpy(ucbuf, (char*)s.str().c_str());
 // DEBUG information output  
-printf("COMMAND = %s\n", ucbuf );
-  if(0 == strncmp(ucbuf, "INIT", 4))
-  {
+//printf("COMMAND string = %s\n", ucbuf );
+    // Call each USAR command programs
+  if(0 == strNcmp(ucbuf, "INIT"))
     UC_INIT UC_init(*this);
-  }
-  else if(0 == strncmp(ucbuf, "GETSTARTPOSES", 13))
-  {
+  else if(0 == strNcmp(ucbuf, "DRIVE"))
+    UC_DRIVE UC_drive(*this);
+  else if(0 == strNcmp(ucbuf, "GETSTARTPOSES"))
     UC_GETSTARTPOSES UC_getstartposes(*this);
-  }
   delete ucbuf;
   ucbuf = NULL;
 }
