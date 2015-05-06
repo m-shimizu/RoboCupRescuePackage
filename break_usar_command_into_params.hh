@@ -72,7 +72,7 @@ struct Break_USAR_Command_Into_Params
     Init();
     if(0 < strlen(cb))
     {
-      _cmdbuf = new char[strlen(cb)+1]; 
+      _cmdbuf = new char[strlen(cb)+2]; 
       strcpy(_cmdbuf, cb);
       Break_Into();
     }

@@ -410,7 +410,7 @@ void USARcommand::UC_check_command_from_USARclient(void)
   s << st.rdbuf();
   if(NULL != ucbuf)
     delete ucbuf;
-  ucbuf = new char[strlen((char*)s.str().c_str())+1];
+  ucbuf = new char[strlen((char*)s.str().c_str())+2];
   strcpy(ucbuf, (char*)s.str().c_str());
 // DEBUG information output  
 //printf("COMMAND string = %s\n", ucbuf );
