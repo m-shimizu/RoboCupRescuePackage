@@ -59,11 +59,11 @@ struct USARcommand
   gazebo::transport::NodePtr    _node;
   // Add your own variables here
 //  RD   Msg, Spawn;
-  int                           Spawned;
   char                          model_name[100], own_name[100], topic_root[100];
   char*                         ucbuf; // a pointer of USARSim command string
   gazebo::math::Vector3         spawn_location;
   gazebo::math::Quaternion      spawn_direction;
+  gazebo::msgs::GzString_V      topics;
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -74,7 +74,7 @@ struct USARcommand
   //////////////////////////////////////////////////////////////////
   // USARcommand.Constructor
   USARcommand(Server_Framework<USARcommand>&parent) : 
-    _parent(parent), _socket(_ioservice), Spawned(0), ucbuf(NULL)
+    _parent(parent), _socket(_ioservice), ucbuf(NULL), topics()
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -96,53 +96,86 @@ struct USARcommand
   }
 
   //////////////////////////////////////////////////////////////////
-  // Get_Topics_List
+  // USARcommand.Get_Topics_List
+  // SAMPLE CODE to get a list of topics from 
+  //   https://bitbucket.org/osrf/gazebo/src/5eed0402ea08b3dff261d25ef8da82db426bbab6/tools/gz_topic.cc?at=default#cl-87
   void Get_Topics_List(void) // still under construction
   {
-  /* SAMPLE CODE to get a list of topics from https://bitbucket.org/osrf/gazebo/src/5eed0402ea08b3dff261d25ef8da82db426bbab6/tools/gz_topic.cc?at=default#cl-87
     std::string data;
-    msgs::Packet packet;
-    msgs::Request request;
-    msgs::GzString_V topics;
-    transport::ConnectionPtr _connection = transport::connectToMaster();
-    if(connection)
-    {
-      request.set_id(0);
-      request.set_request("get_topics");
-      _connection->EnqueueMsg(msgs::Package("request", request), true);
-      _connection->Read(data);
-      packet.ParseFromString(data);
-      topics.ParseFromString(packet.serialized_data());
-      for (int i = 0; i < topics.data_size(); ++i)
-      {
-        std::cout << topics.data(i) << std::endl;
-      }
-    }
+    gazebo::msgs::Packet packet;
+    gazebo::msgs::Request request;
+    gazebo::transport::ConnectionPtr _connection 
+                                       = gazebo::transport::connectToMaster();
+    request.set_id(0);
+    request.set_request("get_topics");
+    _connection->EnqueueMsg(gazebo::msgs::Package("request", request), true);
+    _connection->Read(data);
+    packet.ParseFromString(data);
+    topics.ParseFromString(packet.serialized_data());
+std::cout << "Topic list size = " << topics.data_size() << std::endl;
     _connection.reset();
-  */
+    Filter_Topics_List();
+//  Disp_Topics_List();
   }
 
   //////////////////////////////////////////////////////////////////
-  // Send_SENS   ## UNDER CONSTRUCTION ##
+  // USARcommand.Filter_Topics_List : filtering the topics list with edit_name
+  void Filter_Topics_List(void) // under construction
+  {
+    for (int i = 0; i < topics.data_size(); ++i)
+    {
+//      std::cout << topics.data(i) << std::endl;
+/*      if(NULL == topics.data(i).find(edit_name))
+      {
+        topics.data(i).erase();
+        i = 0;
+        continue;
+      } */
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // USARcommand.Disp_Topics_List
+  void Disp_Topics_List(void)
+  {
+    for (int i = 0; i < topics.data_size(); ++i)
+    {
+      std::cout << topics.data(i) << std::endl;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // USARcommand.Is_Robot_Spawned(void)
+  int Is_Robot_Spawned(void) // return 1, if a robot was spawned
+  {
+    if(0 < topics.data_size())
+      return 1; // The robot was spawned
+    else
+    {
+      Get_Topics_List();
+      Filter_Topics_List();
+      return 0; // The robot was NOT spawned
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // USARcommand.Send_SENS   ## UNDER CONSTRUCTION ##
   void Send_SENS(void)
   {
-    if(0 == Spawned)
+    if(0 == Is_Robot_Spawned())
       return;
-      // 1. Check robot's sensors from topics list
-    Get_Topics_List();
+      // 1. Check robot's sensors from topics list(It's done in Is_Robot_Spawned
       // 2. send SENS of each sensors
       // SAMPLE CODE For debug
     // Sample codes for Debugging
-    if(1 == Spawned)
+/*    if(1 == IS_Robot_Spawned())
     {
       printf("robot name = %s\n", own_name);
-      Spawned = 0;
-    }
-    //
+    } */
   }
 
   //////////////////////////////////////////////////////////////////
-  // USARcommand.functions
+  // USARcommand.functions which need to be defined outside of this class definition
   void UC_check_command_from_USARclient(void);
 };
 
@@ -164,7 +197,7 @@ struct UC_INIT
   //  The constructor
   UC_INIT(USARcommand& parent) : _parent(parent)
   {
-    if(1 == _parent.Spawned)
+    if(1 == _parent.Is_Robot_Spawned())
       return;
     if(UCE_GOOD == read_params_from_usar_command())
       spawn_a_robot();
@@ -206,7 +239,7 @@ struct UC_INIT
   {
     char	model_cmd[100];
       // Already a robot has been spawned, then return
-    if(1 == _parent.Spawned)
+    if(1 == _parent.Is_Robot_Spawned())
       return;
       // Create a publisher on the ~/factory topic
     gazebo::transport::PublisherPtr factoryPub
@@ -224,8 +257,6 @@ struct UC_INIT
       , gazebo::math::Pose(_parent.spawn_location, _parent.spawn_direction));
       // Send the message
     factoryPub->Publish(msg);
-      // Set Spawned flag
-    _parent.Spawned = 1;
   }
   //////////////////////////////////////////////////////////////////
   //  record_robot_param
@@ -233,12 +264,13 @@ struct UC_INIT
                      , float x, float y, float z, float q1, float q2, float q3)
   {
       // Already a robot has been spawned, then return
-    if(1 == _parent.Spawned)
+    if(1 == _parent.Is_Robot_Spawned())
       return;
     gazebo::math::Vector3 _location(x, y, z);
     gazebo::math::Quaternion _direction(q1, q2, q3);
     sprintf(_parent.topic_root, "~/%s", _own_name);
-    strcpy(_parent.own_name, _own_name);
+    strcpy(_parent.own_name, _model_name);// This is tempolary method by fix set_edit_name()
+//    strcpy(_parent.own_name, _own_name); // This is correct 
     strcpy(_parent.model_name, _model_name);
     _parent.spawn_location = _location;
     _parent.spawn_direction = _direction;
@@ -266,7 +298,7 @@ struct UC_DRIVE
   UC_DRIVE(USARcommand& parent)
     : _parent(parent), _left_power(0), _right_power(0)
   {
-    if(1 == _parent.Spawned)
+    if(1 == _parent.Is_Robot_Spawned())
       return;
     if(UCE_GOOD == read_params_from_usar_command())
       drive_a_robot();
@@ -297,7 +329,7 @@ struct UC_DRIVE
     float _speed = 0, _turn = 0;
     int   _RobotType = RT_SkidsteerDrive;
       // Already a robot has been spawned, then return
-    if(1 == _parent.Spawned)
+    if(1 == _parent.Is_Robot_Spawned())
       return;
       // Prepare topic name for drive command
  // sprintf(_TopicName, "~/%s/vel_cmd", _parent.own_name);
