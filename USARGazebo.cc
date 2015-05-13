@@ -59,6 +59,7 @@ struct USARcommand
   gazebo::transport::NodePtr    _node;
   // Add your own variables here
 //  RD   Msg, Spawn;
+  int                           robot_was_spawned;
   char                          model_name[100], own_name[100], topic_root[100];
   char*                         ucbuf; // a pointer of USARSim command string
   gazebo::math::Vector3         spawn_location;
@@ -69,12 +70,14 @@ struct USARcommand
   // Initialize something...
   void Init(void)
   {
+    model_name[0] = own_name[0] = topic_root[0] = 0;
   }
 
   //////////////////////////////////////////////////////////////////
   // USARcommand.Constructor
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), ucbuf(NULL), topics()
+      , robot_was_spawned(0)
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -101,6 +104,8 @@ struct USARcommand
   //   https://bitbucket.org/osrf/gazebo/src/5eed0402ea08b3dff261d25ef8da82db426bbab6/tools/gz_topic.cc?at=default#cl-87
   void Get_Topics_List(void) // still under construction
   {
+    if(1 != robot_was_spawned)
+      return;
     std::string data;
     gazebo::msgs::Packet packet;
     gazebo::msgs::Request request;
@@ -124,13 +129,18 @@ std::cout << "Topic list size = " << topics.data_size() << std::endl;
   {
     for (int i = 0; i < topics.data_size(); ++i)
     {
+      std::stringstream s(topics.data(i));
+//      s << topics.data(i);
+//  ucbuf = new char[strlen((char*)s.str().c_str())+2];
 //      std::cout << topics.data(i) << std::endl;
-/*      if(NULL == topics.data(i).find(edit_name))
+      if(0 != own_name[0] 
+        && NULL != strcasestr((char*)s.str().c_str(), own_name))
       {
-        topics.data(i).erase();
-        i = 0;
+      std::cout << topics.data(i) << std::endl;
+//        topics.data(i).erase();
+//        i = 0;
         continue;
-      } */
+      }
     }
   }
 
@@ -145,28 +155,29 @@ std::cout << "Topic list size = " << topics.data_size() << std::endl;
   }
 
   //////////////////////////////////////////////////////////////////
-  // USARcommand.Is_Robot_Spawned(void)
-  int Is_Robot_Spawned(void) // return 1, if a robot was spawned
+  // USARcommand.Was_Robot_Spawned(void)
+  /*
+  int Was_Robot_Spawned(void) // return 1, if a robot was spawned
   {
-    if(0 < topics.data_size())
-      return 1; // The robot was spawned
-    else
+//    if(0 < topics.data_size())
+//      return 1; // The robot was spawned
+//    else
     {
       Get_Topics_List();
       Filter_Topics_List();
       return 0; // The robot was NOT spawned
     }
-  }
+  }*/
 
   //////////////////////////////////////////////////////////////////
   // USARcommand.Send_SENS   ## UNDER CONSTRUCTION ##
   void Send_SENS(void)
   {
-    if(0 == Is_Robot_Spawned())
+    if(1 != robot_was_spawned)
       return;
-      // 1. Check robot's sensors from topics list(It's done in Is_Robot_Spawned
+      // 1. Check robot's sensors from topics list
+    Get_Topics_List();
       // 2. send SENS of each sensors
-      // SAMPLE CODE For debug
     // Sample codes for Debugging
 /*    if(1 == IS_Robot_Spawned())
     {
@@ -197,8 +208,8 @@ struct UC_INIT
   //  The constructor
   UC_INIT(USARcommand& parent) : _parent(parent)
   {
-    if(1 == _parent.Is_Robot_Spawned())
-      return;
+//    if(1 == _parent.Was_Robot_Spawned())
+//      return;
     if(UCE_GOOD == read_params_from_usar_command())
       spawn_a_robot();
   }
@@ -239,7 +250,7 @@ struct UC_INIT
   {
     char	model_cmd[100];
       // Already a robot has been spawned, then return
-    if(1 == _parent.Is_Robot_Spawned())
+    if(1 == _parent.robot_was_spawned)
       return;
       // Create a publisher on the ~/factory topic
     gazebo::transport::PublisherPtr factoryPub
@@ -257,6 +268,7 @@ struct UC_INIT
       , gazebo::math::Pose(_parent.spawn_location, _parent.spawn_direction));
       // Send the message
     factoryPub->Publish(msg);
+    _parent.robot_was_spawned = 1;
   }
   //////////////////////////////////////////////////////////////////
   //  record_robot_param
@@ -264,8 +276,6 @@ struct UC_INIT
                      , float x, float y, float z, float q1, float q2, float q3)
   {
       // Already a robot has been spawned, then return
-    if(1 == _parent.Is_Robot_Spawned())
-      return;
     gazebo::math::Vector3 _location(x, y, z);
     gazebo::math::Quaternion _direction(q1, q2, q3);
     sprintf(_parent.topic_root, "~/%s", _own_name);
@@ -298,7 +308,7 @@ struct UC_DRIVE
   UC_DRIVE(USARcommand& parent)
     : _parent(parent), _left_power(0), _right_power(0)
   {
-    if(1 == _parent.Is_Robot_Spawned())
+    if(1 != _parent.robot_was_spawned)
       return;
     if(UCE_GOOD == read_params_from_usar_command())
       drive_a_robot();
@@ -329,7 +339,7 @@ struct UC_DRIVE
     float _speed = 0, _turn = 0;
     int   _RobotType = RT_SkidsteerDrive;
       // Already a robot has been spawned, then return
-    if(1 == _parent.Is_Robot_Spawned())
+    if(1 != _parent.robot_was_spawned)
       return;
       // Prepare topic name for drive command
  // sprintf(_TopicName, "~/%s/vel_cmd", _parent.own_name);
