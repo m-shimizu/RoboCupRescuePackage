@@ -9,7 +9,7 @@ A package adding USARSim interface to Gazebo
 
 ### Software Environment Installation Tips  
         I often stopped Gazebo5 installation by "broken dependency error".  
-        Followings are my installation memo:  
+        If you meat a same error, try following memo:  
 
         1st step: Ubuntu 14 installation(no tips, just do it by an ordinally method)  
 
@@ -98,7 +98,7 @@ A package adding USARSim interface to Gazebo
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
-    |++++++++++++++++++++++++++++++++++|
+    |++++++++++++++++++++++++++++++++++++|
 
 ### Change log
     * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image.   
