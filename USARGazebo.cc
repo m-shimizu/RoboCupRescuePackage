@@ -6,7 +6,7 @@
 //
 // Author : Prof.Arnoud Visser, Dr.Nate Koenig, Masaru Shimizu
 // E-Mail : shimizu@sist.chukyo-u.ac.jp
-// Date   : 4.2015
+// Date   : 3.2015-5.2015
 //
 
 #include <gazebo/gazebo.hh>
@@ -17,6 +17,7 @@
 #include <gazebo/math/gzmath.hh>
 #include "boost_server_framework.hh"
 #include "break_usar_command_into_params.hh"
+#include "get_topics_list.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -64,7 +65,7 @@ struct USARcommand
   char*                         ucbuf; // a pointer of USARSim command string
   gazebo::math::Vector3         spawn_location;
   gazebo::math::Quaternion      spawn_direction;
-  gazebo::msgs::GzString_V      topics;
+  TopicsList                    topics_list;
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -76,8 +77,8 @@ struct USARcommand
   //////////////////////////////////////////////////////////////////
   // USARcommand.Constructor
   USARcommand(Server_Framework<USARcommand>&parent) : 
-    _parent(parent), _socket(_ioservice), ucbuf(NULL), topics()
-      , robot_was_spawned(0)
+    _parent(parent), _socket(_ioservice), ucbuf(NULL), robot_was_spawned(0)
+      , topics_list()
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -99,84 +100,22 @@ struct USARcommand
   }
 
   //////////////////////////////////////////////////////////////////
-  // USARcommand.Get_Topics_List
-  // SAMPLE CODE to get a list of topics from 
-  //   https://bitbucket.org/osrf/gazebo/src/5eed0402ea08b3dff261d25ef8da82db426bbab6/tools/gz_topic.cc?at=default#cl-87
-  void Get_Topics_List(void) // still under construction
-  {
-    if(1 != robot_was_spawned)
-      return;
-    std::string data;
-    gazebo::msgs::Packet packet;
-    gazebo::msgs::Request request;
-    gazebo::transport::ConnectionPtr _connection 
-                                       = gazebo::transport::connectToMaster();
-    request.set_id(0);
-    request.set_request("get_topics");
-    _connection->EnqueueMsg(gazebo::msgs::Package("request", request), true);
-    _connection->Read(data);
-    packet.ParseFromString(data);
-    topics.ParseFromString(packet.serialized_data());
-std::cout << "Topic list size = " << topics.data_size() << std::endl;
-    _connection.reset();
-    Filter_Topics_List();
-//  Disp_Topics_List();
-  }
-
-  //////////////////////////////////////////////////////////////////
-  // USARcommand.Filter_Topics_List : filtering the topics list with edit_name
-  void Filter_Topics_List(void) // under construction
-  {
-    for (int i = 0; i < topics.data_size(); ++i)
-    {
-      std::stringstream s(topics.data(i));
-//      s << topics.data(i);
-//  ucbuf = new char[strlen((char*)s.str().c_str())+2];
-//      std::cout << topics.data(i) << std::endl;
-      if(0 != own_name[0] 
-        && NULL != strcasestr((char*)s.str().c_str(), own_name))
-      {
-      std::cout << topics.data(i) << std::endl;
-//        topics.data(i).erase();
-//        i = 0;
-        continue;
-      }
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////
-  // USARcommand.Disp_Topics_List
-  void Disp_Topics_List(void)
-  {
-    for (int i = 0; i < topics.data_size(); ++i)
-    {
-      std::cout << topics.data(i) << std::endl;
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////
-  // USARcommand.Was_Robot_Spawned(void)
-  /*
-  int Was_Robot_Spawned(void) // return 1, if a robot was spawned
-  {
-//    if(0 < topics.data_size())
-//      return 1; // The robot was spawned
-//    else
-    {
-      Get_Topics_List();
-      Filter_Topics_List();
-      return 0; // The robot was NOT spawned
-    }
-  }*/
-
-  //////////////////////////////////////////////////////////////////
   // USARcommand.Send_SENS   ## UNDER CONSTRUCTION ##
   void Send_SENS(void)
   {
     if(1 != robot_was_spawned)
       return;
       // 1. Check robot's sensors from topics list
-    Get_Topics_List();
+      if(1 != robot_was_spawned)
+        return;
+      if(NULL == topics_list.Search(own_name, (char*)"image"))
+      {
+        topics_list.Get_Topics_List();
+	topics_list.Filter(own_name);
+        if(NULL == topics_list.Search(own_name, (char*)"image"))
+          return;
+      }
+//      std::cout << topics_list.Search(own_name, (char*)"image") << std::endl;
       // 2. send SENS of each sensors
     // Sample codes for Debugging
 /*    if(1 == IS_Robot_Spawned())
@@ -194,7 +133,8 @@ enum USAR_Command_Error_Code
 {
   UCE_GOOD                        = 0,
   UCE_INCLUDING_BROKEN_BRACE      = 1,
-  UCE_MISSING_NECESSARY_PARAMETER = 2
+  UCE_MISSING_NECESSARY_PARAMETER = 2,
+  UCE_DO_NOT_CALL_AFTER_SPAWNED   = 3
 };
 
 //////////////////////////////////////////////////////////////////
@@ -208,8 +148,9 @@ struct UC_INIT
   //  The constructor
   UC_INIT(USARcommand& parent) : _parent(parent)
   {
-//    if(1 == _parent.Was_Robot_Spawned())
-//      return;
+      // Already a robot has been spawned, then return
+    if(1 == _parent.robot_was_spawned)
+      return;
     if(UCE_GOOD == read_params_from_usar_command())
       spawn_a_robot();
   }
@@ -217,10 +158,13 @@ struct UC_INIT
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
-    float                        x = 0, y = 0, z = 0, r = 0, p = 0, yaw = 0;
-    char*                        rtn;
+    float                          x = 0, y = 0, z = 0, r = 0, p = 0, yaw = 0;
+    char*                          rtn;
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
 //BUCIP.Disp();
+      // Already a robot has been spawned, then return
+    if(1 == _parent.robot_was_spawned)
+      return UCE_DO_NOT_CALL_AFTER_SPAWNED;
     if(BIE_GOOD != BUCIP.Error_code())
       return UCE_INCLUDING_BROKEN_BRACE;
     rtn = BUCIP.Search("Location");
@@ -276,11 +220,14 @@ struct UC_INIT
                      , float x, float y, float z, float q1, float q2, float q3)
   {
       // Already a robot has been spawned, then return
+    if(1 == _parent.robot_was_spawned)
+      return;
     gazebo::math::Vector3 _location(x, y, z);
     gazebo::math::Quaternion _direction(q1, q2, q3);
     sprintf(_parent.topic_root, "~/%s", _own_name);
-    strcpy(_parent.own_name, _model_name);// This is tempolary method by fix set_edit_name()
-//    strcpy(_parent.own_name, _own_name); // This is correct 
+//    sprintf(_parent.topic_root, "/gazebo/default/%s", _own_name);
+    strcpy(_parent.own_name, _model_name);// This is tempolary method by set_edit_name() could be fixed
+//    strcpy(_parent.own_name, _own_name); // This is correct , but now set_edit_name() was out of order, then we can not use this.
     strcpy(_parent.model_name, _model_name);
     _parent.spawn_location = _location;
     _parent.spawn_direction = _direction;
@@ -504,6 +451,8 @@ struct USARimage
   void send_full_size_image(ConstImageStampedPtr& _msg);
   void send_rectangle_area_image(ConstImageStampedPtr& _msg);
   void imageserver_callback(ConstImageStampedPtr& _msg);
+  // A part of sample code to decide camera topic name automatically
+  TopicsList topics_list;
 
   //////////////////////////////////////////////////////////////////
   // Initialize some thing..
@@ -513,6 +462,7 @@ struct USARimage
   // USARimage.Constructor
   USARimage(Server_Framework<USARimage>&parent)
     : _parent(parent), _socket(_ioservice), flag_OK(0), flag_U(0)
+      , topics_list()
   { Init(); }
 
   //////////////////////////////////////////////////////////////////
@@ -564,7 +514,18 @@ struct USARimage
     sprintf(topic_camera, "%s", s.str().c_str());
     */
       // Now we can not get camera topic name by current hand-shaking rule
-      // , I wrote following line instead.
+      // , then I wrote following line instead.
+/* Sample Code for using topics list to decide cameara topic name automatically
+    if(NULL == topics_list.Search((char*)"image"))
+    {
+      topics_list.Get_Topics_List();
+      topics_list.Filter(own_name);
+      if(NULL == topics_list.Search((char*)"image"))
+        return;
+    }
+    sprintf(topic_camera, "%s"
+                      , topics_list.Search((char*)"image"));
+*/
     sprintf(topic_camera, "%s"
                       , "~/pioneer3at_with_sensors/chassis/r_camera/image");
     _sub_camera_image 
@@ -607,13 +568,14 @@ void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
   boost::asio::write(_socket,boost::asio::buffer((void*)ImageBuf,5+ImageSize));
     // Free ImageBuf
   delete ImageBuf;
-/* For checking to treate an image data
+/* For checking to be able to get an image data
   static int filenumber=0;
   char filename[100];
   if(filenumber>10)
     return;
   sprintf(filename, "./tmp%02d.PPM", (filenumber++)%10);
-  SaveAsPPM(filename, _msg); */
+  SaveAsPPM(filename, _msg);
+*/
 }
 
 void USARimage::send_rectangle_area_image(ConstImageStampedPtr& _msg)
