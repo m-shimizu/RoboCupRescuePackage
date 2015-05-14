@@ -103,21 +103,41 @@ struct USARcommand
   // USARcommand.Send_SENS   ## UNDER CONSTRUCTION ##
   void Send_SENS(void)
   {
+    static int  refresh_cycle = 0;
     if(1 != robot_was_spawned)
       return;
       // 1. Check robot's sensors from topics list
-      if(1 != robot_was_spawned)
+    if(NULL == topics_list.Search(own_name) || 0 == topics_list.Size())
+    {
+      topics_list.Refresh_Topics_List();
+      topics_list.Filter(own_name);
+      if(0 == topics_list.Size())
         return;
-      if(NULL == topics_list.Search(own_name, (char*)"image"))
-      {
-        topics_list.Get_Topics_List();
-	topics_list.Filter(own_name);
-        if(NULL == topics_list.Search(own_name, (char*)"image"))
-          return;
-      }
-//      std::cout << topics_list.Search(own_name, (char*)"image") << std::endl;
+    }
+      // Recheck topics in once at 50 called of this function
+    if(50 < refresh_cycle++)
+    {
+      refresh_cycle = 0;
+      topics_list.Refresh_Topics_List();
+      topics_list.Filter(own_name);
+      if(0 == topics_list.Size())
+        return;
+    }
       // 2. send SENS of each sensors
-    // Sample codes for Debugging
+    for(typename std::set<char*>::iterator i = topics_list._topics_list.begin()
+            ; i != topics_list._topics_list.end(); i++)
+    {
+      // UNDER CONSTRUCTION!! Sensor keywords and functions are all fake!!
+      if(NULL != strcasestr(*i, "laser"))
+      {
+      // Process_laser_sensor(*i);
+      }
+      else if(NULL != strcasestr(*i, "gps"))
+      {
+      // Process_gps_sensor(*i);
+      }
+    }
+    // Codes for Debugging
 /*    if(1 == IS_Robot_Spawned())
     {
       printf("robot name = %s\n", own_name);
