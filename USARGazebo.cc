@@ -107,15 +107,8 @@ struct USARcommand
     if(1 != robot_was_spawned)
       return;
       // 1. Check robot's sensors from topics list
-    if(NULL == topics_list.Search(own_name) || 0 == topics_list.Size())
-    {
-      topics_list.Refresh_Topics_List();
-      topics_list.Filter(own_name);
-      if(0 == topics_list.Size())
-        return;
-    }
-      // Recheck topics in once at 50 called of this function
-    if(50 < refresh_cycle++)
+    if(NULL == topics_list.Search(own_name) || 0 == topics_list.Size()
+      || 50 < refresh_cycle++)
     {
       refresh_cycle = 0;
       topics_list.Refresh_Topics_List();
@@ -137,11 +130,6 @@ struct USARcommand
       // Process_gps_sensor(*i);
       }
     }
-    // Codes for Debugging
-/*    if(1 == IS_Robot_Spawned())
-    {
-      printf("robot name = %s\n", own_name);
-    } */
   }
 
   //////////////////////////////////////////////////////////////////
