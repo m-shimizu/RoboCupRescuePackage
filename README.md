@@ -8,10 +8,12 @@ A package adding USARSim interface to Gazebo
   Maybe OK  : Ubuntu 12, Gazebo 4, ROS hydro  
 
 ### Software Environment Installation Tips  
-        I often stopped Gazebo5 installation by "broken dependency error".  
-        If you meat a same error, try following memo:  
+        I often encountered that Gazebo5 installation 
+        was stopped by an  "broken dependency error".  
+        If you meet the same error, try following steps:  
 
-        1st step: Ubuntu 14 installation(no tips, just do it by an ordinally method)  
+        1st step: Start with a clean Ubuntu 14 installation 
+             (no tips, just do it by an ordinally method)  
 
         2nd step: ROS indigo installation  
         $ sudo apt-get install ros-indigo-desktop-full  
@@ -45,6 +47,8 @@ A package adding USARSim interface to Gazebo
         $ make
 
 ## How to use
+        Start four terminal windows
+
         * At Terminal1
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
@@ -58,12 +62,13 @@ A package adding USARSim interface to Gazebo
         $ telnet localhost 5003  
         (and you can get a frame raw camara image data, after you send "OK")  
         
-        * Temporally method to control robot
-        (After a robot spawned by abave method, open another terminal)
+        * At Terminal4 
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
         $ cd build
         $ ./robot_teleop pioneer3at_with_sensors 2
+        (and you can control the robot with the keyboard)
+
         "robot_teleop" is a program to control a robot which have a plugin "SkidSteerDrivePlugin" through topic "/vel_cmd".  
         The 1st argument is the model name. Please check it in the model name tree in the left sidebar of the gazebo window. If you see a different name like "pioneer3at_with_sensors_0", replace the 1st argument with it.  
         The 2nd argument is a plugin type number defined in this program. Do not change.  
