@@ -219,7 +219,7 @@ struct Break_USAR_Command_Into_Params
 };
 
 #ifdef __SAMPLE_CODE_FOR_USING_Break_USAR_Command_Into_Params__
-  //  You can see a whole class code as UC_INIT in USARGazebo.cc
+  //  You can see a whole UC_INIT class code in USARGazebo.cc
   int UC_INIT::read_params_from_usar_command(void)
   {
     float                        x = 0, y = 0, z = 0, r = 0, p = 0, yaw = 0;

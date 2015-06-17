@@ -32,6 +32,68 @@
 #define SCK_TXT(S,T) write(S, T, strlen(T))
 #endif
 
+#define strNcmp(B,C) strncasecmp(B,C,strlen(C))
+
+//#######################################################################
+//  USARGazebo Plugin Option Reader
+//#######################################################################
+
+#define MAX_StartPoses 10
+#define MAX_StartPoses_Length 1024
+
+#ifndef numof
+#define numof(X) (sizeof(X)/sizeof(typeof(X[0])))
+#endif
+
+char Plugin_Option_Name_StartPose[][30]
+              ={"StartPose_1", "StartPose_2", "StartPose_3"
+               ,"StartPose_4", "StartPose_5", "StartPose_6"
+               ,"StartPose_7", "StartPose_8", "StartPose_9"};
+
+struct Plugin_Option_Parameters
+{
+  int Num_Of_StartPoses;
+  char StartPoses[MAX_StartPoses][MAX_StartPoses_Length];
+  Plugin_Option_Parameters(void):Num_Of_StartPoses(0) { }
+  void Read_Option_Parameters(sdf::ElementPtr _sdf)
+  {
+    int i;
+    for(i = 0; i < numof(Plugin_Option_Name_StartPose); i++)
+    {
+      if(_sdf->HasElement(Plugin_Option_Name_StartPose[i]))
+      {
+        std::stringstream s;
+        s << _sdf->GetElement(Plugin_Option_Name_StartPose[i])
+                    ->Get<std::string>();
+        strncat(StartPoses[Num_Of_StartPoses], s.str().c_str()
+                 , MAX_StartPoses_Length);
+        Num_Of_StartPoses++;
+      }
+    }
+//    for(i = 0; i < Num_Of_StartPoses; i++)
+//      printf("%d %s\n", i, StartPoses[i]); 
+  }
+  int Search_StartPose(char* _name, float& x, float& y, float& z
+                                    ,float& roll, float& pitch, float& yaw)
+  {
+    int   i, read_fields;
+    char  name[100];
+    for(i = 0; i < Num_Of_StartPoses; i++)
+    {
+      printf("%d %s\n", i, StartPoses[i]); 
+      read_fields = sscanf(StartPoses[i], "%s %f,%f,%f %f,%f,%f"
+                            , name, &x, &y, &z, &roll, &pitch, &yaw);
+      if(7 != read_fields)
+        return 0; // Broken parameters.
+      if(0 == strNcmp(_name, name))
+        break; // Found
+    }
+    return 1; // Found and There were all parameters
+  }
+};
+
+Plugin_Option_Parameters POP;
+
 //#######################################################################
 //  Command Server
 //#######################################################################
@@ -220,6 +282,9 @@ struct UC_INIT
       , gazebo::math::Pose(_parent.spawn_location, _parent.spawn_direction));
       // Send the message
     factoryPub->Publish(msg);
+//  usleep(500); // Wait for finishing spawn job
+//  checking loop to get topics of the robot
+//  if any topics of the robot could be got, set _parent.robot_was_spawned 1.
     _parent.robot_was_spawned = 1;
   }
   //////////////////////////////////////////////////////////////////
@@ -330,50 +395,38 @@ struct UC_DRIVE
 
 //////////////////////////////////////////////////////////////////
 //  UC_GETSTARTPOSES
-//   Defined on USARSim Manual P.43
+//   Defined on USARSim Manual P.36-45
 struct UC_GETSTARTPOSES
 {
   //////////////////////////////////////////////////////////////////
   //  Variables
   USARcommand& _parent;
+  int          NumOfStartPoses;
   //////////////////////////////////////////////////////////////////
   //  The constructor
   UC_GETSTARTPOSES(USARcommand& parent) : _parent(parent)
   {
+    int                    i;
     int                    nwritten;
     boost::asio::streambuf response;
     std::iostream          st_response(&response);
-    st_response << "NFO {StartPoses 1}{PlayerStart "<<_parent.spawn_location[0]
-      << ", " << _parent.spawn_location[1] << ", " << _parent.spawn_location[2] 
-      << " 0,0,0}" << std::endl;
+//printf("%d", POP.Num_Of_StartPoses);
+    st_response << "NFO {StartPoses " << POP.Num_Of_StartPoses << "}";
+    for(i = 0; i < POP.Num_Of_StartPoses; i++)
+      st_response << "{" << POP.StartPoses[i] << "}";
+    st_response << std::endl;
 //std::cout << st_response;
     nwritten = boost::asio::write(_parent._socket, response);
-//    std::stringstream s;
-//    s << st_response.rdbuf();
     if(nwritten <= 0) {
       perror("NFO message could not be written, check errno");
     }
-    /*
-    else if (nwritten != strlen(s.str().c_str())) {
+/*  else if (nwritten != response.length()) {
       perror("not whole NFO message written");
-    }
-    */
-    // should also convert the Quaternion spawn_direction
-    // Could there be multiple StartPoses?
+    }*/
+    // Should also convert the Quaternion spawn_direction
     // Could StartPoses be defined in a Gazebo map?
-    // I know an answer of last 2 questions by adding a world plugin. M.Shimizu
-  /*
-   char response[128]; // should be enough
-   int  nwritten, bytes;
-   //  perror("we should send the string NFO {StartPoses #} {Name1 x,y,z a,b,c} over the socket");
-    sprintf(response, "NFO {StartPoses 1}{PlayerStart %g, %g, %g 0,0,0}"
-      , _parent.spawn_location[0], _parent.spawn_location[1]
-      , _parent.spawn_location[2]);
-  */
   }
 };
-
-#define strNcmp(B,C) strncasecmp(B,C,strlen(C))
 
 //////////////////////////////////////////////////////////////////
 //  USAR Command fetch    ## DO NOT MOVE THIS FUNCTION FROM HERE ##
@@ -497,7 +550,7 @@ struct USARimage
     s << st.rdbuf();
     std::cout << CString(s.str().c_str()) << std::endl;
     st << s.str() << std::endl; */
-// SAMPLE CODE : Sendback received data for debug
+// SAMPLE CODE : Sendback received data for debug 
 //    boost::asio::write(_socket, _buffer);
   }
 
@@ -602,18 +655,22 @@ namespace gazebo
   /////////////////////////////////////////////
   /// \brief Destructor
 
-  public: 
-   USARGazebo(void):counter1(0){}
+  public: USARGazebo(void):UCp(NULL),UIp(NULL),counter1(0) { }
   virtual ~USARGazebo()
   {
     connections.clear();
+    if(NULL != UCp)
+      delete UCp;
+    if(NULL != UIp)
+      delete UIp;
   }
 
   ///////////////////////////////////////////////
   // \brief Load the robocup rescue plugin
-  public: void Load(physics::WorldPtr _parent, sdf::ElementPtr /*_sdf*/)
+  public: void Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf)
   {
     world = _parent;
+    Init();
     // Create a new transport node
     node.reset(new transport::Node());
     // Initialize the node with the world name
@@ -626,6 +683,8 @@ namespace gazebo
 */
     connections.push_back(event::Events::ConnectWorldUpdateBegin(
                        boost::bind(&USARGazebo::Send_SENS, this)));
+    // Read option parameters of this plugin from world file.
+    POP.Read_Option_Parameters(_sdf);
   }
 
   /////////////////////////////////////////////
@@ -648,8 +707,10 @@ namespace gazebo
   // \brief Called once after Load
   private: void Init()
   {
-    UCp = new Server_Framework<USARcommand>(3000);
-    UIp = new Server_Framework<USARimage>(5003);
+    if(NULL == UCp)
+      UCp = new Server_Framework<USARcommand>(3000);
+    if(NULL == UIp)
+      UIp = new Server_Framework<USARimage>(5003);
   }
 
 private:
