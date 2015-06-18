@@ -76,7 +76,7 @@ A package adding USARSim interface to Gazebo
         
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.
 
-## Status at 2015.4.22
+## Status at 2015.6.17
 
 ### Current Function 
 * Waiting for socket connections at port 3000 and port 5003
@@ -97,15 +97,16 @@ A package adding USARSim interface to Gazebo
 * USARSim commands  
     - INIT (limited)  
     - DRIVE (limited)  
-    - GETSTARTPOSES (this returns constant strings now)  
+    - GETSTARTPOSES (It can return effective start point parameters. It can not read parameters from map but from world file as plugin options)  
 * Image Server  
     - OK (Raw Image Data only)  
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
-    |++++++++++++++++++++++++++++++++++++|
+    |+++++++++++++++++++++++++++++++++++++++|
 
 ### Change log
+    * 17/ 6/2015 : GETSTARTPOSES can return start point parameters. GETSTARTPOSES reads parameters from a world file which call the USARGazebo plugin as plugin options.
     * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image.   
                    Those have limitation on it's function.
     * 12/ 3/2015 : Adding a limited ImageServer in USARGazebo.cc
