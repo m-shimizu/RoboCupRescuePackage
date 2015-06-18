@@ -16,9 +16,9 @@
     </include>
 
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
-      <Start_Point_1>Start1     0,0,0 0,0,0</Start_Point_1>
-      <Start_Point_2>Highplace1 0,0,1 0,0,0</Start_Point_2>
-      <Start_Point_3>Outside1   1,1,0 0,0,0</Start_Point_3>
+      <StartPose_1>Start1     0,0,0 0,0,0</StartPose_1>
+      <StartPose_2>Highplace1 0,0,1 0,0,0</StartPose_2>
+      <StartPose_3>Outside1   1,1,0 0,0,0</StartPose_3>
     </plugin>
 <!--
     <plugin name="USARGazeboImageServer" filename="libUSARGazeboImageServer.so"/>

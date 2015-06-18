@@ -88,6 +88,7 @@ A package adding USARSim interface to Gazebo
     1. Make a tcp socket connection at port 5003  
     2. Send "OK"  
     3. Get one frame raw image data from camera  
+* You can set 9 start pose informations in USARGazebo.world as option parameters of USARGazebo plugin.
 
 ### Current Constructing Point  
 * Writing codes for sending back sensor data.  
@@ -100,6 +101,11 @@ A package adding USARSim interface to Gazebo
     - GETSTARTPOSES (It can return effective start point parameters. It can not read parameters from map but from world file as plugin options)  
 * Image Server  
     - OK (Raw Image Data only)  
+
+### USARSim commands which are underconstruction or scheduled
+    - SET
+    - GETCONF
+    - GETGEO
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %

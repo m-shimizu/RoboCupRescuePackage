@@ -39,7 +39,7 @@
 //#######################################################################
 
 #define MAX_StartPoses 10
-#define MAX_StartPoses_Length 1024
+#define MAX_StartPose_Length 1024
 
 #ifndef numof
 #define numof(X) (sizeof(X)/sizeof(typeof(X[0])))
@@ -53,7 +53,7 @@ char Plugin_Option_Name_StartPose[][30]
 struct Plugin_Option_Parameters
 {
   int Num_Of_StartPoses;
-  char StartPoses[MAX_StartPoses][MAX_StartPoses_Length];
+  char StartPoses[MAX_StartPoses][MAX_StartPose_Length];
   Plugin_Option_Parameters(void):Num_Of_StartPoses(0) { }
   void Read_Option_Parameters(sdf::ElementPtr _sdf)
   {
@@ -66,7 +66,7 @@ struct Plugin_Option_Parameters
         s << _sdf->GetElement(Plugin_Option_Name_StartPose[i])
                     ->Get<std::string>();
         strncat(StartPoses[Num_Of_StartPoses], s.str().c_str()
-                 , MAX_StartPoses_Length);
+                 , MAX_StartPose_Length);
         Num_Of_StartPoses++;
       }
     }
