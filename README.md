@@ -106,6 +106,7 @@ A package adding USARSim interface to Gazebo
     - SET
     - GETCONF
     - GETGEO
+    - MISPGK
 
 ### Completed rate (sponsered by RoboCup Foundation)
     0---10---20---30---40---50---60---70---80---90---100 %
