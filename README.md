@@ -112,6 +112,9 @@ A package adding USARSim interface to Gazebo
     0---10---20---30---40---50---60---70---80---90---100 %
     |+++++++++++++++++++++++++++++++++++++++|
 
+### Acknowledgement
+    Original maps produced by Stephen Balakirsky and the National Institute of Standards and Technology (NIST).  
+
 ### Change log
     * 17/ 6/2015 : GETSTARTPOSES can return start point parameters. GETSTARTPOSES reads parameters from a world file which call the USARGazebo plugin as plugin options.
     * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image.   
