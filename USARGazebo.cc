@@ -566,7 +566,7 @@ struct USARimage
     // For example...
     // After connecting, send camera topic name like following at first at once.
     // "~/pioneer3at_with_sensors/chassis/r_camera/image"
-    /* We can get the sent camera topic name by following codes.
+    /* We can get the sent camera topic name by following codes,but it's a future protocol.
     boost::system::error_code err;
     boost::asio::read_until(_socket, _buffer, "\r\n", err);
     std::iostream st(&_buffer);
