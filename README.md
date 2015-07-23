@@ -68,8 +68,9 @@ A package adding USARSim interface to Gazebo
         * At Terminal3  
         $ telnet localhost 5003  
         (and you can get a frame raw camara image data, after you send "OK")  
-        Ex.(This command returns a frame of image in USARSim style. You will see so many charactors on your screen, but it's a correct response from this command.)
-            OK
+        Ex.(This command returns a frame of image in USARSim style. You will see so many charactors on your screen, but it's a correct response from this command.)  
+            OK  
+        
         * At Terminal4 
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
