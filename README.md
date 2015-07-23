@@ -60,8 +60,8 @@ A package adding USARSim interface to Gazebo
         Ex.
         (1) Getting Usable Start Location
             GETSTARTPOSES
-        (2) Spawn a robot at the coordinate (-5 , 10 , 0.3)
-            INIT {ClassName pioneer3at_with_sensors}{Name Robot1}{Locate -5,10,0.3}
+        (2) Spawn a robot at the coordinate (5 , 10 , 0.3)
+            INIT {ClassName pioneer3at_with_sensors}{Name Robot1}{Location 5,10,0.3}
         (3) Move the robot
             DRIVE {RIGHT 1.0}{LEFT 1.0}
         
