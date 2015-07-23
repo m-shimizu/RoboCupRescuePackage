@@ -57,18 +57,19 @@ A package adding USARSim interface to Gazebo
         * At Terminal2
         $ telnet localhost 3000
         (and you can use some commands : GETSTARTPOSES, INIT, DRIVE)
-				Ex.
-				(1) Getting Usable Start Location
-				    GETSTARTPOSES
-				(2) Spawn a robot at the coordinate (-5 , 10 , 0.3)
-				    INIT {ClassName pioneer3at_with_sensors}{Name Robot1}{Locate -5,10,0.3}
-				(3) Move the robot
-				    DRIVE {RIGHT 1.0}{LEFT 1.0}
+        Ex.
+        (1) Getting Usable Start Location
+            GETSTARTPOSES
+        (2) Spawn a robot at the coordinate (-5 , 10 , 0.3)
+            INIT {ClassName pioneer3at_with_sensors}{Name Robot1}{Locate -5,10,0.3}
+        (3) Move the robot
+            DRIVE {RIGHT 1.0}{LEFT 1.0}
         
         * At Terminal3  
         $ telnet localhost 5003  
         (and you can get a frame raw camara image data, after you send "OK")  
-        
+        Ex.(This command returns a frame of image in USARSim style. You will see so many charactors on your screen, but it's a correct response from this command.)
+            OK
         * At Terminal4 
         $ cd ~/RoboCupRescuePackage
         $ source ./.bashrc.USARGazebo
