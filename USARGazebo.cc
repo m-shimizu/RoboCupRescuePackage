@@ -183,7 +183,7 @@ struct USARcommand
             ; i != topics_list._topics_list.end(); i++)
     {
       // UNDER CONSTRUCTION!! Sensor keywords and functions are all fake!!
-      if(NULL != strcasestr(*i, "laser"))
+      if(NULL != strcasestr(*i, "scan"))
       {
       // Process_laser_sensor(*i);
       }
