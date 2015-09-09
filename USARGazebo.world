@@ -15,9 +15,11 @@
       <uri>model://sun</uri>
     </include>
 
+		<!--
     <include>
       <uri>model://2012pre1_3</uri>
     </include>
+		-->
 
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
