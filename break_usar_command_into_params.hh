@@ -144,8 +144,9 @@ struct Break_USAR_Command_Into_Params
     char*    _Value_Start = NULL;
     int      _Name_len, _Value_len;
     UC_Param _tmp;
-    for(int i = 0; _cmdbuf[i] != 0; i++)
+    for(int i = 0; 0 != _cmdbuf[i]; i++)
     {
+//printf("%c[%02X,%d],", _cmdbuf[i], _cmdbuf[i], BI_state);
       switch(BI_state)
       {
         case BI_SEARCH_LEFT_BRACE :  
@@ -164,7 +165,7 @@ struct Break_USAR_Command_Into_Params
                {
                  _Name_len = (int)(&_cmdbuf[i] - _Name_Start);
                  strncpy(_tmp._Name, _Name_Start
-                                    , _MIN(_Name_len, sizeof(_tmp._Name)-1));
+                                   , _MIN(_Name_len, sizeof(_tmp._Name)-1));
                  _tmp._Name[_MIN(_Name_len, sizeof(_tmp._Name)-1)] = 0;
                  BI_state = BI_SEARCH_VALUE_TOP;
                }

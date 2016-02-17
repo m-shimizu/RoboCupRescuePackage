@@ -1,2 +1,17 @@
-INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}
-DRIVE {RIGHT 1.0}{LEFT 1.0}
+# USARSim command samples in GameBot Protocol
+
+GETSTARTPOSES
+INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}
+DRIVE {RIGHT 1.0} {LEFT 1.0}
+
+
+=== SANDBOX ===
+GETSTARTPOSES
+INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}
+GETSTARTPOSES
+GETSTARTPOSES
+GETSTARTPOSES
+GETSTARTPOSES
+DRIVE {RIGHT 1.0} {LEFT 1.0}
+DRIVE {RIGHT 0.0} {LEFT 0.0}
+

@@ -70,6 +70,7 @@
           </clip>
         </camera>
       </sensor>
+<!-- IMU Sensor -->
       <sensor name="imu_sensor" type="imu">
         <pose>0 0 0 0 0 0</pose>
         <always_on>1</always_on>
@@ -162,9 +163,9 @@
           </range>
         </ray>
       </sensor>
-<!-- Gps sensor copied from gazebo-5.0.1/test/worlds/gps_test.world -->
+<!-- GPS sensor copied from gazebo-5.0.1/test/worlds/gps_test.world -->
       <sensor name="gps" type="gps">
-        <pose>0 0 0  0 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <update_rate>10.0</update_rate>
         <always_on>true</always_on>
         <gps>
@@ -383,7 +384,7 @@
       <right_rear>right_rear</right_rear>
       <left_front>left_front</left_front>
       <left_rear>left_rear</left_rear>
-      <MaxForce>5.0</MaxForce>
+      <max_force>10.0</max_force>
     </plugin>
 
     <!--    

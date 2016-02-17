@@ -33,6 +33,7 @@ template <typename Child_Session> class Server_Framework
   // Server_Framework.Variables
 private:
 public:
+  gazebo::physics::WorldPtr       _world;
   boost::asio::io_service         _ioservice;
   boost::asio::ip::tcp::acceptor  _acceptor;
   std::set<Child_Session*>        _Child_Session_list;
@@ -68,11 +69,13 @@ public:
 
   //////////////////////////////////////////////////////////////////
   // Server_Framework.Constractor
-  Server_Framework(unsigned short port) try
+  Server_Framework(unsigned short port
+	                 , gazebo::physics::WorldPtr world) try
     :_acceptor(_ioservice
         , boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port))
     , _new_Child_Sessionp(NULL)
   {
+		_world = world;
     _thread = boost::thread(
         boost::bind(&Server_Framework::Make_A_Child_Session_and_Accept_Loop
                           , this));
@@ -135,15 +138,24 @@ struct Sample_Child_Session
 //std::cout << "Child_Session_Loop a [" << this << "]" << std::endl;
     boost::asio::read_until(_socket, _buffer , "\r\n", err);
 //std::cout << "Child_Session_Loop b [" << this << "]" << std::endl;
-/* SAMPLE CODE : Display received data for debug
-    std::iostream st(&_buffer);
-    std::stringstream s;
-    s << st.rdbuf();
-    std::cout << CString(s.str().c_str()) << std::endl;
-    st << s.str() << std::endl;
-*/
 // SAMPLE CODE : Sendback received data for debug
-    boost::asio::write(_socket, _buffer);
+    std::istream is(&_buffer);
+    std::string  line;
+		for(;1;)
+		{
+      std::getline(is, line);
+			if(0 < line.length())
+			{
+
+// THIS IS WRONG =>         boost::asio::write(_socket, line);
+// SAMPLE CODE : Display received data for debug
+//       std::cout << line.c_str() << std::endl; 
+			}
+			else
+			  break;
+		}
+//    boost::asio::write(_socket, _buffer);
+
 //
 //std::cout << "Child_Session_Loop c [" << this << "]" << std::endl;
 //std::cout << "Child_Session_Loop d [" << this << "]" << std::endl;

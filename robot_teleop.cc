@@ -92,19 +92,82 @@ void  disp_usage_control_and_status(float speed, float turn)
   static int  loop_counter = 0;
   if(0 == (loop_counter++ % 10))
   {
-    printf("              [w]:speed up to front\n");
+    printf("\n              [w]:speed up to front\n");
     printf("[a]:left turn [s]:stop        [d]:right turn\n");
     printf("              [x]:speed up to back\n");
+		printf("\nAnd with a game controller, you can use the right analog stick to move the robot\n");
+		printf("Current programmed game controllers are:\n  BUFFALO BSGP1601\n");
   }
-  printf("  Speed : %f , Turn : %f\n", speed, turn);
+  printf("  Speed : %8.3f , Turn : %8.3f\r", speed, turn);
 }
 
 #define _MAX(X,Y)  ((X > Y)?X:Y)
 #define _MIN(X,Y)  ((X < Y)?X:Y)
 
-void  check_key_command(gazebo::transport::PublisherPtr pub, int RobotType)
+#include <linux/joystick.h>
+#define BUTTON_DATA_MAX 20
+#define STICK_DATA_MAX 4
+
+#define Kjx	( 2.0/30000.0)
+#define Kjy (-2.0/30000.0)
+
+void  check_joystick(gazebo::transport::PublisherPtr pub, int RobotType
+                     , float& speed, float& turn)
 {
-  static float  speed = 0, turn = 0;
+  // See http://wlog.flatlib.jp/item/1682
+  // and https://www.kernel.org/doc/Documentation/input/joystick-api.txt
+//  unsigned char ButtonData[BUTTON_DATA_MAX];
+//  signed int    StickData[STICK_DATA_MAX];
+  struct js_event jse;
+  int fd = open("/dev/input/js0", O_RDONLY | O_NONBLOCK);
+  if(0 > fd)
+  {
+//    fprintf(stderr, "Joystick open error\n");
+    return;
+  }
+  while(read(fd, &jse, sizeof(jse)) > 0)
+  {
+//  printf("%02X : %5d, %5d\n", jse.type, jse.number, jse.value);
+    switch(jse.type & 0x7f)
+    {
+      case JS_EVENT_BUTTON:
+        if(jse.number < BUTTON_DATA_MAX)
+        {
+//          printf("BUTTON[%d]:%-5d\n", jse.number, jse.value);
+  //        ButtonData[jse.number] = jse.value;
+        }
+        break;
+      case JS_EVENT_AXIS:
+        if(jse.number < STICK_DATA_MAX)
+        {
+          switch(jse.number)
+          {
+            case 3: speed = jse.value * Kjy; break;
+            case 2: turn  = jse.value * Kjx; break;
+          }
+  /* [BUFFALO BSGP1601]
+     Left Analog Stick       Right Analog Stick         Hat Swtiches
+           [1]                     [3]                      [5]
+          -32767                 -32767                    -32767
+ [0]-32767  +  +32767    [2]-32767  +  +32767    [4]-32767   +   +32767
+          +32767                 +32767                    +32767
+  */
+//          printf("STICK[%d]:%-5d\n", jse.number, jse.value);
+  //      StickData[jse.number] = jse.value;
+        }
+        break;
+    }
+  }
+  close(fd);
+  if(speed < 0)
+    turn *= -1.0; // For natural backward behavior 
+  publish_vel_cmd(pub, speed, turn, RobotType);
+  disp_usage_control_and_status(speed, turn);
+}
+
+void  check_key_command(gazebo::transport::PublisherPtr pub, int RobotType
+                        , float& speed, float& turn)
+{
   if(doslike_kbhit())
   {
     int cmd = doslike_getch();
@@ -145,6 +208,7 @@ void  disp_usage_option(char* arg)
 int main(int argc, char* argv[])
 {
   char  worldname[50];
+	float speed = 0, turn = 0;
   if(3 != argc && 4 != argc)
   {
     disp_usage_option(argv[0]);
@@ -152,6 +216,7 @@ int main(int argc, char* argv[])
   }
   else
   {
+    
     if(3 == argc)
       strcpy(worldname, "default");
     else if(4 == argc)
@@ -172,7 +237,8 @@ printf("%s\n", TopicName);
   for(;1;)
   {
     gazebo::common::Time::MSleep(100);
-    check_key_command(pub, RobotType);
+    check_key_command(pub, RobotType, speed, turn);
+    check_joystick(pub, RobotType, speed, turn);
   }
   return 0;
 }

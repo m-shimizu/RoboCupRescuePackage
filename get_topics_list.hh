@@ -33,7 +33,7 @@ struct TopicsList
   // TopicsList.Constructor
   TopicsList(void) : _data(), _packet(), _request()
                       , _topics(), _already_called_get_topics(0)
-		      , _topics_list()
+                      , _topics_list()
   {
     _topics_list.clear();
   }
@@ -83,7 +83,7 @@ struct TopicsList
     _connection = gazebo::transport::connectToMaster();
     _request.set_id(0);
     _request.set_request("get_topics");
-    _connection->EnqueueMsg(gazebo::msgs::Package("request", _request), true);
+    _connection->EnqueueMsg(gazebo::msgs::Package("request",_request),true);
     _connection->Read(_data);
     _packet.ParseFromString(_data);
     _topics.ParseFromString(_packet.serialized_data());
@@ -114,8 +114,8 @@ Disp_topics_list();*/
   //                       from _topics_list
   int Filter(char* _keyword = NULL)
   {
-    if(1 != _already_called_get_topics)
-      Get_Topics_List();
+//    if(1 != _already_called_get_topics)
+//      Get_Topics_List();
     if(0 == Size())
       return 0;
     if(NULL == _keyword || (NULL != _keyword && 0 == _keyword[0]))
@@ -125,10 +125,10 @@ Disp_topics_list();*/
     {
       if(NULL == strcasestr(*i, _keyword))
       {
-	delete *i;
+        delete *i;
         _topics_list.erase(*i);
-	i = _topics_list.begin();
-	continue;
+        i = _topics_list.begin();
+        continue;
       }
       i++;
     }
@@ -138,12 +138,13 @@ Disp_topics_list();*/
 
   //////////////////////////////////////////////////////////////////
   // TopicsList.Search_n : Search about 3 keywords in _topics_list,
-  //  and return _num'th string's pointer(The first hitted string's _num is 0).
+  //  and return _num'th string's pointer
+	//  (The first hitted string's _num is 0).
   char* Search_n(int _num, char* _keyword1 = NULL, char* _keyword2 = NULL
                   , char* _keyword3 = NULL)
   {
-    if(1 != _already_called_get_topics)
-      Get_Topics_List();
+//    if(1 != _already_called_get_topics)
+//      Get_Topics_List();
     if(0 == Size())
       return NULL;
     for(typename std::set<char*>::iterator i = _topics_list.begin()
@@ -154,7 +155,7 @@ Disp_topics_list();*/
         if(NULL == _keyword2 || (NULL != _keyword2 && 0 == _keyword2[0]) || 
            (NULL != _keyword2 && 0 != _keyword2[0]
             && NULL != strcasestr(*i, _keyword2)))
-          if(NULL == _keyword1 || (NULL != _keyword1 && 0 == _keyword1[0]) || 
+          if(NULL == _keyword1 || (NULL != _keyword1 && 0 == _keyword1[0])||
              (NULL != _keyword1 && 0 != _keyword1[0]
               && NULL != strcasestr(*i, _keyword1)))
             if(0 == _num--)
