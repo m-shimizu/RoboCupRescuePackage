@@ -145,15 +145,15 @@
         </geometry>
       </visual>
       <sensor name="laser_tilt" type="ray">
-        <update_rate>40.000000</update_rate>
+        <update_rate>10.000000</update_rate>
         <pose>0.000000 0.000000 0.030000 0.000000 -0.000000 0.000000</pose>
         <ray>
           <scan>
             <horizontal>
-              <samples>640</samples>
+              <samples>180</samples>
               <resolution>1.000000</resolution>
-              <min_angle>-1.396263</min_angle>
-              <max_angle>1.396263</max_angle>
+              <min_angle>-1.570796</min_angle>
+              <max_angle>1.570796</max_angle>
             </horizontal>
           </scan>
           <range>

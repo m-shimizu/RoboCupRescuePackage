@@ -5,6 +5,22 @@ INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotati
 DRIVE {RIGHT 1.0} {LEFT 1.0}
 
 
+=== usarsim_inf output sample ===
+GETSTARTPOSES
+INIT {Classname pioneer3at_with_sensors} {Name pioneer3at_with_sensors} {Location 1,-2,1}
+GETCONF {Type RFID}
+GETGEO {Type RFID}
+GETCONF {Type Robot} {Name pioneer3at_with_sensors}
+GETGEO {Type Robot} {Name pioneer3at_with_sensors}
+GETCONF {Type RangeScanner} {Name laser_tilt}
+GETGEO {Type RangeScanner} {Name laser_tilt}
+GETCONF {Type INS} {Name imu_sensor}
+GETGEO {Type INS} {Name imu_sensor}
+GETCONF {Type GPS} {Name gps}
+GETGEO {Type GPS} {Name gps}
+
+
+
 === SANDBOX ===
 GETSTARTPOSES
 INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}

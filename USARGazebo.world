@@ -22,16 +22,36 @@
 		</include>
 
 <!--
+	 HOW TO GET model:robocup2012_rvrl_pre1  
+     You can get it by using following commands  
+	   $ cd ~/.gazebo/models  
+     $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1/  
+		 $ cd robocup2012_rvrl_pre1/meshes  
+		 $ unzip RC2012Pre1.dae.zip  
+-->
+<!--
     <include>
 			<static>1</static>
-      <uri>model://2012pre1_3</uri>
+      <uri>model://robocup2012_rvrl_pre1</uri>
     </include>
--->
-
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
       <StartPose_2>OfficeRoom -12,12,0.3 0,0,0</StartPose_2>
       <StartPose_3>JumpPoint    0, 0,  0 0,0,0</StartPose_3>
+    </plugin>
+-->
+
+<!--
+    <include>
+			<static>1</static>
+      <uri>model://portmessa</uri>
+    </include>
+-->
+
+    <plugin name="USARGazebo" filename="libUSARGazebo.so">
+      <StartPose_1>TEST1   5,10,0.3 0,0,0</StartPose_1>
+      <StartPose_2>TEST2 -12,12,0.3 0,0,0</StartPose_2>
+      <StartPose_3>TEST3   0, 0,  0 0,0,0</StartPose_3>
     </plugin>
 
   </world>

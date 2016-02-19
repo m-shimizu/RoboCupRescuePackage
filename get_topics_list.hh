@@ -140,8 +140,9 @@ Disp_topics_list();*/
   // TopicsList.Search_n : Search about 3 keywords in _topics_list,
   //  and return _num'th string's pointer
 	//  (The first hitted string's _num is 0).
-  char* Search_n(int _num, char* _keyword1 = NULL, char* _keyword2 = NULL
-                  , char* _keyword3 = NULL)
+  char* Search_n(int _num, const char* _keyword1 = NULL, 
+	                         const char* _keyword2 = NULL,
+                           const char* _keyword3 = NULL)
   {
 //    if(1 != _already_called_get_topics)
 //      Get_Topics_List();
@@ -166,8 +167,8 @@ Disp_topics_list();*/
   //////////////////////////////////////////////////////////////////
   // TopicsList.Search : Search about 3 keywords in _topics_list,
   //  and return the fist hitted string's pointer.
-  char* Search(char* _keyword1 = NULL, char* _keyword2 = NULL
-                  , char* _keyword3 = NULL)
+  char* Search(const char* _keyword1 = NULL, const char* _keyword2 = NULL
+                  , const char* _keyword3 = NULL)
   {
     Search_n(0, _keyword1, _keyword2, _keyword3);
   }

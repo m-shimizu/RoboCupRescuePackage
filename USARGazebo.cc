@@ -51,23 +51,59 @@ char Plugin_Option_Name_StartPose[][30]
                ,"StartPose_7", "StartPose_8", "StartPose_9"};
 
 //////////////////////////////////////////////////////////////////
-// Return own name in topic name
-const char* right_of_last_slash_in_topic_name(const char* topic_name)
+// Return device type in topic name
+const char* get_string_between_slash_from_topic_name(char* dist, 
+       int dist_size, int slash_num_from_right, const char* topic_name)
 {
-	const char* i;
-	i = topic_name;
-	i+= strlen(topic_name);
-	for(i--; topic_name <= i; i--)
-	{
-		if('/' == *i)
-		{
-			i++;
-			break;
-		}
-	}
-	if(topic_name + strlen(topic_name) == i)
-		return (const char*)NULL;
-	return i;
+  const char* i;
+  const char* start;
+  const char* end;
+	int         copy_size;
+	if(1 > slash_num_from_right)
+	  return (const char*)NULL;
+  i = topic_name;
+  i+= strlen(topic_name);
+  end = i;
+  start = (const char*)NULL;
+  for(i--; topic_name <= i; i--)
+  {
+    if('/' == *i)
+    {
+			start = (i + 1);
+			slash_num_from_right--;
+			if(0 < slash_num_from_right)
+			{
+			  end = i;
+				start = (const char*)NULL;
+				continue;
+			}
+      break;
+    }
+  }
+  if((const char*)NULL == start)
+    return (const char*)NULL;
+  dist_size--; // for 0x0(end of string)
+	copy_size = (int)(end - start);
+  strncpy(dist, start, (copy_size > dist_size)?dist_size:copy_size);
+	dist[copy_size] = 0;
+  return (const char*)dist;
+}
+
+//////////////////////////////////////////////////////////////////
+// Return device type in topic name
+const char* get_type_from_topic_name(char* dist, int dist_size, 
+                                              const char* topic_name)
+{
+  return get_string_between_slash_from_topic_name(dist, dist_size, 1
+	                                                        , topic_name);
+}
+//////////////////////////////////////////////////////////////////
+// Return device name in topic name
+const char* get_name_from_topic_name(char* dist, int dist_size, 
+                                              const char* topic_name)
+{
+  return get_string_between_slash_from_topic_name(dist, dist_size, 2
+	                                                        , topic_name);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -83,10 +119,10 @@ struct Plugin_Option_Parameters
 
   //////////////////////////////////////////////////////////////////
   // Read Option Parameters from SDF file
-	void Read_Option_Parameters(sdf::ElementPtr _sdf)
-	{
+  void Read_Option_Parameters(sdf::ElementPtr _sdf)
+  {
     Read_Start_Pose_Parameters(_sdf);
-	}
+  }
 
   //////////////////////////////////////////////////////////////////
   // Read Start Pose Parameters into StartPose array
@@ -145,12 +181,30 @@ struct RD
 };
 
 //////////////////////////////////////////////////////////////////
+// ROBOT_TYPE
+enum ROBOT_TYPE
+{
+  RT_GROUNDVECHILE = 1,
+  RT_LEGGEDROBOT   = 2,
+  RT_NAUTICVEHICLE = 3,
+	RT_AERIALVEHICLE = 4
+};
+
+//////////////////////////////////////////////////////////////////
+// ROBOT_TYPE_NAME
+#define RT_D_GROUNDVEHICLE "GroundVehicle"
+#define RT_D_LEGGEDROBOT   "LeggedRobot"
+#define RT_D_NAUTICVEHICLE "NauticVehicle"
+#define RT_D_AERIALVEHICLE "AerialVehicle"
+#define RT_D_UNKNOWN       "Unknown"
+
+//////////////////////////////////////////////////////////////////
 // DRIVE_TYPE for UC_DRIVE
 enum DRIVE_TYPE
 {
-  RT_DiffarentialDrive = 1,
-  RT_SkidsteerDrive    = 2,
-  RT_QuadRotor         = 3
+  DT_DiffarentialDrive = 1,
+  DT_SkidsteerDrive    = 2,
+  DT_QuadRotor         = 3
 };
 
 //////////////////////////////////////////////////////////////////
@@ -159,12 +213,26 @@ struct ROBOT_DATABASE
 {
   const char* Name;
   const char* Type;
+  const char* SteeringType;
+	const float Mass;
+	const float MaxSpeed;
+	const float MaxTorque;
+	const float MaxFrontSteer;
+	const float MaxRearSteer;
   int         Battery;
   int         DriveType;
 } Robot_DB[]
- = {{"pioneer3at_with_sensors", "GroundVehicle", 3600, RT_SkidsteerDrive}
-   ,{"quadrotor", "AerialVehicle", 3600, RT_QuadRotor}
-   ,{"noname", "Unknown", 10, 0} };
+ = {{"pioneer3at_with_sensors", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
+   ,{"quadrotor", RT_D_AERIALVEHICLE, "RotaryWing",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_QuadRotor}
+
+   ,{"noname", RT_D_UNKNOWN, "Unknown",
+   //Mass Speed Torque Front Rear Battery  DT
+        0,    0,     0,    0,   0,      0, 0} };
 
 int get_number_of_Robot_DB(char* robot_name)
 {
@@ -176,6 +244,18 @@ int get_number_of_Robot_DB(char* robot_name)
 }
 
 #define get_type_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)].Type
+#define get_steeringtype_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .SteeringType
+#define get_mass_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .Mass
+#define get_maxspeed_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .MaxSpeed
+#define get_maxtorque_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .MaxTorque
+#define get_maxfrontsteer_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .MaxFrontSteer
+#define get_maxrearsteer_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)]\
+           .MaxRearSteer
 #define get_battery_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)].Battery
 #define get_drive_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)].DriveType
 
@@ -207,6 +287,8 @@ struct USARcommand
   int                           full_battery, remain_battery;
   gazebo::transport::SubscriberPtr* _sub;
   std::vector<event::ConnectionPtr> connections;
+  int                           STA_Last_sec, STA_Count_Per_1sec, 
+	                              STA_Cut_Counter;
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -220,13 +302,14 @@ struct USARcommand
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), ucbuf(NULL), robot_was_spawned(0)
       , current_topics_list(), registered_topics_list()
+			, STA_Last_sec(0), STA_Count_Per_1sec(0), STA_Cut_Counter(0)
 //    , Msg(), Spawn() 
   { Init(); }
 
   //////////////////////////////////////////////////////////////////
   // USARcommand.Desstructor
   ~USARcommand() 
-	{
+  {
     connections.clear();
   }
 
@@ -237,22 +320,28 @@ struct USARcommand
     float      Current_time = _parent._world->GetRealTime().Double();
     int        Current_sec = (int)Current_time;
     char       Current_time_in_form[50];
-    static int Last_sec, Count_Per_1sec;
     boost::asio::streambuf response;
     std::ostream           os_res(&response);
     sprintf(Current_time_in_form, "%.2f", Current_time);
-    if(Last_sec != Current_sec)
+    if(STA_Last_sec != Current_sec)
     {
-      Count_Per_1sec = 0;
+      STA_Count_Per_1sec = 0;
       remain_battery--;
     }
-    os_res << "STA {Type " << get_type_of_robot(model_name) << "}"
-           << "{Time " << Current_time_in_form << "}"
-           << "{Battery " << remain_battery << "}"
-           << "{CountPer1sec " << Count_Per_1sec << "}"
-           << "\r\n";
-    Count_Per_1sec++;
-    Last_sec = Current_sec;
+		if(STA_Cut_Counter < 0)
+		{
+		  STA_Cut_Counter = 100; // Display STA 1 times per 100 loop times
+      os_res << "STA " << 
+			  "{Type " << get_type_of_robot(model_name) << "}" << 
+        "{Time " << Current_time_in_form << "}" << 
+        "{Battery " << remain_battery << "}" << 
+        "{CountPer1sec " << STA_Count_Per_1sec << "}" << 
+        "\r\n";
+		}
+		else
+		  STA_Cut_Counter--;
+    STA_Count_Per_1sec++;
+    STA_Last_sec = Current_sec;
     boost::asio::write(_socket, response);
   }
 
@@ -261,7 +350,7 @@ struct USARcommand
   void Process_laser_scanner_callback(ConstLaserScanStampedPtr& _msg);
   void Process_gps_callback(ConstGPSPtr& _msg);
   void Process_imu_callback(ConstIMUPtr& _msg);
-	
+  
   //////////////////////////////////////////////////////////////////
   // USARcommand.Send_SENS   ## NEED YOUR HELP TO INCREASE SENSORS ##
   void Send_STA_and_Search_Sensors_and_Register_Callbacks(void)
@@ -295,12 +384,12 @@ struct USARcommand
           {
 std::cout << "Laser cb registered" << std::endl;
             registered_topics_list.Add_a_topics(*i);
-	          _sub = new gazebo::transport::SubscriberPtr;
-		// The function Subscribe needs a valiable which be assigned 
-		//  a return value from the function Subscribe. Without the assigning,
-		//   a call-back function  which was registered 
-		//    by the function Subscribe will NOT be call-backed.
-		// DO NOT REMOVE *_sub
+            _sub = new gazebo::transport::SubscriberPtr;
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE *_sub
             *_sub = _node->Subscribe((const char*)*i
                , &USARcommand::Process_laser_scanner_callback, this);
           }
@@ -312,12 +401,12 @@ std::cout << "Laser cb registered" << std::endl;
           {
 std::cout << "GPS cb registered" << std::endl;
             registered_topics_list.Add_a_topics(*i);
-	          _sub = new gazebo::transport::SubscriberPtr;
-		// The function Subscribe needs a valiable which be assigned 
-		//  a return value from the function Subscribe. Without the assigning,
-		//   a call-back function  which was registered 
-		//    by the function Subscribe will NOT be call-backed.
-		// DO NOT REMOVE *_sub
+            _sub = new gazebo::transport::SubscriberPtr;
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE *_sub
             *_sub = _node->Subscribe((const char*)*i
                , &USARcommand::Process_gps_callback, this);
           }
@@ -329,12 +418,12 @@ std::cout << "GPS cb registered" << std::endl;
           {
 std::cout << "IMU cb registered" << std::endl;
             registered_topics_list.Add_a_topics(*i);
-	          _sub = new gazebo::transport::SubscriberPtr;
-		// The function Subscribe needs a valiable which be assigned 
-		//  a return value from the function Subscribe. Without the assigning,
-		//   a call-back function  which was registered 
-		//    by the function Subscribe will NOT be call-backed.
-		// DO NOT REMOVE *_sub
+            _sub = new gazebo::transport::SubscriberPtr;
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE *_sub
             *_sub = _node->Subscribe((const char*)*i
                , &USARcommand::Process_imu_callback, this);
           }
@@ -354,15 +443,20 @@ std::cout << "IMU cb registered" << std::endl;
   {
     _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
     _node->Init(/*_parent._world->GetName()*/);
-		// Binding a sensor functions with cyclic timer
+    // Binding a sensor functions with cyclic timer
     connections.push_back(event::Events::ConnectWorldUpdateBegin(
       boost::bind(&USARcommand
-			    ::Send_STA_and_Search_Sensors_and_Register_Callbacks, this)));
+          ::Send_STA_and_Search_Sensors_and_Register_Callbacks, this)));
 //std::cout << "Accept_Process address [" << this << "]" << std::endl;
     while(1)
       UC_check_command_from_USARclient();
   }
 };
+
+#define GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
+                                         registered_topics_list.Search(X))
+#define GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
+                                         registered_topics_list.Search(X))
 
 //////////////////////////////////////////////////////////////////////
 // Process_laser_scanner_callback
@@ -397,31 +491,30 @@ void USARcommand::Process_laser_scanner_callback(
 {
   boost::asio::streambuf sen;
   std::ostream os(&sen);
-	float angle_width = _msg->scan().angle_max() - _msg->scan().angle_min();
+	char  tmpbuf[100];
+  float angle_width = _msg->scan().angle_max() - _msg->scan().angle_min();
   float steps       = angle_width / _msg->scan().angle_step();
-	float resolution  = steps / angle_width;
-	os << "SEN {Type RangeScanner}" <<
-            "{Name ????}" << 
-//	          "{Name " << right_of_last_slash_in_topic_name(topic_name)
-//						???}" << 
-	          "{Resolution " << resolution << "}" << 
-						"{FOV " << angle_width << "}" << 
-						"{Range ";
-	/*
+  float resolution  = angle_width / steps;
+  os << "SEN {Type RangeScanner}" <<
+            "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}" <<
+            "{Resolution " << resolution << "}" << 
+            "{FOV " << angle_width << "}" << 
+            "{Range ";
+  /*
   for(typename std::set<double>::iterator i=_msg->scan().ranges().begin()
         ; i != _msg->scan().ranges().end(); i++)
   */
-	for(int i = 0; _msg->scan().ranges_size() > i; i++)
-	{
+  for(int i = 0; _msg->scan().ranges_size() > i; i++)
+  {
     os << _msg->scan().ranges(i);
-		if(_msg->scan().ranges_size() > i + 1)
-			os << ",";
-	}
-	os << "}";
-	os << "\r\n"; 
+    if(_msg->scan().ranges_size() > i + 1)
+      os << ",";
+  }
+  os << "}";
+  os << "\r\n"; 
   boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
-	/*
+  /*
   _msg->time().sec();
   _msg->time().nsec();
   _msg->scan().angle_min();
@@ -433,7 +526,7 @@ void USARcommand::Process_laser_scanner_callback(
   _msg->scan().ranges(i)
   _msg->scan().intensities_size();
   _msg->scan().intensities(i)
-	*/
+  */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -456,23 +549,24 @@ void USARcommand::Process_laser_scanner_callback(
 //    }
 void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 {
-	int   iLon, iLat;
-	float fLon, fLat;
+  int   iLon, iLat;
+  float fLon, fLat;
+	char  tmpbuf[100];
   boost::asio::streambuf sen;
   std::ostream os(&sen);
-	iLat = (int)_msg->latitude_deg();
-	iLon = (int)_msg->longitude_deg();
-	fLat = (_msg->latitude_deg() - iLat) * 60.0;
-	fLon = (_msg->longitude_deg() - iLon) * 60.0;
-	os << "SEN {Type GPS}" <<
-            "{Name ????}" << 
+  iLat = (int)_msg->latitude_deg();
+  iLon = (int)_msg->longitude_deg();
+  fLat = (_msg->latitude_deg() - iLat) * 60.0;
+  fLon = (_msg->longitude_deg() - iLon) * 60.0;
+  os << "SEN {Type GPS}" <<
+            "{Name " << GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}" <<
             "{Latitude " << iLat << "," << fLat << ",N}" << 
             "{Lonitude " << iLon << "," << fLon << ",E}" << 
-						"{Satellites 8}{Fix 1}";
-	os << "\r\n"; 
+            "{Satellites 8}{Fix 1}";
+  os << "\r\n"; 
   boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
-	/*
+  /*
   _msg->time().sec();
   _msg->time().nsec();
   _msg->latitude_deg();
@@ -481,7 +575,7 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
   _msg->velocity_east();
   _msg->velocity_north();
   _msg->velocity_up();
-	*/
+  */
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -501,6 +595,7 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 //    }
 void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
 {
+	char   tmpbuf[100];
   double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
   const gazebo::msgs::Quaternion &orientation = _msg->orientation();
   _msg->stamp().sec();
@@ -522,11 +617,11 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   roll  = asin(-2.0 * (x*z - y*w)) * (180.0f/M_PI);
   boost::asio::streambuf sen;
   std::ostream os(&sen);
-	os << "SEN {Type INS}" <<
-            "{Name ????}" << 
-            "{Location "<<x<<","<<y<<","<<z<<"}"<< 
-            "{Orientation "<<roll<<","<<pitch<<","<<yaw<<"}";
-	os << "\r\n"; 
+  os << "SEN {Type INS}" <<
+            "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
+            "{Location " << x << "," << y << "," << z << "}" << 
+            "{Orientation " << roll << "," << pitch << "," << yaw << "}";
+  os << "\r\n"; 
   boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
 }
@@ -664,6 +759,7 @@ struct UC_INIT
 
 //////////////////////////////////////////////////////////////////
 // UC_DRIVE
+//                          (GOOD TEMPLATE TO ADD ANOTHER COMMAND)
 struct UC_DRIVE
 {
   //////////////////////////////////////////////////////////////////
@@ -686,7 +782,7 @@ struct UC_DRIVE
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
-    char*                        rtn;
+    char*                          rtn;
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
 //  BUCIP.Disp();
     if(BIE_GOOD != BUCIP.Error_code())
@@ -724,11 +820,11 @@ struct UC_DRIVE
     // Adjust parameters by robot drive type
     switch(_DriveType)
     {
-      case RT_DiffarentialDrive:
+      case DT_DiffarentialDrive:
         // Pioneer 2DX(Skidsteer); Turn > 0 then robot turn clock wise
         //_turn = _turn;
         break;
-      case RT_SkidsteerDrive   : 
+      case DT_SkidsteerDrive   : 
         // Pioneer 3AT(Diffarential); Turn < 0 then robot turn clock wise
         _turn = -_turn;
         break;
@@ -766,7 +862,7 @@ struct UC_GETSTARTPOSES
     st_response << "NFO {StartPoses " << POP.Num_Of_StartPoses << "}";
     for(i = 0; i < POP.Num_Of_StartPoses; i++)
       st_response << "{" << POP.StartPoses[i] << "}";
-    st_response << std::endl;
+    st_response << "\r\n";
 //  std::cout << st_response;
     nwritten = boost::asio::write(_parent._socket, response);
     if(0 >= nwritten)
@@ -778,9 +874,198 @@ struct UC_GETSTARTPOSES
     }*/
     // Should also convert the Quaternion spawn_direction.
     // Could StartPoses be defined in a Gazebo map?
-		//  No, but they can be written as options of USARGazebo plugin in sdf.
+    //  No, but they can be written as options of USARGazebo plugin in sdf.
   }
 };
+
+#define UC_GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
+                                 _parent.registered_topics_list.Search(X))
+#define UC_GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
+                                 _parent.registered_topics_list.Search(X))
+
+//////////////////////////////////////////////////////////////////
+// UC_GETGEO
+//  GETGEO is defined in the USARSim manual P.77
+//  GEO is define in the USARSim manual P.58 - P.61
+struct UC_GETGEO
+{
+  //////////////////////////////////////////////////////////////////
+  //  Variables
+  USARcommand& _parent;
+
+  //////////////////////////////////////////////////////////////////
+  //  The constructor
+  UC_GETGEO(USARcommand& parent) : _parent(parent)
+  {
+    if(1 != _parent.robot_was_spawned)
+      return;
+    read_params_from_usar_command();
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  read_params_from_usar_command
+  int read_params_from_usar_command(void)
+  {
+    char*                          rtn;
+		char                           tmpbuf[100];
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    boost::asio::streambuf         response;
+    std::iostream                  st_response(&response);
+    int                            nwritten;
+//  BUCIP.Disp();
+    if(BIE_GOOD != BUCIP.Error_code())
+      return UCE_INCLUDING_BROKEN_BRACE;
+    rtn = BUCIP.Search("Type");
+    if(NULL != rtn)
+    {
+      st_response << "GEO ";
+      if(NULL != strcasestr(rtn, "RFID"))
+      {
+        st_response << 
+          "{Type RFID}";
+			/*
+          "{Type " << "RFID" << "}" << 
+          "{Name " << "RFID1" << 
+          " Location " << "0.0820,0.0002,0.0613" << 
+          " Orientation " << "0.0000,-0.0000,0.0000" <<
+          " Mount " << "CameraTilt" < "}";
+			*/
+      }
+      else if(NULL != strcasestr(rtn, "RangeScanner"))
+			{
+        st_response << 
+          "{Type " << "RangeScanner" << "}" << 
+          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "scan") << 
+					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
+					_parent.own_name << "}";
+					 
+			}
+      else if(NULL != strcasestr(rtn, "GPS"))
+			{
+        st_response << 
+          "{Type " << "GPS" << "}" << 
+          "{Name " << UC_GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << 
+					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
+					_parent.own_name << "}";
+			}
+      else if(NULL != strcasestr(rtn, "INS"))
+			{
+        st_response << 
+          "{Type " << "INS" << "}" << 
+          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "imu") << 
+					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
+					_parent.own_name << "}";
+      }
+      else if(NULL != strcasestr(rtn, "Robot"))
+      {
+        st_response << 
+          "{Type " << get_type_of_robot(_parent.model_name) << "}" << 
+          "{Name " << _parent.own_name << "}" <<
+          "{Dimensions 0.7744,0.6318,0.5754}" << 
+          "{COG 0.0000,0.0000,-0.1000}" <<
+          "{WheelRadius 0.1922}" << 
+          "{WheelSeparation 0.5120}" << 
+          "{Wheelbase 0.3880}";
+      }
+      st_response << "\r\n";
+      nwritten = boost::asio::write(_parent._socket, response);
+      if(0 >= nwritten)
+        perror("GEO message could not be written, check errno");
+    }
+    return UCE_GOOD;
+  }
+};
+
+//////////////////////////////////////////////////////////////////
+// UC_GETCONF
+//  GETCONF is defined in the USARSim manual P.77
+//  CONF is define in the USARSim manual P.61 - P.64
+struct UC_GETCONF
+{
+  //////////////////////////////////////////////////////////////////
+  //  Variables
+  USARcommand& _parent;
+
+  //////////////////////////////////////////////////////////////////
+  //  The constructor
+  UC_GETCONF(USARcommand& parent) : _parent(parent)
+  {
+    if(1 != _parent.robot_was_spawned)
+      return;
+    read_params_from_usar_command();
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  read_params_from_usar_command
+  int read_params_from_usar_command(void)
+  {
+    char*                          rtn;
+		char                           tmpbuf[100];
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    boost::asio::streambuf         response;
+    std::iostream                  st_response(&response);
+    int                            nwritten;
+//  BUCIP.Disp();
+    if(BIE_GOOD != BUCIP.Error_code())
+      return UCE_INCLUDING_BROKEN_BRACE;
+    rtn = BUCIP.Search("Type");
+    if(NULL != rtn)
+    {
+      st_response << "CONF ";
+      if(NULL != strcasestr(rtn, "RFID"))
+      {
+        st_response << 
+          "{Type " << "RFID" << "}";
+      }
+      else if(NULL != strcasestr(rtn, "RangeScanner"))
+			{
+        st_response << 
+          "{Type " << "RangeScanner" << "}" << 
+          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}"; 
+			}
+      else if(NULL != strcasestr(rtn, "GPS"))
+			{
+        st_response << 
+          "{Type " << "GPS" << "}" << 
+          "{Name " << UC_GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}"; 
+			}
+      else if(NULL != strcasestr(rtn, "INS"))
+			{
+        st_response << 
+          "{Type " << "INS" << "}" << 
+          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}"; 
+			}
+      else if(NULL != strcasestr(rtn, "Robot"))
+      {
+        if(NULL != strcasestr(get_type_of_robot(_parent.model_name),
+                                                 RT_D_GROUNDVEHICLE))
+        {
+          st_response << 
+            "{Type " << get_type_of_robot(_parent.model_name) << "}" << 
+            "{Name " << _parent.own_name << "}" <<
+            "{SteeringType " << 
+               get_steeringtype_of_robot(_parent.model_name) << "}" << 
+            "{Mass " << 
+						   get_mass_of_robot(_parent.model_name) << "}" << 
+            "{MaxSpeed " << 
+						   get_maxspeed_of_robot(_parent.model_name) << "}" << 
+            "{MaxTorque " << 
+						   get_maxtorque_of_robot(_parent.model_name) << "}" << 
+            "{MaxFrontSteer " << 
+						   get_maxfrontsteer_of_robot(_parent.model_name) << "}" << 
+            "{MaxRearSteer " << 
+               get_maxrearsteer_of_robot(_parent.model_name) << "}";
+        }
+      }
+      st_response << "\r\n";
+      nwritten = boost::asio::write(_parent._socket, response);
+      if(0 >= nwritten)
+        perror("GEO message could not be written, check errno");
+    }
+    return UCE_GOOD;
+  }
+};
+
 
 //////////////////////////////////////////////////////////////////
 //  USAR Command fetch    ## DO NOT MOVE THIS FUNCTION FROM HERE ##
@@ -792,7 +1077,7 @@ void USARcommand::UC_check_command_from_USARclient(void)
   // Get an USAR command string
   nread = boost::asio::read_until(_socket, _buffer, "\r\n", err);
   // DO NOT USE _buffer, including just reading _buffer.
-	//  Ex) After reading _buffer, values were erased in _buffer.
+  //  Ex) After reading _buffer, values were erased in _buffer.
 //std::cout << "Child_Session_Loop address [" << this << "]" << std::endl;
 //std::cout << "nread = " << nread << std::endl;
   if(0 > nread)
@@ -812,16 +1097,11 @@ void USARcommand::UC_check_command_from_USARclient(void)
   for(;1;)
   {
     // Copy 1 line by 1 line from _buffer into "line"
-		//  to keep the USAR command string values
+    //  to keep the USAR command string values
+//  line.getline(is);
     std::getline(is, line);
     if(0 < line.length())
     {
-      // TEST CODE MEMO : socket output
-      /*
-      boost::asio::write(_socket, boost::asio::buffer(line.c_str()
-        , line.length()));
-      boost::asio::write(_socket, boost::asio::buffer(line));
-			*/
       if(NULL != ucbuf)
         delete ucbuf;
       ucbuf = new char[line.length()+2];
@@ -835,6 +1115,10 @@ void USARcommand::UC_check_command_from_USARclient(void)
         UC_DRIVE UC_drive(*this);
       else if(0 == strNcmp(ucbuf, "GETSTARTPOSES"))
         UC_GETSTARTPOSES UC_getstartposes(*this);
+      else if(0 == strNcmp(ucbuf, "GETGEO"))
+        UC_GETGEO UC_getgeo(*this);
+      else if(0 == strNcmp(ucbuf, "GETCONF"))
+        UC_GETCONF UC_getconf(*this);
       delete ucbuf;
       ucbuf = NULL;
     }
@@ -888,11 +1172,11 @@ struct USARimage
     boost::system::error_code err;
     boost::asio::read_until(_socket, _buffer , "\r\n", err);
   // DO NOT USE _buffer, including just reading _buffer.
-	//  Ex) After reading _buffer, values were erased in _buffer.
+  //  Ex) After reading _buffer, values were erased in _buffer.
 //  std::cout << "Child_Session_Loop_Core address ["<<this<<"]"<<std::endl;
     // OK or U command should be checked here.
-		//  U is underconstruction, not working.
-		// SS is for debug.
+    //  U is underconstruction, not working.
+    // SS is for debug.
     std::istream is(&_buffer);
     std::string  line;
     for(;1;)
@@ -919,14 +1203,14 @@ struct USARimage
     _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
     _node->Init();
     // Set topic name of camera
-		// Now the camera topic name is set as : 
+    // Now the camera topic name is set as : 
     // "~/pioneer3at_with_sensors/chassis/r_camera/image" .
     // You can change camera by each child session, 
     //  if we could change the hand-shaking rule of sending 
     //   cameara image data.
     // After connecting, the camera topic name can be tranfered 
-		//  by codes like following, but it's a future protocol.
-		/*
+    //  by codes like following, but it's a future protocol.
+    /*
     boost::system::error_code err;
     boost::asio::read_until(_socket, _buffer, "\r\n", err);
     std::istream is(&_buffer);
@@ -956,13 +1240,14 @@ struct USARimage
     sprintf(camera_topic_name, "%s"
                       , topics_list.Search((char*)"image"));
 */
+printf("image\n");
     sprintf(topic_camera, "%s"
                      , "~/pioneer3at_with_sensors/chassis/r_camera/image");
-		// The function Subscribe needs a valiable which be assigned 
-		//  a return value from the function Subscribe. Without the assigning,
-		//   a call-back function  which was registered 
-		//    by the function Subscribe will NOT be call-backed.
-		// DO NOT REMOVE _sub_camera_image
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE _sub_camera_image
     _sub_camera_image 
       = _node->Subscribe(topic_camera, &USARimage::imageserver_callback
                                                                   , this);
@@ -1038,7 +1323,7 @@ void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
 void USARimage::send_rectangle_area_image(ConstImageStampedPtr& _msg)
 {
   flag_U = 0;
-	// Please anyone, write this function instead of me.....
+  // Please anyone, write this function instead of me.....
 }
 
 //#######################################################################
