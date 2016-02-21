@@ -848,7 +848,8 @@ struct UC_INIT
     // Model file to load
     msg.set_sdf_filename(model_cmd);
     // Set this robot's own name
-//  msg.set_edit_name(_parent.own_name); Please fix this function! > Dr.Nate
+//Please fix msg.set_edit_name()  > Dr.Nate
+//  msg.set_edit_name(_parent.own_name);
     // Pose to initialize the model to
     gazebo::msgs::Set(msg.mutable_pose()
      , gazebo::math::Pose(_parent.spawn_location, _parent.spawn_direction));
