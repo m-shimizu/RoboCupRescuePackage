@@ -29,24 +29,16 @@
       <cast_shadows>1</cast_shadows>
     </light>
 
-<!--
+<!-- SIMPLE WORLD
+-->
     <include>
       <pose>6.52567 5.49381 0.5 0 -0 0</pose>
       <static>1</static>
       <uri>model://box_gazebo_generated</uri>
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
--->
 
-<!--
-   HOW TO GET model:robocup2012_rvrl_pre1  
-     You can get it by using following commands  
-     $ cd ~/.gazebo/models  
-     $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1/  
-     $ cd robocup2012_rvrl_pre1/meshes  
-     $ unzip RC2012Pre1.dae.zip  
--->
-<!--
+<!-- RoboCup 2012 Rescue Virtual Robot League Pre-Liminary 1
     <include>
       <static>1</static>
       <uri>model://robocup2012_rvrl_pre1</uri>
@@ -57,9 +49,16 @@
       <StartPose_3>JumpPoint    0, 0,  0 0,0,0</StartPose_3>
     </plugin>
 -->
-
 <!--
+   HOW TO GET model:robocup2012_rvrl_pre1  
+     You can get it by using following commands  
+     $ cd ~/.gazebo/models  
+     $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1/  
+     $ cd robocup2012_rvrl_pre1/meshes  
+     $ unzip RC2012Pre1.dae.zip  
 -->
+
+<!--  Portmessa Nagoya (The RoboCup 2017 venue)
     <include>
       <static>1</static>
       <uri>model://portmessa</uri>
@@ -68,6 +67,7 @@
       <StartPose_1>EASTENTRANCE   1.5,-55,0.3 0,0,0</StartPose_1>
       <StartPose_1>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_1>
     </plugin>
+-->
 
   </world>
 </sdf>
