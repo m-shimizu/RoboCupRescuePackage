@@ -653,8 +653,7 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
 {
   char   tmpbuf[100];
-  static gazebo::math::Vector3 pose(0,0,0);
-  static gazebo::math::Vector3 vel(0,0,0);
+  static gazebo::math::Vector3 pose(0,0,0), vel(0,0,0), acl;
   double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
   float  Current_time = _parent._world->GetRealTime().Double();
   float  dt;
@@ -685,9 +684,12 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   Last_time = Current_time;
   if(dt < 1)
   {
-    vel.x += linear_acceleration.x() * dt;
-    vel.y += linear_acceleration.y() * dt;
-    vel.z += linear_acceleration.z() * dt;
+    acl.x = linear_acceleration.x();
+    acl.y = linear_acceleration.y();
+    acl.z = linear_acceleration.z();
+    vel.x += acl.x * dt;
+    vel.y += acl.y * dt;
+    vel.z += acl.z * dt;
     pose.x += vel.x * dt;
     pose.y += vel.y * dt;
     pose.z += vel.z * dt;

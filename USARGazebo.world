@@ -15,23 +15,37 @@
       <uri>model://sun</uri>
     </include>
 
-		<include>
+    <include>
       <pose>6.52567 5.49381 0.5 0 -0 0</pose>
-			<static>1</static>
-		  <uri>model://box_gazebo_generated</uri>
-		</include>
+      <static>1</static>
+      <uri>model://box_gazebo_generated</uri>
+    </include>
+
+    <light type="directional" name="my_light0">
+      <pose>0 0 30 0 0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <linear>0.01</linear>
+        <constant>0.5</constant>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>1</cast_shadows>
+    </light>
 
 <!--
-	 HOW TO GET model:robocup2012_rvrl_pre1  
+   HOW TO GET model:robocup2012_rvrl_pre1  
      You can get it by using following commands  
-	   $ cd ~/.gazebo/models  
+     $ cd ~/.gazebo/models  
      $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1/  
-		 $ cd robocup2012_rvrl_pre1/meshes  
-		 $ unzip RC2012Pre1.dae.zip  
+     $ cd robocup2012_rvrl_pre1/meshes  
+     $ unzip RC2012Pre1.dae.zip  
 -->
 <!--
     <include>
-			<static>1</static>
+      <static>1</static>
       <uri>model://robocup2012_rvrl_pre1</uri>
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
@@ -42,11 +56,11 @@
 -->
 
 <!--
+-->
     <include>
-			<static>1</static>
+      <static>1</static>
       <uri>model://portmessa</uri>
     </include>
--->
 
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>TEST1   5,10,0.3 0,0,0</StartPose_1>
