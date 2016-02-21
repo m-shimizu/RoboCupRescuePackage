@@ -280,6 +280,8 @@ int get_number_of_Robot_DB(const char* robot_name)
 #define ET_D_U_CAMERA       "Camera"
 #define ET_D_G_LASERSCANNER "scan"
 #define ET_D_U_LASERSCANNER "RangeScanner"
+#define ET_D_G_ODOMETRY     "Odometry_from_IMU"
+#define ET_D_U_ODOMETRY     "Odometry"
 
 //////////////////////////////////////////////////////////////////
 // Gazebo-USARSim Database 
@@ -683,72 +685,50 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   sqy = y*y;    
   sqz = z*z; 
    //YPR conversions from Quarternion
-  yaw   = atan2(2.0 * (x*y + z*w), (sqx - sqy - sqz + sqw)) 
-           * (180.0f/M_PI);
-  pitch = atan2(2.0 * (y*z + x*w), (-sqx - sqy + sqz + sqw)) 
-           * (180.0f/M_PI);          
-  roll  = asin(-2.0 * (x*z - y*w)) * (180.0f/M_PI);
+  yaw   = atan2(2.0 * (x*y + z*w), (sqx - sqy - sqz + sqw));
+  pitch = atan2(2.0 * (y*z + x*w), (-sqx - sqy + sqz + sqw));
+  roll  = asin(-2.0 * (x*z - y*w));
   // Calc Pose
   dt  = Current_time - Last_time;
   Last_time = Current_time;
   if(dt < 1)
   {
-    acl.x = linear_acceleration.x() * 0.001;
-    acl.y = linear_acceleration.y() * 0.001;
-    acl.z = linear_acceleration.z() * 0.001;
-    vel.x += acl.x * dt;
-    vel.y += acl.y * dt;
-    vel.z += acl.z * dt;
+    acl.x = linear_acceleration.x();
+    acl.y = linear_acceleration.y();
+    acl.z = linear_acceleration.z();
+    // Reverse Rotation around Z axis
+    float cz = cos(yaw), sz = sin(yaw);
+    gazebo::math::Vector3 racl;
+    racl.x = cz * acl.x - sz * acl.y;
+    racl.y = sz * acl.x + cz * acl.y;
+    // Integration
+    vel.x += racl.x * dt;
+    vel.y += racl.y * dt;
+    vel.z +=  acl.z * dt;
     pose.x += vel.x * dt;
     pose.y += vel.y * dt;
     pose.z += vel.z * dt;
-printf("IMU: X,Y,YAW=%f,%f,%f\n", pose.x, pose.y, yaw);
+//printf("IMU: X,Y,YAW=%f,%f,%f\n", pose.x, pose.y, yaw);
   }
-  boost::asio::streambuf sen_imu;
-  std::ostream os(&sen_imu);
+  boost::asio::streambuf sen;
+  std::ostream os(&sen);
   os << "SEN {Type INS}" <<
         "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
         "{Location " << pose.x << "," << pose.y << "," << pose.z << "}" << 
         "{Orientation " << roll << "," << pitch << "," << yaw << "}";
   os << "\r\n"; 
-  boost::asio::write(_socket, sen_imu);
+  boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
   ///////////////////////////////////////////////////////////////
   // Send Odometory 
-//  Send_Odometry(_msg);
+  boost::asio::streambuf sen_odo;
+  std::ostream os_odo(&sen_odo);
+  os_odo << "SEN {Type Odometry}" <<
+        "{Name " << ET_D_G_ODOMETRY << "}" <<
+        "{Pose " << pose.x << "," << pose.y << "," << yaw << "}";
+  os_odo << "\r\n"; 
+  boost::asio::write(_socket, sen_odo);
 }
-
-/*
-void USARcommand::Send_Odometry(ConstIMUPtr& _msg)
-{
-  char   tmpbuf[100];
-  double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
-  const gazebo::msgs::Quaternion &orientation = _msg->orientation();
-  _msg->stamp().sec();
-  _msg->stamp().nsec();
-  //Break out the values from the Quarternion and convert to YPR
-  w = orientation.w();
-  x = orientation.x();
-  y = orientation.y();
-  z = orientation.z();
-  sqw = w*w;    
-  sqx = x*x;    
-  sqy = y*y;    
-  sqz = z*z; 
-   //YPR conversions from Quarternion
-  yaw   = atan2(2.0 * (x*y + z*w), (sqx - sqy - sqz + sqw)) ;
-  pitch = atan2(2.0 * (y*z + x*w), (-sqx - sqy + sqz + sqw)) ;
-  roll  = asin(-2.0 * (x*z - y*w)) ;
-  boost::asio::streambuf sen;
-  std::ostream os(&sen);
-  os << "SEN {Type Odometry}" <<
-            "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
-            "{Pose " << x << "," << y << "," << yaw << "}";
-  os << "\r\n"; 
-  boost::asio::write(_socket, sen);
-//  std::cout << _msg->DebugString();
-}
-*/
 
 //////////////////////////////////////////////////////////////////
 // Error Code Definition for UC_**** functions
@@ -1073,6 +1053,20 @@ struct UC_GETGEO
   }
 
   //////////////////////////////////////////////////////////////////
+  //  GEO_set_odometry_params
+  int GEO_set_odometry_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    st_response << "{Type " << _USARSim_name << "}";
+    st_response << 
+      "{Name " << ET_D_G_ODOMETRY << 
+      " Location " << "0,0.1,0.1" <<
+      " Orientation " << "0,0.1,0.1" << 
+      " Mount " << _parent.own_name << "}";
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
@@ -1089,7 +1083,6 @@ struct UC_GETGEO
     if(NULL != rtn)
     {
       st_response << "GEO ";
-
       if(NULL != strcasestr(rtn, ET_D_U_RFID))
         GEO_set_effecters_params(st_response, ET_D_U_RFID);
       else if(NULL != strcasestr(rtn, ET_D_U_CAMERA))
@@ -1100,7 +1093,8 @@ struct UC_GETGEO
         GEO_set_effecters_params(st_response, ET_D_U_GPS);
       else if(NULL != strcasestr(rtn, ET_D_U_IMU))
         GEO_set_effecters_params(st_response, ET_D_U_IMU);
-
+      else if(NULL != strcasestr(rtn, ET_D_U_ODOMETRY))
+        GEO_set_odometry_params(st_response, ET_D_U_ODOMETRY);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         st_response << 
@@ -1177,6 +1171,21 @@ struct UC_GETCONF
   }
 
   //////////////////////////////////////////////////////////////////
+  //  CONF_set_odometry_params
+  int CONF_set_odometry_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    st_response << "{Type " << _USARSim_name << "}";
+    st_response << 
+      "{Name " << ET_D_G_ODOMETRY << 
+//      " Location " << "0,0.1,0.1" <<
+//      " Orientation " << "0,0.1,0.1" << 
+//      " Mount " << _parent.own_name << 
+      "}";
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
@@ -1203,6 +1212,8 @@ struct UC_GETCONF
         CONF_set_effecters_params(st_response, ET_D_U_GPS);
       else if(NULL != strcasestr(rtn, ET_D_U_IMU))
         CONF_set_effecters_params(st_response, ET_D_U_IMU);
+      else if(NULL != strcasestr(rtn, ET_D_U_ODOMETRY))
+        CONF_set_odometry_params(st_response, ET_D_U_ODOMETRY);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         if(NULL != strcasestr(get_type_of_robot(_parent.model_name),

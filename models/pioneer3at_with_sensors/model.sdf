@@ -74,8 +74,12 @@
       <sensor name="imu_sensor" type="imu">
         <pose>0 0 0 0 0 0</pose>
         <always_on>1</always_on>
+        <update_rate>100</update_rate>
+<!--  NOW update rate is set 100 tempolary
         <update_rate>10</update_rate>
+-->
         <imu>
+<!--  NOW comment noise parameters out tempolary
           <noise>
             <type>gaussian</type>
             <rate>
@@ -91,6 +95,7 @@
               <bias_stddev>0.001</bias_stddev>
             </accel>
           </noise>
+-->
         </imu>
       </sensor>
     </link>
