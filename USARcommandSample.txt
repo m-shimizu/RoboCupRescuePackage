@@ -18,6 +18,8 @@ GETCONF {Type INS} {Name imu_sensor}
 GETGEO {Type INS} {Name imu_sensor}
 GETCONF {Type GPS} {Name gps}
 GETGEO {Type GPS} {Name gps}
+GETCONF {Type Camera} {Name r_camera}
+GETGEO {Type Camera} {Name l_camera}
 
 
 

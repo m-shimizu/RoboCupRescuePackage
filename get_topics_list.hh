@@ -54,7 +54,7 @@ struct TopicsList
 
   //////////////////////////////////////////////////////////////////
   // TopicsList.Add a topics to _topics_list
-  void Add_a_topics(char* _a_topic)
+  void Add_a_topics(const char* _a_topic)
   {
     char* _newp;
     _newp = new char[strlen(_a_topic)+2];
@@ -93,7 +93,7 @@ struct TopicsList
     for(int i = 0; i < _topics.data_size(); ++i)
     {
       std::stringstream _s(_topics.data(i));
-      Add_a_topics((char*)_s.str().c_str());
+      Add_a_topics((const char*)_s.str().c_str());
     }
 // Codes for debug
 /*std::cout << "_topics size = " << _topics.data_size() << std::endl;
@@ -112,7 +112,7 @@ Disp_topics_list();*/
   //////////////////////////////////////////////////////////////////
   // TopicsList.Filter : remove topic entries which does not have _keyword
   //                       from _topics_list
-  int Filter(char* _keyword = NULL)
+  int Filter(const char* _keyword = NULL)
   {
 //    if(1 != _already_called_get_topics)
 //      Get_Topics_List();
@@ -139,9 +139,9 @@ Disp_topics_list();*/
   //////////////////////////////////////////////////////////////////
   // TopicsList.Search_n : Search about 3 keywords in _topics_list,
   //  and return _num'th string's pointer
-	//  (The first hitted string's _num is 0).
-  char* Search_n(int _num, const char* _keyword1 = NULL, 
-	                         const char* _keyword2 = NULL,
+  //  (The first hitted string's _num is 0).
+  const char* Search_n(int _num, const char* _keyword1 = NULL, 
+                           const char* _keyword2 = NULL,
                            const char* _keyword3 = NULL)
   {
 //    if(1 != _already_called_get_topics)
@@ -156,19 +156,23 @@ Disp_topics_list();*/
         if(NULL == _keyword2 || (NULL != _keyword2 && 0 == _keyword2[0]) || 
            (NULL != _keyword2 && 0 != _keyword2[0]
             && NULL != strcasestr(*i, _keyword2)))
+          /* Memo for Debug
           if(NULL == _keyword1 || (NULL != _keyword1 && 0 == _keyword1[0])||
              (NULL != _keyword1 && 0 != _keyword1[0]
+              && NULL != strcasestr(*i, _keyword1)))  */
+          if((NULL != _keyword1 && 0 != _keyword1[0]
               && NULL != strcasestr(*i, _keyword1)))
             if(0 == _num--)
-	      return *i;
+              return *i;
     return NULL;
   }
 
   //////////////////////////////////////////////////////////////////
   // TopicsList.Search : Search about 3 keywords in _topics_list,
-  //  and return the fist hitted string's pointer.
-  char* Search(const char* _keyword1 = NULL, const char* _keyword2 = NULL
-                  , const char* _keyword3 = NULL)
+  //  and return the first hitted string's pointer.
+  const char* Search(const char* _keyword1 = NULL, 
+                     const char* _keyword2 = NULL,
+                     const char* _keyword3 = NULL)
   {
     Search_n(0, _keyword1, _keyword2, _keyword3);
   }

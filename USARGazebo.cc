@@ -58,9 +58,9 @@ const char* get_string_between_slash_from_topic_name(char* dist,
   const char* i;
   const char* start;
   const char* end;
-	int         copy_size;
-	if(1 > slash_num_from_right)
-	  return (const char*)NULL;
+  int         copy_size;
+  if(1 > slash_num_from_right)
+    return (const char*)NULL;
   i = topic_name;
   i+= strlen(topic_name);
   end = i;
@@ -69,23 +69,23 @@ const char* get_string_between_slash_from_topic_name(char* dist,
   {
     if('/' == *i)
     {
-			start = (i + 1);
-			slash_num_from_right--;
-			if(0 < slash_num_from_right)
-			{
-			  end = i;
-				start = (const char*)NULL;
-				continue;
-			}
+      start = (i + 1);
+      slash_num_from_right--;
+      if(0 < slash_num_from_right)
+      {
+        end = i;
+        start = (const char*)NULL;
+        continue;
+      }
       break;
     }
   }
   if((const char*)NULL == start)
     return (const char*)NULL;
   dist_size--; // for 0x0(end of string)
-	copy_size = (int)(end - start);
+  copy_size = (int)(end - start);
   strncpy(dist, start, (copy_size > dist_size)?dist_size:copy_size);
-	dist[copy_size] = 0;
+  dist[copy_size] = 0;
   return (const char*)dist;
 }
 
@@ -95,7 +95,7 @@ const char* get_type_from_topic_name(char* dist, int dist_size,
                                               const char* topic_name)
 {
   return get_string_between_slash_from_topic_name(dist, dist_size, 1
-	                                                        , topic_name);
+                                                          , topic_name);
 }
 //////////////////////////////////////////////////////////////////
 // Return device name in topic name
@@ -103,7 +103,7 @@ const char* get_name_from_topic_name(char* dist, int dist_size,
                                               const char* topic_name)
 {
   return get_string_between_slash_from_topic_name(dist, dist_size, 2
-	                                                        , topic_name);
+                                                          , topic_name);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ struct Plugin_Option_Parameters
   //////////////////////////////////////////////////////////////////
   // Search Start Pose from StartPose array and set parameters 
   int Search_StartPose(char* target_name, float& x, float& y, float& z
-                                    ,float& roll, float& pitch, float& yaw)
+                                   ,float& roll, float& pitch, float& yaw)
   {
     int   i, read_fields;
     char  name[100];
@@ -187,7 +187,7 @@ enum ROBOT_TYPE
   RT_GROUNDVECHILE = 1,
   RT_LEGGEDROBOT   = 2,
   RT_NAUTICVEHICLE = 3,
-	RT_AERIALVEHICLE = 4
+  RT_AERIALVEHICLE = 4
 };
 
 //////////////////////////////////////////////////////////////////
@@ -214,11 +214,11 @@ struct ROBOT_DATABASE
   const char* Name;
   const char* Type;
   const char* SteeringType;
-	const float Mass;
-	const float MaxSpeed;
-	const float MaxTorque;
-	const float MaxFrontSteer;
-	const float MaxRearSteer;
+  const float Mass;
+  const float MaxSpeed;
+  const float MaxTorque;
+  const float MaxFrontSteer;
+  const float MaxRearSteer;
   int         Battery;
   int         DriveType;
 } Robot_DB[]
@@ -234,7 +234,7 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
         0,    0,     0,    0,   0,      0, 0} };
 
-int get_number_of_Robot_DB(char* robot_name)
+int get_number_of_Robot_DB(const char* robot_name)
 {
   int i;
   for(i = 0; (numof(Robot_DB) - 1) > i; i++)
@@ -258,6 +258,56 @@ int get_number_of_Robot_DB(char* robot_name)
            .MaxRearSteer
 #define get_battery_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)].Battery
 #define get_drive_of_robot(X) Robot_DB[get_number_of_Robot_DB(X)].DriveType
+
+//////////////////////////////////////////////////////////////////
+// EFFECTER_TYPE_NAME
+#define ET_D_G_RFID         "Unknown"
+#define ET_D_U_RFID         "RFID"
+#define ET_D_G_GPS          "gps"
+#define ET_D_U_GPS          "GPS"
+#define ET_D_G_IMU          "imu"
+#define ET_D_U_IMU          "INS"
+#define ET_D_G_CAMERA       "image"
+#define ET_D_U_CAMERA       "Camera"
+#define ET_D_G_LASERSCANNER "scan"
+#define ET_D_U_LASERSCANNER "RangeScanner"
+
+//////////////////////////////////////////////////////////////////
+// Gazebo-USARSim Database 
+struct Gazebo_USARSim_DATABASE
+{
+  const char* Gazebo_name;
+  const char* USARSim_name;
+} Gazebo_USARSim_DB[]
+ = {{ET_D_G_LASERSCANNER, ET_D_U_LASERSCANNER},
+    {ET_D_G_CAMERA,       ET_D_U_CAMERA},
+    {ET_D_G_RFID,         ET_D_U_RFID},
+    {ET_D_G_GPS,          ET_D_U_GPS},
+    {ET_D_G_IMU,          ET_D_U_IMU},
+    {"Unknown",           "UnKnown"} };
+
+int get_number_of_DB_From_Gazebo_name(const char* _name)
+{
+  int i;
+  for(i = 0; (numof(Gazebo_USARSim_DB) - 1) > i; i++)
+    if(0 == strNcmp(_name, Gazebo_USARSim_DB[i].Gazebo_name))
+      break;
+  return i;
+}
+
+int get_number_of_DB_From_USARSim_name(const char* _name)
+{
+  int i;
+  for(i = 0; (numof(Gazebo_USARSim_DB) - 1) > i; i++)
+    if(0 == strNcmp(_name, Gazebo_USARSim_DB[i].USARSim_name))
+      break;
+  return i;
+}
+
+#define get_USARSim_name_of(X) \
+      Gazebo_USARSim_DB[get_number_of_DB_From_Gazebo_name(X)].USARSim_name
+#define get_Gazebo_name_of(X) \
+      Gazebo_USARSim_DB[get_number_of_DB_From_USARSim_name(X)].Gazebo_name
 
 namespace gazebo
 {
@@ -288,7 +338,7 @@ struct USARcommand
   gazebo::transport::SubscriberPtr* _sub;
   std::vector<event::ConnectionPtr> connections;
   int                           STA_Last_sec, STA_Count_Per_1sec, 
-	                              STA_Cut_Counter;
+                                STA_Cut_Counter;
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -302,7 +352,7 @@ struct USARcommand
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), ucbuf(NULL), robot_was_spawned(0)
       , current_topics_list(), registered_topics_list()
-			, STA_Last_sec(0), STA_Count_Per_1sec(0), STA_Cut_Counter(0)
+      , STA_Last_sec(0), STA_Count_Per_1sec(0), STA_Cut_Counter(0)
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -328,18 +378,18 @@ struct USARcommand
       STA_Count_Per_1sec = 0;
       remain_battery--;
     }
-		if(STA_Cut_Counter < 0)
-		{
-		  STA_Cut_Counter = 100; // Display STA 1 times per 100 loop times
+    if(STA_Cut_Counter < 0)
+    {
+      STA_Cut_Counter = 100; // Display STA 1 times per 100 loop times
       os_res << "STA " << 
-			  "{Type " << get_type_of_robot(model_name) << "}" << 
+        "{Type " << get_type_of_robot(model_name) << "}" << 
         "{Time " << Current_time_in_form << "}" << 
         "{Battery " << remain_battery << "}" << 
         "{CountPer1sec " << STA_Count_Per_1sec << "}" << 
         "\r\n";
-		}
-		else
-		  STA_Cut_Counter--;
+    }
+    else
+      STA_Cut_Counter--;
     STA_Count_Per_1sec++;
     STA_Last_sec = Current_sec;
     boost::asio::write(_socket, response);
@@ -350,6 +400,7 @@ struct USARcommand
   void Process_laser_scanner_callback(ConstLaserScanStampedPtr& _msg);
   void Process_gps_callback(ConstGPSPtr& _msg);
   void Process_imu_callback(ConstIMUPtr& _msg);
+  void Send_odometry(ConstIMUPtr& _msg);
   
   //////////////////////////////////////////////////////////////////
   // USARcommand.Send_SENS   ## NEED YOUR HELP TO INCREASE SENSORS ##
@@ -370,7 +421,7 @@ struct USARcommand
       current_topics_list.Filter(own_name);
       if(0 == current_topics_list.Size())
         return;
-//    registered_topics_list.Disp_topics_list();
+    //registered_topics_list.Disp_topics_list();
     // 3. Register callback functions for sensors
       for(typename std::set<char*>::iterator i 
                                  = current_topics_list._topics_list.begin()
@@ -378,7 +429,7 @@ struct USARcommand
       {
         // At only first time, register a callback function for the sensor.
         // RangeFinder 
-        if(NULL != strcasestr(*i, "scan"))
+        if(NULL != strcasestr(*i, ET_D_G_LASERSCANNER))
         {
           if(NULL == registered_topics_list.Search(*i))
           {
@@ -395,7 +446,7 @@ std::cout << "Laser cb registered" << std::endl;
           }
         }
         // GPS 
-        else if(NULL != strcasestr(*i, "gps"))
+        else if(NULL != strcasestr(*i, ET_D_G_GPS))
         {
           if(NULL == registered_topics_list.Search(*i))
           {
@@ -412,7 +463,7 @@ std::cout << "GPS cb registered" << std::endl;
           }
         }
         // IMU 
-        else if(NULL != strcasestr(*i, "imu"))
+        else if(NULL != strcasestr(*i, ET_D_G_IMU))
         {
           if(NULL == registered_topics_list.Search(*i))
           {
@@ -491,7 +542,8 @@ void USARcommand::Process_laser_scanner_callback(
 {
   boost::asio::streambuf sen;
   std::ostream os(&sen);
-	char  tmpbuf[100];
+  int   angles;
+  char  tmpbuf[100];
   float angle_width = _msg->scan().angle_max() - _msg->scan().angle_min();
   float steps       = angle_width / _msg->scan().angle_step();
   float resolution  = angle_width / steps;
@@ -504,11 +556,16 @@ void USARcommand::Process_laser_scanner_callback(
   for(typename std::set<double>::iterator i=_msg->scan().ranges().begin()
         ; i != _msg->scan().ranges().end(); i++)
   */
-  for(int i = 0; _msg->scan().ranges_size() > i; i++)
+  angles = _msg->scan().ranges_size();
+  if(0 < angles)
   {
-    os << _msg->scan().ranges(i);
-    if(_msg->scan().ranges_size() > i + 1)
-      os << ",";
+    int    i;
+    float* angle_values = new float[angles];
+    for(i = 0; angles > i; i++)
+      angle_values[i] = _msg->scan().ranges(i);
+    for(i = 0; angles > i; i++)
+      os << angle_values[(angles - 1)-i] << (((angles - 1) > i)?",":"");
+    delete angle_values;
   }
   os << "}";
   os << "\r\n"; 
@@ -551,7 +608,7 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 {
   int   iLon, iLat;
   float fLon, fLat;
-	char  tmpbuf[100];
+  char  tmpbuf[100];
   boost::asio::streambuf sen;
   std::ostream os(&sen);
   iLat = (int)_msg->latitude_deg();
@@ -595,11 +652,19 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 //    }
 void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
 {
-	char   tmpbuf[100];
+  char   tmpbuf[100];
+  static gazebo::math::Vector3 pose(0,0,0);
+  static gazebo::math::Vector3 vel(0,0,0);
   double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
-  const gazebo::msgs::Quaternion &orientation = _msg->orientation();
+  float  Current_time = _parent._world->GetRealTime().Double();
+  float  dt;
+  static float Last_time = 0;
+  const gazebo::msgs::Quaternion& orientation = _msg->orientation();
+  const gazebo::msgs::Vector3d& linear_acceleration = 
+                                        _msg->linear_acceleration();
   _msg->stamp().sec();
   _msg->stamp().nsec();
+
   //Break out the values from the Quarternion and convert to YPR
   w = orientation.w();
   x = orientation.x();
@@ -615,16 +680,64 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   pitch = atan2(2.0 * (y*z + x*w), (-sqx - sqy + sqz + sqw)) 
            * (180.0f/M_PI);          
   roll  = asin(-2.0 * (x*z - y*w)) * (180.0f/M_PI);
+  // Calc Pose
+  dt  = Current_time - Last_time;
+  Last_time = Current_time;
+  if(dt < 1)
+  {
+    vel.x += linear_acceleration.x() * dt;
+    vel.y += linear_acceleration.y() * dt;
+    vel.z += linear_acceleration.z() * dt;
+    pose.x += vel.x * dt;
+    pose.y += vel.y * dt;
+    pose.z += vel.z * dt;
+printf("IMU: X,Y,YAW=%f,%f,%f\n", pose.x, pose.y, yaw);
+  }
+  boost::asio::streambuf sen_imu;
+  std::ostream os(&sen_imu);
+  os << "SEN {Type INS}" <<
+        "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
+        "{Location " << pose.x << "," << pose.y << "," << pose.z << "}" << 
+        "{Orientation " << roll << "," << pitch << "," << yaw << "}";
+  os << "\r\n"; 
+  boost::asio::write(_socket, sen_imu);
+//  std::cout << _msg->DebugString();
+  ///////////////////////////////////////////////////////////////
+  // Send Odometory 
+//  Send_Odometry(_msg);
+}
+
+/*
+void USARcommand::Send_Odometry(ConstIMUPtr& _msg)
+{
+  char   tmpbuf[100];
+  double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
+  const gazebo::msgs::Quaternion &orientation = _msg->orientation();
+  _msg->stamp().sec();
+  _msg->stamp().nsec();
+  //Break out the values from the Quarternion and convert to YPR
+  w = orientation.w();
+  x = orientation.x();
+  y = orientation.y();
+  z = orientation.z();
+  sqw = w*w;    
+  sqx = x*x;    
+  sqy = y*y;    
+  sqz = z*z; 
+   //YPR conversions from Quarternion
+  yaw   = atan2(2.0 * (x*y + z*w), (sqx - sqy - sqz + sqw)) ;
+  pitch = atan2(2.0 * (y*z + x*w), (-sqx - sqy + sqz + sqw)) ;
+  roll  = asin(-2.0 * (x*z - y*w)) ;
   boost::asio::streambuf sen;
   std::ostream os(&sen);
-  os << "SEN {Type INS}" <<
+  os << "SEN {Type Odometry}" <<
             "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
-            "{Location " << x << "," << y << "," << z << "}" << 
-            "{Orientation " << roll << "," << pitch << "," << yaw << "}";
+            "{Pose " << x << "," << y << "," << yaw << "}";
   os << "\r\n"; 
   boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
 }
+*/
 
 //////////////////////////////////////////////////////////////////
 // Error Code Definition for UC_**** functions
@@ -633,7 +746,8 @@ enum USAR_Command_Error_Code
   UCE_GOOD                        = 0,
   UCE_INCLUDING_BROKEN_BRACE      = 1,
   UCE_MISSING_NECESSARY_PARAMETER = 2,
-  UCE_DO_NOT_CALL_AFTER_SPAWNED   = 3
+  UCE_DO_NOT_CALL_AFTER_SPAWNED   = 3,
+  UCE_NO_EFFECTER                 = 4
 };
 
 //////////////////////////////////////////////////////////////////
@@ -883,6 +997,11 @@ struct UC_GETSTARTPOSES
 #define UC_GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
                                  _parent.registered_topics_list.Search(X))
 
+#define UC_GET_TYPE_FROM_TL(T,X,I) \
+           get_type_from_topic_name(T,sizeof(T),tl.Search_n(I,X))
+#define UC_GET_NAME_FROM_TL(T,X,I) \
+           get_name_from_topic_name(T,sizeof(T),tl.Search_n(I,X))
+
 //////////////////////////////////////////////////////////////////
 // UC_GETGEO
 //  GETGEO is defined in the USARSim manual P.77
@@ -903,11 +1022,46 @@ struct UC_GETGEO
   }
 
   //////////////////////////////////////////////////////////////////
+  //  GEO_set_effecters_params
+  int GEO_set_effecters_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    TopicsList  tl;
+    int         effecters;
+    char        tmpbuf[100];
+    int         flag_gps = 0;
+    const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
+    st_response << "{Type " << _USARSim_name << "}";
+    if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
+      flag_gps = 1;
+    tl.Get_Topics_List();
+    if(0 == tl.Filter(_parent.own_name))
+      return UCE_NO_EFFECTER;
+    if(0 == (effecters = tl.Filter(Gazebo_name)))
+      return UCE_NO_EFFECTER;
+    if(NULL != effecter_name && 0 == (effecters=tl.Filter(effecter_name)))
+      return UCE_NO_EFFECTER;
+    for(int i = 0; effecters > i; i++)
+    {
+      st_response << 
+        "{Name " << 
+          ((flag_gps)?(UC_GET_TYPE_FROM_TL(tmpbuf, Gazebo_name, i)): 
+                      (UC_GET_NAME_FROM_TL(tmpbuf, Gazebo_name, i))) << 
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" << 
+        " Mount " << _parent.own_name << "}";
+    }
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
     char*                          rtn;
-		char                           tmpbuf[100];
+    char                           tmpbuf[100];
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     boost::asio::streambuf         response;
     std::iostream                  st_response(&response);
@@ -919,43 +1073,18 @@ struct UC_GETGEO
     if(NULL != rtn)
     {
       st_response << "GEO ";
-      if(NULL != strcasestr(rtn, "RFID"))
-      {
-        st_response << 
-          "{Type RFID}";
-			/*
-          "{Type " << "RFID" << "}" << 
-          "{Name " << "RFID1" << 
-          " Location " << "0.0820,0.0002,0.0613" << 
-          " Orientation " << "0.0000,-0.0000,0.0000" <<
-          " Mount " << "CameraTilt" < "}";
-			*/
-      }
-      else if(NULL != strcasestr(rtn, "RangeScanner"))
-			{
-        st_response << 
-          "{Type " << "RangeScanner" << "}" << 
-          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "scan") << 
-					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
-					_parent.own_name << "}";
-					 
-			}
-      else if(NULL != strcasestr(rtn, "GPS"))
-			{
-        st_response << 
-          "{Type " << "GPS" << "}" << 
-          "{Name " << UC_GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << 
-					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
-					_parent.own_name << "}";
-			}
-      else if(NULL != strcasestr(rtn, "INS"))
-			{
-        st_response << 
-          "{Type " << "INS" << "}" << 
-          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "imu") << 
-					" Location 0,0.1,0.1 Orientation 0,0.1,0.1 Mount " << 
-					_parent.own_name << "}";
-      }
+
+      if(NULL != strcasestr(rtn, ET_D_U_RFID))
+        GEO_set_effecters_params(st_response, ET_D_U_RFID);
+      else if(NULL != strcasestr(rtn, ET_D_U_CAMERA))
+        GEO_set_effecters_params(st_response, ET_D_U_CAMERA);
+      else if(NULL != strcasestr(rtn, ET_D_U_LASERSCANNER))
+        GEO_set_effecters_params(st_response, ET_D_U_LASERSCANNER);
+      else if(NULL != strcasestr(rtn, ET_D_U_GPS))
+        GEO_set_effecters_params(st_response, ET_D_U_GPS);
+      else if(NULL != strcasestr(rtn, ET_D_U_IMU))
+        GEO_set_effecters_params(st_response, ET_D_U_IMU);
+
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         st_response << 
@@ -996,11 +1125,47 @@ struct UC_GETCONF
   }
 
   //////////////////////////////////////////////////////////////////
+  //  CONF_set_effecters_params
+  int CONF_set_effecters_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    TopicsList  tl;
+    int         effecters;
+    char        tmpbuf[100];
+    int         flag_gps = 0;
+    const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
+    st_response << "{Type " << _USARSim_name << "}";
+    if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
+      flag_gps = 1;
+    tl.Get_Topics_List();
+    if(0 == tl.Filter(_parent.own_name))
+      return UCE_NO_EFFECTER;
+    if(0 == (effecters = tl.Filter(Gazebo_name)))
+      return UCE_NO_EFFECTER;
+    if(NULL != effecter_name && 0 == (effecters=tl.Filter(effecter_name)))
+      return UCE_NO_EFFECTER;
+    for(int i = 0; effecters > i; i++)
+    {
+      st_response << 
+        "{Name " << 
+          ((flag_gps)?(UC_GET_TYPE_FROM_TL(tmpbuf, Gazebo_name, i)): 
+                      (UC_GET_NAME_FROM_TL(tmpbuf, Gazebo_name, i))) << 
+//        " Location " << "0,0.1,0.1" <<
+//        " Orientation " << "0,0.1,0.1" << 
+//        " Mount " << _parent.own_name << 
+        "}";
+    }
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
     char*                          rtn;
-		char                           tmpbuf[100];
+    char                           tmpbuf[100];
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     boost::asio::streambuf         response;
     std::iostream                  st_response(&response);
@@ -1012,29 +1177,16 @@ struct UC_GETCONF
     if(NULL != rtn)
     {
       st_response << "CONF ";
-      if(NULL != strcasestr(rtn, "RFID"))
-      {
-        st_response << 
-          "{Type " << "RFID" << "}";
-      }
-      else if(NULL != strcasestr(rtn, "RangeScanner"))
-			{
-        st_response << 
-          "{Type " << "RangeScanner" << "}" << 
-          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}"; 
-			}
-      else if(NULL != strcasestr(rtn, "GPS"))
-			{
-        st_response << 
-          "{Type " << "GPS" << "}" << 
-          "{Name " << UC_GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}"; 
-			}
-      else if(NULL != strcasestr(rtn, "INS"))
-			{
-        st_response << 
-          "{Type " << "INS" << "}" << 
-          "{Name " << UC_GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}"; 
-			}
+      if(NULL != strcasestr(rtn, ET_D_U_RFID))
+        CONF_set_effecters_params(st_response, ET_D_U_RFID);
+      else if(NULL != strcasestr(rtn, ET_D_U_CAMERA))
+        CONF_set_effecters_params(st_response, ET_D_U_CAMERA);
+      else if(NULL != strcasestr(rtn, ET_D_U_LASERSCANNER))
+        CONF_set_effecters_params(st_response, ET_D_U_LASERSCANNER);
+      else if(NULL != strcasestr(rtn, ET_D_U_GPS))
+        CONF_set_effecters_params(st_response, ET_D_U_GPS);
+      else if(NULL != strcasestr(rtn, ET_D_U_IMU))
+        CONF_set_effecters_params(st_response, ET_D_U_IMU);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         if(NULL != strcasestr(get_type_of_robot(_parent.model_name),
@@ -1046,13 +1198,13 @@ struct UC_GETCONF
             "{SteeringType " << 
                get_steeringtype_of_robot(_parent.model_name) << "}" << 
             "{Mass " << 
-						   get_mass_of_robot(_parent.model_name) << "}" << 
+               get_mass_of_robot(_parent.model_name) << "}" << 
             "{MaxSpeed " << 
-						   get_maxspeed_of_robot(_parent.model_name) << "}" << 
+               get_maxspeed_of_robot(_parent.model_name) << "}" << 
             "{MaxTorque " << 
-						   get_maxtorque_of_robot(_parent.model_name) << "}" << 
+               get_maxtorque_of_robot(_parent.model_name) << "}" << 
             "{MaxFrontSteer " << 
-						   get_maxfrontsteer_of_robot(_parent.model_name) << "}" << 
+               get_maxfrontsteer_of_robot(_parent.model_name) << "}" << 
             "{MaxRearSteer " << 
                get_maxrearsteer_of_robot(_parent.model_name) << "}";
         }

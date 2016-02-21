@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
-<sdf version="1.5">
+<sdf version="1.4">
   <model name="portmessa">
     <static>true</static>
-    <pose>0 0 -2.6 0 0 0</pose>
+    <pose>0 0 2.6 0 0 0</pose>
     <link name="walls">
       <collision name="collision">
         <geometry>
