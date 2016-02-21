@@ -15,12 +15,6 @@
       <uri>model://sun</uri>
     </include>
 
-    <include>
-      <pose>6.52567 5.49381 0.5 0 -0 0</pose>
-      <static>1</static>
-      <uri>model://box_gazebo_generated</uri>
-    </include>
-
     <light type="directional" name="my_light0">
       <pose>0 0 30 0 0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
@@ -34,6 +28,15 @@
       </attenuation>
       <cast_shadows>1</cast_shadows>
     </light>
+
+<!--
+    <include>
+      <pose>6.52567 5.49381 0.5 0 -0 0</pose>
+      <static>1</static>
+      <uri>model://box_gazebo_generated</uri>
+    </include>
+    <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
+-->
 
 <!--
    HOW TO GET model:robocup2012_rvrl_pre1  
@@ -61,11 +64,9 @@
       <static>1</static>
       <uri>model://portmessa</uri>
     </include>
-
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
-      <StartPose_1>TEST1   5,10,0.3 0,0,0</StartPose_1>
-      <StartPose_2>TEST2 -12,12,0.3 0,0,0</StartPose_2>
-      <StartPose_3>TEST3   0, 0,  0 0,0,0</StartPose_3>
+      <StartPose_1>EASTENTRANCE   1.5,-55,0.3 0,0,0</StartPose_1>
+      <StartPose_1>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_1>
     </plugin>
 
   </world>

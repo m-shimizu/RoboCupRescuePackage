@@ -145,11 +145,12 @@ struct Plugin_Option_Parameters
 
   //////////////////////////////////////////////////////////////////
   // Search Start Pose from StartPose array and set parameters 
-  int Search_StartPose(char* target_name, float& x, float& y, float& z
-                                   ,float& roll, float& pitch, float& yaw)
+  int Search_StartPose(char* target_name, float& _x, float& _y, float& _z,
+                       float& _roll, float& _pitch, float& _yaw)
   {
     int   i, read_fields;
     char  name[100];
+    float x, y, z, roll, pitch, yaw;
     for(i = 0; i < Num_Of_StartPoses; i++)
     {
       printf("%d %s\n", i, StartPoses[i]); 
@@ -158,9 +159,17 @@ struct Plugin_Option_Parameters
       if(7 != read_fields)
         return 0; // Broken parameters.
       if(0 == strNcmp(target_name, name))
-        break; // Found
+      {
+        _x     = x;
+        _y     = y;
+        _z     = z;
+        _roll  = roll;
+        _pitch = pitch;
+        _yaw   = yaw;
+        return 1; // Found and There were all parameters
+      }
     }
-    return 1; // Found and There were all parameters
+    return 0; // No same name parameter.
   }
 };
 
@@ -684,9 +693,9 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   Last_time = Current_time;
   if(dt < 1)
   {
-    acl.x = linear_acceleration.x();
-    acl.y = linear_acceleration.y();
-    acl.z = linear_acceleration.z();
+    acl.x = linear_acceleration.x() * 0.001;
+    acl.y = linear_acceleration.y() * 0.001;
+    acl.z = linear_acceleration.z() * 0.001;
     vel.x += acl.x * dt;
     vel.y += acl.y * dt;
     vel.z += acl.z * dt;
@@ -800,6 +809,10 @@ struct UC_INIT
     rtn = BUCIP.Search("Rotation");
     if(NULL != rtn)
       sscanf(rtn, "%f,%f,%f", &r, &p, &yaw);
+    // If a Start parameter was given....(Option)
+    rtn = BUCIP.Search("Start");
+    if(NULL != rtn)
+      POP.Search_StartPose(rtn, x, y, z, r, p, yaw);
     // If a battery parameter was given....(Option)
     rtn = BUCIP.Search("Battery");
     if(NULL != rtn)

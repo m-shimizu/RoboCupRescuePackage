@@ -2,7 +2,7 @@
 <sdf version="1.4">
   <model name="portmessa">
     <static>true</static>
-    <pose>0 0 1.45 0 0 0</pose>
+    <pose>0 0 1.428622 0 0 0</pose>
     <link name="walls">
       <collision name="collision">
         <geometry>
