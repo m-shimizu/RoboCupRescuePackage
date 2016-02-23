@@ -14,6 +14,8 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 # Build the USARGazebo plugin
 add_library(USARGazebo SHARED USARGazebo.cc)
 target_link_libraries(USARGazebo ${GAZEBO_LIBRARIES})
+add_library(crawler_robot_1DEG SHARED crawler_robot_1DEG.cc)
+target_link_libraries(crawler_robot_1DEG ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
 ################################################
 # Build the example a set of USARGazebo-WorldPlugin(Subscriber) and usarsim_pub program
@@ -26,4 +28,3 @@ target_link_libraries(USARGazebo ${GAZEBO_LIBRARIES})
 # Build the optional tool
 add_executable (robot_teleop robot_teleop.cc)
 target_link_libraries(robot_teleop ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-

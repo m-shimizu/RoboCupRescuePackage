@@ -1489,6 +1489,7 @@ void USARimage::send_full_size_image(ConstImageStampedPtr& _msg)
                      , 5 + ImageSize));
     // Free ImageBuf
   delete ImageBuf;
+printf("Sent a full size image in raw data, size = %d\n", 5+ImageSize);
 /* For checking to be able to get an image data
   static int filenumber=0;
   char filename[100];
