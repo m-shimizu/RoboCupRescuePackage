@@ -235,6 +235,10 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
 
+   ,{"Crawler_Robot", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
    ,{"quadrotor", RT_D_AERIALVEHICLE, "RotaryWing",
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_QuadRotor}
@@ -280,8 +284,10 @@ int get_number_of_Robot_DB(const char* robot_name)
 #define ET_D_U_CAMERA       "Camera"
 #define ET_D_G_LASERSCANNER "scan"
 #define ET_D_U_LASERSCANNER "RangeScanner"
-#define ET_D_G_ODOMETRY     "Odometry_from_IMU"
+#define ET_D_G_ODOMETRY     "Odometry"
 #define ET_D_U_ODOMETRY     "Odometry"
+#define ET_D_G_GROUNDTRUTH  "GndTruth"
+#define ET_D_U_GROUNDTRUTH  "GroundTruth"
 
 //////////////////////////////////////////////////////////////////
 // Gazebo-USARSim Database 
@@ -295,6 +301,8 @@ struct Gazebo_USARSim_DATABASE
     {ET_D_G_RFID,         ET_D_U_RFID},
     {ET_D_G_GPS,          ET_D_U_GPS},
     {ET_D_G_IMU,          ET_D_U_IMU},
+    {ET_D_G_ODOMETRY,     ET_D_U_ODOMETRY},
+    {ET_D_G_GROUNDTRUTH,  ET_D_U_GROUNDTRUTH},
     {"Unknown",           "UnKnown"} };
 
 int get_number_of_DB_From_Gazebo_name(const char* _name)
@@ -322,7 +330,6 @@ int get_number_of_DB_From_USARSim_name(const char* _name)
 
 namespace gazebo
 {
-
 //////////////////////////////////////////////////////////////////
 // USARcommand 
 struct USARcommand
@@ -348,8 +355,8 @@ struct USARcommand
   int                           full_battery, remain_battery;
   gazebo::transport::SubscriberPtr* _sub;
   std::vector<event::ConnectionPtr> connections;
-  int                           STA_Last_sec, STA_Count_Per_1sec, 
-                                STA_Cut_Counter;
+  int                           STA_Disp_Counter, IMU_Disp_Counter;
+  int                           STA_Last_sec, STA_Count_Per_1sec; 
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -363,7 +370,8 @@ struct USARcommand
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), ucbuf(NULL), robot_was_spawned(0)
       , current_topics_list(), registered_topics_list()
-      , STA_Last_sec(0), STA_Count_Per_1sec(0), STA_Cut_Counter(0)
+      , STA_Disp_Counter(0), IMU_Disp_Counter(0)
+      , STA_Last_sec(0), STA_Count_Per_1sec(0)
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -375,32 +383,44 @@ struct USARcommand
   }
 
   //////////////////////////////////////////////////////////////////
+  // set_current_time_in_form
+  float set_current_time_in_form(char* buf)
+  {
+    float  Current_time = _parent._world->GetRealTime().Double();
+    sprintf(buf, "%.4f", Current_time);
+    return Current_time;
+  }
+
+  //////////////////////////////////////////////////////////////////
   // USARcommand.Process_STA for USARcommand.Send_SENS
   void Process_STA(void)
   {
-    float      Current_time = _parent._world->GetRealTime().Double();
-    int        Current_sec = (int)Current_time;
-    char       Current_time_in_form[50];
     boost::asio::streambuf response;
     std::ostream           os_res(&response);
-    sprintf(Current_time_in_form, "%.2f", Current_time);
+    char       Current_time_in_form[50];
+    float      Current_time=set_current_time_in_form(Current_time_in_form);
+    int        Current_sec = (int)Current_time;
     if(STA_Last_sec != Current_sec)
     {
       STA_Count_Per_1sec = 0;
       remain_battery--;
     }
-    if(STA_Cut_Counter < 0)
+    if(STA_Disp_Counter < 0)
     {
-      STA_Cut_Counter = 100; // Display STA 1 times per 100 loop times
+      STA_Disp_Counter = 100; // Display STA 1 times per 100 loop times
       os_res << "STA " << 
-        "{Type " << get_type_of_robot(model_name) << "}" << 
         "{Time " << Current_time_in_form << "}" << 
         "{Battery " << remain_battery << "}" << 
+        "{Type " << get_type_of_robot(model_name) << "}" << 
+        "{LightToggle False}" << 
+        "{LightIntensity 100}" << 
+        "{FrontSteer 0}" << 
+        "{RearSteer 0}" << 
         "{CountPer1sec " << STA_Count_Per_1sec << "}" << 
         "\r\n";
     }
     else
-      STA_Cut_Counter--;
+      STA_Disp_Counter--;
     STA_Count_Per_1sec++;
     STA_Last_sec = Current_sec;
     boost::asio::write(_socket, response);
@@ -495,11 +515,6 @@ std::cout << "IMU cb registered" << std::endl;
   }
 
   //////////////////////////////////////////////////////////////////
-  // USARcommand.functions which need to be defined 
-  //  at outside of this class definition
-  void UC_check_command_from_USARclient(void);
-
-  //////////////////////////////////////////////////////////////////
   // USARcommand.Accept_Process
   void Accept_Process(void)
   {
@@ -509,10 +524,17 @@ std::cout << "IMU cb registered" << std::endl;
     connections.push_back(event::Events::ConnectWorldUpdateBegin(
       boost::bind(&USARcommand
           ::Send_STA_and_Search_Sensors_and_Register_Callbacks, this)));
+    UC_send_NFO(*this);
 //std::cout << "Accept_Process address [" << this << "]" << std::endl;
     while(1)
       UC_check_command_from_USARclient();
   }
+
+  //////////////////////////////////////////////////////////////////
+  // USARcommand.functions which need to be defined 
+  //  at outside of this class definition
+  void UC_check_command_from_USARclient(void);
+  void UC_send_NFO(USARcommand&);
 };
 
 #define GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
@@ -553,16 +575,21 @@ void USARcommand::Process_laser_scanner_callback(
 {
   boost::asio::streambuf sen;
   std::ostream os(&sen);
+  char  Current_time_in_form[50];
+  float Current_time=set_current_time_in_form(Current_time_in_form);
+  int   Current_sec = (int)Current_time;
   int   angles;
   char  tmpbuf[100];
   float angle_width = _msg->scan().angle_max() - _msg->scan().angle_min();
   float steps       = angle_width / _msg->scan().angle_step();
   float resolution  = angle_width / steps;
-  os << "SEN {Type RangeScanner}" <<
-            "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}" <<
-            "{Resolution " << resolution << "}" << 
-            "{FOV " << angle_width << "}" << 
-            "{Range ";
+  os << "SEN " <<  
+        "{Time " << Current_time_in_form << "}" << 
+        "{Type RangeScanner}" <<
+        "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}" <<
+        "{Resolution " << resolution << "}" << 
+        "{FOV " << angle_width << "}" << 
+        "{Range ";
   /*
   for(typename std::set<double>::iterator i=_msg->scan().ranges().begin()
         ; i != _msg->scan().ranges().end(); i++)
@@ -617,6 +644,9 @@ void USARcommand::Process_laser_scanner_callback(
 //    }
 void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 {
+  char  Current_time_in_form[50];
+  float Current_time=set_current_time_in_form(Current_time_in_form);
+  int   Current_sec = (int)Current_time;
   int   iLon, iLat;
   float fLon, fLat;
   char  tmpbuf[100];
@@ -626,11 +656,13 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
   iLon = (int)_msg->longitude_deg();
   fLat = (_msg->latitude_deg() - iLat) * 60.0;
   fLon = (_msg->longitude_deg() - iLon) * 60.0;
-  os << "SEN {Type GPS}" <<
-            "{Name " << GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}" <<
-            "{Latitude " << iLat << "," << fLat << ",N}" << 
-            "{Lonitude " << iLon << "," << fLon << ",E}" << 
-            "{Satellites 8}{Fix 1}";
+  os << "SEN " << 
+        "{Time " << Current_time_in_form << "}" << 
+        "{Type GPS}" <<
+        "{Name " << GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}" <<
+        "{Latitude " << iLat << "," << fLat << ",N}" << 
+        "{Lonitude " << iLon << "," << fLon << ",E}" << 
+        "{Satellites 8}{Fix 1}";
   os << "\r\n"; 
   boost::asio::write(_socket, sen);
 //  std::cout << _msg->DebugString();
@@ -663,18 +695,20 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
 //    }
 void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
 {
+  char   Current_time_in_form[50];
+  float  Current_time=set_current_time_in_form(Current_time_in_form);
+  int    Current_sec = (int)Current_time;
   char   tmpbuf[100];
   static gazebo::math::Vector3 pose(0,0,0), vel(0,0,0), acl;
   double w, x, y, z, sqw, sqx, sqy, sqz, yaw, pitch, roll;
-  float  Current_time = _parent._world->GetRealTime().Double();
   float  dt;
   static float Last_time = 0;
   const gazebo::msgs::Quaternion& orientation = _msg->orientation();
   const gazebo::msgs::Vector3d& linear_acceleration = 
                                         _msg->linear_acceleration();
+//std::cout << _msg->DebugString();
   _msg->stamp().sec();
   _msg->stamp().nsec();
-
   //Break out the values from the Quarternion and convert to YPR
   w = orientation.w();
   x = orientation.x();
@@ -710,24 +744,37 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
     pose.z += vel.z * dt;
 //printf("IMU: X,Y,YAW=%f,%f,%f\n", pose.x, pose.y, yaw);
   }
-  boost::asio::streambuf sen;
-  std::ostream os(&sen);
-  os << "SEN {Type INS}" <<
-        "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
-        "{Location " << pose.x << "," << pose.y << "," << pose.z << "}" << 
-        "{Orientation " << roll << "," << pitch << "," << yaw << "}";
-  os << "\r\n"; 
-  boost::asio::write(_socket, sen);
-//  std::cout << _msg->DebugString();
-  ///////////////////////////////////////////////////////////////
-  // Send Odometory 
-  boost::asio::streambuf sen_odo;
-  std::ostream os_odo(&sen_odo);
-  os_odo << "SEN {Type Odometry}" <<
-        "{Name " << ET_D_G_ODOMETRY << "}" <<
-        "{Pose " << pose.x << "," << pose.y << "," << yaw << "}";
-  os_odo << "\r\n"; 
-  boost::asio::write(_socket, sen_odo);
+  if(IMU_Disp_Counter < 0)
+  {
+    IMU_Disp_Counter = 50; // Display STA 1 times per 100 loop times
+    ///////////////////////////////////////////////////////////////
+    // Send INS
+    boost::asio::streambuf sen;
+    std::ostream os(&sen);
+    os << "SEN " << 
+          "{Time " << Current_time_in_form << "}" << 
+          "{Type INS}" <<
+          "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
+          "{Location " << pose.x <<","<< pose.y <<","<< pose.z << "}" << 
+          "{Orientation " << roll << "," << pitch << "," << yaw << "}";
+    os << "\r\n"; 
+    boost::asio::write(_socket, sen);
+    ///////////////////////////////////////////////////////////////
+    // Send Odometory 
+    boost::asio::streambuf sen_odo;
+    std::ostream os_odo(&sen_odo);
+    os_odo << "SEN " << 
+          "{Time " << Current_time_in_form << "}" << 
+    //      "{Type Odometry}" <<
+    //      "{Name " << ET_D_G_ODOMETRY << "}" <<
+          "{Type " << ET_D_U_GROUNDTRUTH << "}" <<
+          "{Name " << ET_D_G_GROUNDTRUTH << "}" <<
+          "{Pose " << pose.x << "," << pose.y << "," << yaw << "}";
+    os_odo << "\r\n"; 
+    boost::asio::write(_socket, sen_odo);
+  }
+  else
+    IMU_Disp_Counter--;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -988,6 +1035,13 @@ struct UC_GETSTARTPOSES
   }
 };
 
+//////////////////////////////////////////////////////////////////
+//  Send NFO            ## DO NOT MOVE THIS FUNCTION FROM HERE ##
+void USARcommand::UC_send_NFO(USARcommand& parent)
+{
+  UC_GETSTARTPOSES UC_getstartposes(parent);
+}
+
 #define UC_GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
                                  _parent.registered_topics_list.Search(X))
 #define UC_GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
@@ -1067,6 +1121,20 @@ struct UC_GETGEO
   }
 
   //////////////////////////////////////////////////////////////////
+  //  GEO_set_groundtruth_params
+  int GEO_set_groundtruth_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    st_response << "{Type " << _USARSim_name << "}";
+    st_response << 
+      "{Name " << ET_D_G_GROUNDTRUTH << 
+      " Location " << "0,0.1,0.1" <<
+      " Orientation " << "0,0.1,0.1" << 
+      " Mount " << _parent.own_name << "}";
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
@@ -1095,6 +1163,8 @@ struct UC_GETGEO
         GEO_set_effecters_params(st_response, ET_D_U_IMU);
       else if(NULL != strcasestr(rtn, ET_D_U_ODOMETRY))
         GEO_set_odometry_params(st_response, ET_D_U_ODOMETRY);
+      else if(NULL != strcasestr(rtn, ET_D_U_GROUNDTRUTH))
+        GEO_set_groundtruth_params(st_response, ET_D_U_GROUNDTRUTH);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         st_response << 
@@ -1186,6 +1256,21 @@ struct UC_GETCONF
   }
 
   //////////////////////////////////////////////////////////////////
+  //  CONF_set_groundtruth_params
+  int CONF_set_groundtruth_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    st_response << "{Type " << _USARSim_name << "}";
+    st_response << 
+      "{Name " << ET_D_G_GROUNDTRUTH << 
+//      " Location " << "0,0.1,0.1" <<
+//      " Orientation " << "0,0.1,0.1" << 
+//      " Mount " << _parent.own_name << 
+      "}";
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
   //  read_params_from_usar_command
   int read_params_from_usar_command(void)
   {
@@ -1214,6 +1299,8 @@ struct UC_GETCONF
         CONF_set_effecters_params(st_response, ET_D_U_IMU);
       else if(NULL != strcasestr(rtn, ET_D_U_ODOMETRY))
         CONF_set_odometry_params(st_response, ET_D_U_ODOMETRY);
+      else if(NULL != strcasestr(rtn, ET_D_U_GROUNDTRUTH))
+        CONF_set_groundtruth_params(st_response, ET_D_U_GROUNDTRUTH);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         if(NULL != strcasestr(get_type_of_robot(_parent.model_name),
@@ -1244,7 +1331,6 @@ struct UC_GETCONF
     return UCE_GOOD;
   }
 };
-
 
 //////////////////////////////////////////////////////////////////
 //  USAR Command fetch    ## DO NOT MOVE THIS FUNCTION FROM HERE ##
