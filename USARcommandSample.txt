@@ -1,35 +1,40 @@
 # USARSim command samples in GameBot Protocol
 
-GETSTARTPOSES
+## GETSTARTPOSES
 INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}
 DRIVE {RIGHT 1.0} {LEFT 1.0}
+GETCONF {Type Robot}
+GETGEO {Type Robot}
+GETCONF {Type RangeScanner}
+GETGEO {Type RangeScanner}
+GETCONF {Type INS}
+GETGEO {Type INS}
+GETCONF {Type GPS}
+GETGEO {Type GPS}
+GETCONF {Type Camera}
+GETGEO {Type Camera} 
+GETCONF {Type GroundTruth}
+GETGEO {Type GroundTruth}
 
-
-=== usarsim_inf output sample ===
-GETSTARTPOSES
-INIT {Classname pioneer3at_with_sensors} {Name pioneer3at_with_sensors} {Location 1,-2,1}
-GETCONF {Type RFID}
-GETGEO {Type RFID}
-GETCONF {Type Robot} {Name pioneer3at_with_sensors}
-GETGEO {Type Robot} {Name pioneer3at_with_sensors}
-GETCONF {Type RangeScanner} {Name laser_tilt}
-GETGEO {Type RangeScanner} {Name laser_tilt}
-GETCONF {Type INS} {Name imu_sensor}
-GETGEO {Type INS} {Name imu_sensor}
-GETCONF {Type GPS} {Name gps}
-GETGEO {Type GPS} {Name gps}
-GETCONF {Type Camera} {Name r_camera}
-GETGEO {Type Camera} {Name l_camera}
-
-
-
-=== SANDBOX ===
-GETSTARTPOSES
-INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}
-GETSTARTPOSES
-GETSTARTPOSES
-GETSTARTPOSES
-GETSTARTPOSES
-DRIVE {RIGHT 1.0} {LEFT 1.0}
-DRIVE {RIGHT 0.0} {LEFT 0.0}
-
+## REAL USARSIM OUTPUT SAMPLE
+NFO {Gametype BotDeathMatch} {Level EmptyRoom} {TimeLimit 20}
+CONF {Type Camera} {Name Camera}{TextureOffsetX 320}{TextureOffsetY 0}{TextureResolutionX 320}{TextureResolutionY 240}{CameraDefFov 80.0000}{CameraMinFov 20.0000}{CameraMaxFov 120.0000}{CameraFov 80.0000}
+CONF {Name P3AT} {Type GroundVehicle} {SteeringType SkidSteered} {Mass 11.9000} {MaxSpeed 1.2999} {MaxTorque 50000.0000} {MaxFrontSteer 0} {MaxRearSteer 0}
+GEO  {Name P3AT} {Type GroundVehicle} {Dimensions 0.2480,0.3600,0.0000} {COG 0.0000,0.0000,0.0000} {WheelRadius 0.0980} {WheelSeparation 0.3600} {WheelBase 0.2480}
+CONF {Type RangeScanner} {Name lms200} {MaxRange 20.0000} {MinRange 0.1000} {Resolution 0.0174} {Fov 3.1414} {Panning True} {Tilting False}
+GEO {Type RangeScanner} {Name lms200} {Location 0.21,-0.00,-0.20} {Orientation 0.00,-0.00,-0.00}{Mount P3AT}
+CONF {Type INS} {Name InsTest} {ScanInterval 0.2000}
+GEO {Type INS} {Name InsTest} {Location -0.00,-0.00,-0.20} {Orientation 0.00,-0.00,-0.00}{Mount P3AT}
+CONF {Type Camera} {Name Camera}{TextureOffsetX 320}{TextureOffsetY 0}{TextureResolutionX 320}{TextureResolutionY 240}{CameraDefFov 80.0000}{CameraMinFov 20.0000}{CameraMaxFov 120.0000}{CameraFov 80.0000}
+GEO {Type Camera} {Name Camera} {Location 0.10,-0.00,-0.42} {Orientation 0.00,-0.00,-0.00}{Mount P3AT}
+CONF {Type GroundTruth} {Name GndTruth} {ScanInterval 0.1000}
+GEO {Type GroundTruth} {Name GndTruth} {Location 0.00,0.00,-0.00} {Orientation 0.00,-0.00,-0.00}{Mount P3AT}
+STA {Time 477.7582} {Battery 99999} {Type GroundVehicle} {LightToggle False} {LightIntensity 100} {FrontSteer 0} {RearSteer 0}
+SEN {Time 477.7582} {Type GroundTruth} {Name GndTruth} {Location -0.000,-0.000,0.017} {Orientation -0.000,0.000,0.000}
+SEN {Time 477.7582} {Type Encoder} {Name W1} {Tick 0}
+SEN {Time 477.7582} {Type Encoder} {Name W2} {Tick 0}
+SEN {Time 477.7743} {Type Camera} 
+SEN {Type INS} {Name InsTest} {Location 0.00,0.00,-0.20} {Orientation 0.00,0.00,0.00}
+SEN {Time 477.8550} {Type RangeScanner} {Name lms200} {Resolution 0.0174} {FOV 3.1414} {Range 9.38,9.38,9.38,9.39,9.40,9.41,9.43,9.45,9.47,9.49,9.52,9.55,9.59,9.62,9.67,9.71,9.76,9.81,9.86,9.92,9.98,10.05,10.12,10.19,10.27,10.35,10.44,10.53,10.62,10.72,10.83,10.94,11.06,11.18,11.31,11.45,11.59,11.74,11.90,12.07,12.25,12.43,12.62,12.82,13.04,12.97,12.75,12.54,12.34,12.15,11.97,11.80,11.64,11.48,11.33,11.19,11.06,10.93,10.81,10.70,10.59,10.48,10.38,10.29,10.20,10.12,10.04,9.96,9.89,9.82,9.76,9.70,9.64,9.59,9.54,9.49,9.45,9.41,9.37,9.34,9.31,9.28,9.26,9.24,9.22,9.20,9.19,9.18,9.17,9.17,9.17,9.17,9.17,9.18,9.19,9.20,9.22,9.24,9.26,9.28,9.31,9.34,9.37,9.41,9.45,9.49,9.54,9.59,9.64,9.70,9.76,9.82,9.89,9.96,10.04,10.12,10.20,10.29,10.38,10.48,10.59,10.70,10.81,10.93,11.06,11.19,11.33,11.48,11.64,11.80,11.97,12.15,12.34,12.53,12.75,12.96,13.04,12.83,12.62,12.43,12.24,12.07,11.90,11.75,11.59,11.45,11.31,11.19,11.06,10.94,10.83,10.72,10.62,10.53,10.43,10.35,10.27,10.19,10.11,10.05,9.98,9.92,9.86,9.81,9.76,9.71,9.66,9.62,9.59,9.55,9.52,9.49,9.47,9.45,9.43,9.41,9.40,9.39,9.38,9.38,9.38}
+SEN {Time 477.8550} {Type Tachometer} {Name TachTest} {Vel 0.0000,0.0000,0.0000,0.0000} {Pos 0.0000,0.0000,0.0000,0.0000}
+SEN {Type INS} {Name InsTest} {Location 0.00,0.00,-0.20} {Orientation 0.00,0.00,0.00}

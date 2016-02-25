@@ -31,9 +31,9 @@
 
 <!-- SIMPLE WORLD -->
     <include>
-      <pose>6.52567 5.49381 0.5 0 -0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <static>1</static>
-      <uri>model://box_gazebo_generated</uri>
+      <uri>model://simple_block_world</uri>
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
 -->

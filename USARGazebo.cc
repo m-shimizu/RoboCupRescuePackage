@@ -403,7 +403,8 @@ struct USARcommand
     if(STA_Last_sec != Current_sec)
     {
       STA_Count_Per_1sec = 0;
-      remain_battery--;
+      if(0 < remain_battery)
+        remain_battery--;
     }
     if(STA_Disp_Counter < 0)
     {
@@ -537,10 +538,12 @@ std::cout << "IMU cb registered" << std::endl;
   void UC_send_NFO(USARcommand&);
 };
 
-#define GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
-                                         registered_topics_list.Search(X))
-#define GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
-                                         registered_topics_list.Search(X))
+#define GET_TYPE_FROM_REGISTERED_TOPIC(T,X) \
+                              get_type_from_topic_name(T, sizeof(T),\
+                                registered_topics_list.Search(X))
+#define GET_NAME_FROM_REGISTERED_TOPIC(T,X) \
+                              get_name_from_topic_name(T, sizeof(T),\
+                                registered_topics_list.Search(X))
 
 //////////////////////////////////////////////////////////////////////
 // Process_laser_scanner_callback
@@ -586,25 +589,18 @@ void USARcommand::Process_laser_scanner_callback(
   os << "SEN " <<  
         "{Time " << Current_time_in_form << "}" << 
         "{Type RangeScanner}" <<
-        "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "scan") << "}" <<
+        "{Name " << GET_NAME_FROM_REGISTERED_TOPIC(tmpbuf, "scan")<<"}"<<
         "{Resolution " << resolution << "}" << 
         "{FOV " << angle_width << "}" << 
         "{Range ";
-  /*
+  /* MEMO
   for(typename std::set<double>::iterator i=_msg->scan().ranges().begin()
         ; i != _msg->scan().ranges().end(); i++)
   */
   angles = _msg->scan().ranges_size();
   if(0 < angles)
-  {
-    int    i;
-    float* angle_values = new float[angles];
-    for(i = 0; angles > i; i++)
-      angle_values[i] = _msg->scan().ranges(i);
-    for(i = 0; angles > i; i++)
-      os << angle_values[(angles - 1)-i] << (((angles - 1) > i)?",":"");
-    delete angle_values;
-  }
+    for(int i = 0; angles > i; i++)
+      os << _msg->scan().ranges(i) << (((angles - 1) > i)?",":"");
   os << "}";
   os << "\r\n"; 
   boost::asio::write(_socket, sen);
@@ -659,7 +655,7 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
   os << "SEN " << 
         "{Time " << Current_time_in_form << "}" << 
         "{Type GPS}" <<
-        "{Name " << GET_TYPE_FROM_TOPIC(tmpbuf, "gps") << "}" <<
+        "{Name " << GET_TYPE_FROM_REGISTERED_TOPIC(tmpbuf, "gps")<<"}"<<
         "{Latitude " << iLat << "," << fLat << ",N}" << 
         "{Lonitude " << iLon << "," << fLon << ",E}" << 
         "{Satellites 8}{Fix 1}";
@@ -754,7 +750,7 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
     os << "SEN " << 
           "{Time " << Current_time_in_form << "}" << 
           "{Type INS}" <<
-          "{Name " << GET_NAME_FROM_TOPIC(tmpbuf, "imu") << "}" <<
+          "{Name " << GET_NAME_FROM_REGISTERED_TOPIC(tmpbuf, "imu")<<"}"<<
           "{Location " << pose.x <<","<< pose.y <<","<< pose.z << "}" << 
           "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os << "\r\n"; 
@@ -769,7 +765,8 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
     //      "{Name " << ET_D_G_ODOMETRY << "}" <<
           "{Type " << ET_D_U_GROUNDTRUTH << "}" <<
           "{Name " << ET_D_G_GROUNDTRUTH << "}" <<
-          "{Pose " << pose.x << "," << pose.y << "," << yaw << "}";
+          "{Location " << pose.x <<","<< pose.y <<","<< pose.z << "}" << 
+          "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os_odo << "\r\n"; 
     boost::asio::write(_socket, sen_odo);
   }
@@ -1042,15 +1039,17 @@ void USARcommand::UC_send_NFO(USARcommand& parent)
   UC_GETSTARTPOSES UC_getstartposes(parent);
 }
 
-#define UC_GET_TYPE_FROM_TOPIC(T,X) get_type_from_topic_name(T, sizeof(T),\
-                                 _parent.registered_topics_list.Search(X))
-#define UC_GET_NAME_FROM_TOPIC(T,X) get_name_from_topic_name(T, sizeof(T),\
-                                 _parent.registered_topics_list.Search(X))
+#define UC_GET_TYPE_FROM_REGISTERED_TOPIC(T,X) \
+                           get_type_from_topic_name(T, sizeof(T),\
+                          _parent.registered_topics_list.Search(X))
+#define UC_GET_NAME_FROM_REGISTERED_TOPIC(T,X) \
+                           get_name_from_topic_name(T, sizeof(T),\
+                          _parent.registered_topics_list.Search(X))
 
-#define UC_GET_TYPE_FROM_TL(T,X,I) \
-           get_type_from_topic_name(T,sizeof(T),tl.Search_n(I,X))
-#define UC_GET_NAME_FROM_TL(T,X,I) \
-           get_name_from_topic_name(T,sizeof(T),tl.Search_n(I,X))
+#define UC_GET_TYPE_FROM_TOPIC_NAME(T,S) \
+                           get_type_from_topic_name(T, sizeof(T),S)
+#define UC_GET_NAME_FROM_TOPIC_NAME(T,S) \
+                           get_name_from_topic_name(T, sizeof(T),S)
 
 //////////////////////////////////////////////////////////////////
 // UC_GETGEO
@@ -1076,32 +1075,29 @@ struct UC_GETGEO
   int GEO_set_effecters_params(std::iostream& st_response, 
                                              const char* _USARSim_name)
   {
-    TopicsList  tl;
     int         effecters;
     char        tmpbuf[100];
     int         flag_gps = 0;
+		const char* topic_name;
     const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
-    tl.Get_Topics_List();
-    if(0 == tl.Filter(_parent.own_name))
-      return UCE_NO_EFFECTER;
-    if(0 == (effecters = tl.Filter(Gazebo_name)))
-      return UCE_NO_EFFECTER;
-    if(NULL != effecter_name && 0 == (effecters=tl.Filter(effecter_name)))
-      return UCE_NO_EFFECTER;
-    for(int i = 0; effecters > i; i++)
+    for(int i = 0; 1; i++)
     {
+			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+			if(NULL == topic_name)
+			  break;
       st_response << 
         "{Name " << 
-          ((flag_gps)?(UC_GET_TYPE_FROM_TL(tmpbuf, Gazebo_name, i)): 
-                      (UC_GET_NAME_FROM_TL(tmpbuf, Gazebo_name, i))) << 
-        " Location " << "0,0.1,0.1" <<
-        " Orientation " << "0,0.1,0.1" << 
-        " Mount " << _parent.own_name << "}";
+         ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
+                     (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name)))<< 
+				            "}" <<
+        "{Location " << "0,0.1,0.1" << "}" <<
+        "{Orientation " << "0,0.1,0.1" << "}" << 
+        "{Mount " << _parent.own_name << "}";
     }
     return UCE_GOOD;
   }
@@ -1209,33 +1205,34 @@ struct UC_GETCONF
   int CONF_set_effecters_params(std::iostream& st_response, 
                                              const char* _USARSim_name)
   {
-    TopicsList  tl;
     int         effecters;
     char        tmpbuf[100];
     int         flag_gps = 0;
+		const char* topic_name;
     const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
-    tl.Get_Topics_List();
-    if(0 == tl.Filter(_parent.own_name))
-      return UCE_NO_EFFECTER;
-    if(0 == (effecters = tl.Filter(Gazebo_name)))
-      return UCE_NO_EFFECTER;
-    if(NULL != effecter_name && 0 == (effecters=tl.Filter(effecter_name)))
-      return UCE_NO_EFFECTER;
-    for(int i = 0; effecters > i; i++)
+    for(int i = 0; 1; i++)
     {
-      st_response << 
-        "{Name " << 
-          ((flag_gps)?(UC_GET_TYPE_FROM_TL(tmpbuf, Gazebo_name, i)): 
-                      (UC_GET_NAME_FROM_TL(tmpbuf, Gazebo_name, i))) << 
-//        " Location " << "0,0.1,0.1" <<
-//        " Orientation " << "0,0.1,0.1" << 
-//        " Mount " << _parent.own_name << 
-        "}";
+			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+			if(NULL == topic_name)
+			  break;
+      const char* dev_name = 
+         ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
+                     (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
+      st_response << "{Name " << dev_name << "}";
+      if(0 == strNcmp(Gazebo_name, ET_D_G_LASERSCANNER))
+      {
+        st_response<<"{MaxRange 20.0}" <<
+                     "{MinRange 0.08}" <<
+                     "{Resolution 0.0175508}"<<
+                     "{Fov 3.1416}" <<
+                     "{Panning False}" <<
+                     "{Tilting True}";
+      }
     }
     return UCE_GOOD;
   }
