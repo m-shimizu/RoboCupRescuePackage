@@ -29,7 +29,7 @@
       <cast_shadows>1</cast_shadows>
     </light>
 
-<!-- SIMPLE WORLD
+<!-- SIMPLE WORLD -->
     <include>
       <pose>0 0 0 0 0 0</pose>
       <static>1</static>
@@ -38,7 +38,7 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
 -->
 
-<!--  Portmessa Nagoya (The RoboCup 2017 venue) -->
+<!--  Portmessa Nagoya (The RoboCup 2017 venue) 
     <include>
       <static>1</static>
       <uri>model://portmessa</uri>
