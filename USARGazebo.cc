@@ -587,7 +587,8 @@ void USARcommand::Process_laser_scanner_callback(
   float steps       = angle_width / _msg->scan().angle_step();
   float resolution  = angle_width / steps;
   os << "SEN " <<  
-        "{Time " << Current_time_in_form << "}" << 
+//        "{Time " << Current_time_in_form << "}" << 
+        "{Time "<<_msg->time().sec()<<"."<<(int)_msg->time().nsec()<<"}"<< 
         "{Type RangeScanner}" <<
         "{Name " << GET_NAME_FROM_REGISTERED_TOPIC(tmpbuf, "scan")<<"}"<<
         "{Resolution " << resolution << "}" << 
@@ -653,7 +654,8 @@ void USARcommand::Process_gps_callback(ConstGPSPtr& _msg)
   fLat = (_msg->latitude_deg() - iLat) * 60.0;
   fLon = (_msg->longitude_deg() - iLon) * 60.0;
   os << "SEN " << 
-        "{Time " << Current_time_in_form << "}" << 
+//        "{Time " << Current_time_in_form << "}" << 
+        "{Time "<<_msg->time().sec()<<"."<<(int)_msg->time().nsec()<<"}"<< 
         "{Type GPS}" <<
         "{Name " << GET_TYPE_FROM_REGISTERED_TOPIC(tmpbuf, "gps")<<"}"<<
         "{Latitude " << iLat << "," << fLat << ",N}" << 
@@ -725,7 +727,7 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   {
     acl.x = linear_acceleration.x();
     acl.y = linear_acceleration.y();
-    acl.z = linear_acceleration.z();
+//    acl.z = linear_acceleration.z(); // It must have gravity value;
     // Reverse Rotation around Z axis
     float cz = cos(yaw), sz = sin(yaw);
     gazebo::math::Vector3 racl;
@@ -742,25 +744,29 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   }
   if(IMU_Disp_Counter < 0)
   {
-    IMU_Disp_Counter = 50; // Display STA 1 times per 100 loop times
+    IMU_Disp_Counter = 10; // Display STA 1 times per 100 loop times
     ///////////////////////////////////////////////////////////////
     // Send INS
+		/*
     boost::asio::streambuf sen;
     std::ostream os(&sen);
     os << "SEN " << 
-          "{Time " << Current_time_in_form << "}" << 
+      "{Time "<<_msg->stamp().sec()<<"."<<(int)_msg->stamp().nsec()<<"}"<< 
+    //      "{Time " << Current_time_in_form << "}" << 
           "{Type INS}" <<
           "{Name " << GET_NAME_FROM_REGISTERED_TOPIC(tmpbuf, "imu")<<"}"<<
           "{Location " << pose.x <<","<< pose.y <<","<< pose.z << "}" << 
           "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os << "\r\n"; 
     boost::asio::write(_socket, sen);
+		*/
     ///////////////////////////////////////////////////////////////
     // Send Odometory 
     boost::asio::streambuf sen_odo;
     std::ostream os_odo(&sen_odo);
     os_odo << "SEN " << 
-          "{Time " << Current_time_in_form << "}" << 
+      "{Time "<<_msg->stamp().sec()<<"."<<(int)_msg->stamp().nsec()<<"}"<< 
+    //      "{Time " << Current_time_in_form << "}" << 
     //      "{Type Odometry}" <<
     //      "{Name " << ET_D_G_ODOMETRY << "}" <<
           "{Type " << ET_D_U_GROUNDTRUTH << "}" <<
@@ -1085,19 +1091,37 @@ struct UC_GETGEO
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
+		if(NULL != effecter_name)
+		{
+			topic_name = _parent.registered_topics_list.Search(
+			                                      Gazebo_name, effecter_name);
+			if(NULL == topic_name)
+			  return UCE_NO_EFFECTER;
+      const char* dev_name = 
+         ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
+                     (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
+      st_response << 
+			  "{Name " << dev_name << "}" <<
+        "{Location " << "0,0.1,0.1" << "}" <<
+        "{Orientation " << "0,0.1,0.1" << "}" << 
+        "{Mount " << _parent.own_name << "}";
+      return UCE_GOOD;
+		}
     for(int i = 0; 1; i++)
     {
 			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
 			if(NULL == topic_name)
-			  break;
+				if(0 == i)
+			    return UCE_NO_EFFECTER;
+			  else
+			    break;
       st_response << 
         "{Name " << 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
                      (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name)))<< 
-				            "}" <<
-        "{Location " << "0,0.1,0.1" << "}" <<
-        "{Orientation " << "0,0.1,0.1" << "}" << 
-        "{Mount " << _parent.own_name << "}";
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" <<
+        " Mount " << _parent.own_name << "}";
     }
     return UCE_GOOD;
   }
@@ -1107,12 +1131,25 @@ struct UC_GETGEO
   int GEO_set_odometry_params(std::iostream& st_response, 
                                              const char* _USARSim_name)
   {
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-    st_response << 
-      "{Name " << ET_D_G_ODOMETRY << 
-      " Location " << "0,0.1,0.1" <<
-      " Orientation " << "0,0.1,0.1" << 
-      " Mount " << _parent.own_name << "}";
+		if(NULL != effecter_name)
+		{
+      st_response << 
+        "{Name " << ET_D_G_ODOMETRY << "}" <<
+        "{Location " << "0,0.1,0.1" << "}" <<
+        "{Orientation " << "0,0.1,0.1" << "}" <<
+        "{Mount " << _parent.own_name << "}";
+		}
+		else
+		{
+      st_response << 
+        "{Name " << ET_D_G_ODOMETRY << 
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" << 
+        " Mount " << _parent.own_name << "}";
+	  }
     return UCE_GOOD;
   }
 
@@ -1121,12 +1158,25 @@ struct UC_GETGEO
   int GEO_set_groundtruth_params(std::iostream& st_response, 
                                              const char* _USARSim_name)
   {
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-    st_response << 
-      "{Name " << ET_D_G_GROUNDTRUTH << 
-      " Location " << "0,0.1,0.1" <<
-      " Orientation " << "0,0.1,0.1" << 
-      " Mount " << _parent.own_name << "}";
+		if(NULL != effecter_name)
+		{
+      st_response << 
+        "{Name " << ET_D_G_GROUNDTRUTH << "}" << 
+        "{Location " << "0,0.1,0.1" << "}" << 
+        "{Orientation " << "0,0.1,0.1" << "}" << 
+        "{Mount " << _parent.own_name << "}";
+    }
+		else
+		{
+      st_response << 
+        "{Name " << ET_D_G_GROUNDTRUTH << 
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" << 
+        " Mount " << _parent.own_name << "}";
+		}
     return UCE_GOOD;
   }
 
@@ -1215,23 +1265,47 @@ struct UC_GETCONF
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
-    for(int i = 0; 1; i++)
-    {
-			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+		if(NULL != effecter_name)
+		{
+			topic_name = _parent.registered_topics_list.Search(
+			                                      Gazebo_name, effecter_name);
 			if(NULL == topic_name)
-			  break;
+			  return UCE_NO_EFFECTER;
       const char* dev_name = 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
                      (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
       st_response << "{Name " << dev_name << "}";
       if(0 == strNcmp(Gazebo_name, ET_D_G_LASERSCANNER))
       {
-        st_response<<"{MaxRange 20.0}" <<
+        st_response<<"{MaxRange 10.0}" <<
                      "{MinRange 0.08}" <<
-                     "{Resolution 0.0175508}"<<
+                     "{Resolution 0.0175508}" <<
                      "{Fov 3.1416}" <<
                      "{Panning False}" <<
                      "{Tilting True}";
+      }
+      return UCE_GOOD;
+		}
+    for(int i = 0; 1; i++)
+    {
+			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+			if(NULL == topic_name)
+				if(0 == i)
+			    return UCE_NO_EFFECTER;
+			  else
+			    break;
+      const char* dev_name = 
+         ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
+                     (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
+      st_response << "{Name " << dev_name << " ";
+      if(0 == strNcmp(Gazebo_name, ET_D_G_LASERSCANNER))
+      {
+        st_response<<" MaxRange 20.0" <<
+                     " MinRange 0.08" <<
+                     " Resolution 0.0175508"<<
+                     " Fov 3.1416" <<
+                     " Panning False" <<
+                     " Tilting True}";
       }
     }
     return UCE_GOOD;
@@ -1257,13 +1331,19 @@ struct UC_GETCONF
   int CONF_set_groundtruth_params(std::iostream& st_response, 
                                              const char* _USARSim_name)
   {
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-    st_response << 
-      "{Name " << ET_D_G_GROUNDTRUTH << 
-//      " Location " << "0,0.1,0.1" <<
-//      " Orientation " << "0,0.1,0.1" << 
-//      " Mount " << _parent.own_name << 
-      "}";
+		if(NULL != effecter_name)
+		{
+      st_response << "{Name GndTruth}" <<
+                     "{ScanInterval 0.1000}";
+    }
+    else
+		{
+      st_response << "{Name GndTruth" <<
+                     " ScanInterval 0.1000}";
+    }
     return UCE_GOOD;
   }
 

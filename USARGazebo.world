@@ -38,7 +38,7 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
 -->
 
-<!--  Portmessa Nagoya (The RoboCup 2017 venue)
+<!--  Portmessa Nagoya (The RoboCup 2017 venue) 
     <include>
       <static>1</static>
       <uri>model://portmessa</uri>
