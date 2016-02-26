@@ -601,7 +601,7 @@ void USARcommand::Process_laser_scanner_callback(
   angles = _msg->scan().ranges_size();
   if(0 < angles)
     for(int i = 0; angles > i; i++)
-      os << _msg->scan().ranges(i) << (((angles - 1) > i)?",":"");
+      os << _msg->scan().ranges((angles-1)-i) << (((angles-1)>i)?",":"");
   os << "}";
   os << "\r\n"; 
   boost::asio::write(_socket, sen);

@@ -29,7 +29,7 @@
       <cast_shadows>1</cast_shadows>
     </light>
 
-<!-- SIMPLE WORLD -->
+<!-- SIMPLE WORLD
     <include>
       <pose>0 0 0 0 0 0</pose>
       <static>1</static>
@@ -38,13 +38,13 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
 -->
 
-<!--  Portmessa Nagoya (The RoboCup 2017 venue) 
+<!--  Portmessa Nagoya (The RoboCup 2017 venue) -->
     <include>
       <static>1</static>
       <uri>model://portmessa</uri>
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
-      <StartPose_1>EASTENTRANCE   1.5,-55,0.3 0,0,0</StartPose_1>
+      <StartPose_1>EASTENTRANCE   1.5,-40,0.3 0,0,0</StartPose_1>
       <StartPose_1>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_1>
     </plugin>
 -->
