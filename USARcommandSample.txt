@@ -1,7 +1,7 @@
 # USARSim command samples in GameBot Protocol
 
 ## GETSTARTPOSES
-INIT {ClassName pioneer3at_with_sensors} {Name Robo_A} {Location 1,-2,0} {Rotation 0,0,0} {Start Point1} {Battery 3600}
+INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}{Battery 3600}
 DRIVE {RIGHT 1.0} {LEFT 1.0}
 GETCONF {Type Robot}
 GETGEO {Type Robot}

@@ -400,6 +400,8 @@ struct USARcommand
     char       Current_time_in_form[50];
     float      Current_time=set_current_time_in_form(Current_time_in_form);
     int        Current_sec = (int)Current_time;
+    if(0 == robot_was_spawned)
+      return;
     if(STA_Last_sec != Current_sec)
     {
       STA_Count_Per_1sec = 0;
@@ -864,7 +866,8 @@ struct UC_INIT
   //  spawn_a_robot
   void spawn_a_robot(void)
   {
-    char  model_cmd[100];
+    char       model_cmd[100];
+    TopicsList current_topics_list;
     // Already a robot has been spawned, then return
     if(1 == _parent.robot_was_spawned)
       return;
@@ -878,19 +881,35 @@ struct UC_INIT
     // Model file to load
     msg.set_sdf_filename(model_cmd);
     // Set this robot's own name
-//Please fix msg.set_edit_name()  > Dr.Nate
-//  msg.set_edit_name(_parent.own_name);
+/*msg.set_edit_name is not working in Gazebo5.
+    msg.set_edit_name(_parent.own_name); */
     // Pose to initialize the model to
     gazebo::msgs::Set(msg.mutable_pose()
-     , gazebo::math::Pose(_parent.spawn_location, _parent.spawn_direction));
-    // Send the message
+     , gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
+    // Send the message (SPAWN A ROBOT!!)
     factoryPub->Publish(msg);
     usleep(1000); // Wait for finishing spawn job
     //  checking loop to get topics of the robot
     //   if any topics of the robot could be got, 
     //    set _parent.robot_was_spawned with "1".
-    _parent.robot_was_spawned = 1;
+    for(int check_loop_cnt=0; 10 > check_loop_cnt; check_loop_cnt++)
+    {
+      current_topics_list.Refresh_Topics_List();
+      // The following line is tempolary method
+      current_topics_list.Filter(_parent.model_name);
+      // The following line is correct
+      // ,but now set_edit_name() is not working,then we can not use this.
+      //current_topics_list.Filter(_parent.own_name);
+      if(0 < current_topics_list.Size())
+      {
+        _parent.robot_was_spawned = 1;
+        break;
+      }
+      usleep(100); // Wait more for finishing spawn job
+    }
   }
+
+#define USARBOTCLASSNAMEPREFIX "USARBot."
 
   //////////////////////////////////////////////////////////////////
   //  record_robot_param
@@ -902,13 +921,15 @@ struct UC_INIT
       return;
     gazebo::math::Vector3 _location(x, y, z);
     gazebo::math::Quaternion _direction(q1, q2, q3);
-    sprintf(_parent.topic_root, "~/%s", _own_name);
-//  sprintf(_parent.topic_root, "/gazebo/default/%s", _own_name);
+    // Remove "USARBot." from the model name, if it exists.
+    if(0 == strNcmp(_model_name, USARBOTCLASSNAMEPREFIX))
+      _model_name = _model_name + strlen(USARBOTCLASSNAMEPREFIX);
+    sprintf(_parent.topic_root, "~/%s", _own_name); // ~ = /gazebo/default
     // The following line is tempolary method
-    //  until set_edit_name() would be fixed
+    //  until set_edit_name() be fixed
     strcpy(_parent.own_name, _model_name /*_own_name*/);
     // The following line is correct
-    // , but now set_edit_name() was out of order, then we can not use this.
+    // ,but now set_edit_name() was out of order,then we can not use this.
     //strcpy(_parent.own_name, _own_name); 
     strcpy(_parent.model_name, _model_name);
     _parent.spawn_location = _location;
