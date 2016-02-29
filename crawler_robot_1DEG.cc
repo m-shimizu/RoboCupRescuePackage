@@ -12,6 +12,8 @@
 #include <termios.h>
 #include <iostream>
 
+// Japanese comments will be removed soon, soory. M.Shimizu
+
 #define DEG00 0
 #define DEG45 45
 #define DEG90 90
@@ -40,6 +42,8 @@ namespace gazebo
 class MobileBasePlugin : public ModelPlugin
 {
 public:
+    transport::SubscriberPtr velSub;
+
     void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
     {
        // physics::WorldPtr world = physics::get_world("default");
@@ -98,12 +102,18 @@ public:
             this->updateConnection
             = event::Events::ConnectWorldUpdateBegin(
                   boost::bind(&MobileBasePlugin::OnUpdate, this));
+            this->velSub = this->node->Subscribe(
+      std::string("~/") + this->model->GetName() + std::string("/vel_cmd"),
+      &MobileBasePlugin::OnVelMsg, this);
         }
+
     }
 
  
     bool LoadParams(sdf::ElementPtr _sdf)
     {
+        wheelSeparation=1;
+        wheelRadius=0.2;
         // 制御用のgainパラメータを見つける
         if (!_sdf->HasElement("gain"))
         {
@@ -119,185 +129,36 @@ public:
         // 成功時
         return true;
     }
- 
-int  doslike_kbhit(void)
+
+void  check_key_command(double  vr, double  vl)
 {
-  struct termios  oldt, newt;
-  int  ch;
-  int  oldf;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-  newt.c_lflag &= ~(BRKINT | ISTRIP | IXON);
-  newt.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-  fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-  ch = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  fcntl(STDIN_FILENO, F_SETFL, oldf);
-  if(ch != EOF)
-  {
-    ungetc(ch, stdin);
-    return 1;
-  }
-  return 0;
-}
+            THETA[1] = vr;
+            THETA[2] = vr;
+            THETA[3] = vr;
+            THETA[4] = vr;
+            THETA[13] = vr;
+            THETA[14] = vr;
+            THETA[15] = vr;
+            THETA[19] = vr;
+            THETA[20] = vr;
+            THETA[21] = vr;
+            THETA[25] = vr;
+            THETA[26] = vr;
 
-int  doslike_getch(void)
-{
-  static struct termios  oldt, newt;
-  tcgetattr(STDIN_FILENO, &oldt);
-  newt = oldt;
-  newt.c_lflag &= ~(BRKINT | ISTRIP | IXON);
-  newt.c_lflag &= ~(ICANON | ECHO | ECHOE | ECHOK | ECHONL);
-  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-  int c = getchar();
-  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-  return c;
-}
+            THETA[5] = vl;
+            THETA[6] = vl;
+            THETA[7] = vl;
+            THETA[8] = vl;
+            THETA[16] = vl;
+            THETA[17] = vl;
+            THETA[18] = vl;
+            THETA[22] = vl;
+            THETA[23] = vl;
+            THETA[24] = vl;
+            THETA[27] = vl;
+            THETA[28] = vl;
 
-
-void  check_key_command(void)
-{
-
-  if(doslike_kbhit())
-  {
-    int cmd = doslike_getch();
-    switch(cmd)
-    {
-        case 'w':
-            THETA[1] = 10;
-            THETA[2] = 10;
-            THETA[3] = 10;
-            THETA[4] = 10;
-            THETA[5] = 10;
-            THETA[6] = 10;
-            THETA[7] = 10;
-      THETA[8] = 10;
-      THETA[13] = 10;
-      THETA[14] = 10;
-      THETA[15] = 10;
-      THETA[16] = 10;
-      THETA[17] = 10;
-      THETA[18] = 10;
-      THETA[19] = 10;
-      THETA[20] = 10;
-      THETA[21] = 10;
-      THETA[22] = 10;
-      THETA[23] = 10;
-      THETA[24] = 10;
-            THETA[25] = 10;
-            THETA[26] = 10;
-            THETA[27] = 10;
-            THETA[28] = 10;
-            break;     
-        case 'z':
-            THETA[1] = -10;
-            THETA[2] = -10;
-            THETA[3] = -10;
-            THETA[4] = -10;
-            THETA[5] = -10;
-            THETA[6] = -10;
-            THETA[7] = -10;
-      THETA[8] = -10;
-      THETA[13] = -10;
-      THETA[14] = -10;
-      THETA[15] = -10;
-      THETA[16] = -10;
-      THETA[17] = -10;
-      THETA[18] = -10;
-      THETA[19] = -10;
-      THETA[20] = -10;
-      THETA[21] = -10;
-      THETA[22] = -10;
-      THETA[23] = -10;
-      THETA[24] = -10;
-            THETA[25] = -10;
-            THETA[26] = -10;
-            THETA[27] = -10;
-            THETA[28] = -10;
-            break;    
-        case 'a':
-            THETA[1] = 10;
-            THETA[2] = 10;
-            THETA[3] = 10;
-            THETA[4] = 10;
-            THETA[13] = 10;
-            THETA[14] = 10;
-            THETA[15] = 10;
-            THETA[19] = 10;
-            THETA[20] = 10;
-            THETA[21] = 10;
-            THETA[25] = 10;
-            THETA[26] = 10;
-
-            THETA[5] = -10;
-            THETA[6] = -10;
-            THETA[7] = -10;
-      THETA[8] = -10;
-            THETA[16] = -10;
-            THETA[17] = -10;
-            THETA[18] = -10;
-            THETA[22] = -10;
-            THETA[23] = -10;
-            THETA[24] = -10;
-            THETA[27] = -10;
-            THETA[28] = -10;
-            break;   
-        case 'd':
-            THETA[1] = -10;
-            THETA[2] = -10;
-            THETA[3] = -10;
-            THETA[4] = -10;
-            THETA[13] = -10;
-            THETA[14] = -10;
-            THETA[15] = -10;
-            THETA[19] = -10;
-            THETA[20] = -10;
-            THETA[21] = -10;
-            THETA[25] = -10;
-            THETA[26] = -10;
-
-            THETA[5] = 10;
-            THETA[6] = 10;
-            THETA[7] = 10;
-      THETA[8] = 10;
-            THETA[16] = 10;
-            THETA[17] = 10;
-            THETA[18] = 10;
-            THETA[22] = 10;
-            THETA[23] = 10;
-            THETA[24] = 10;
-            THETA[27] = 10;
-            THETA[28] = 10;
-            break;   
-        case 's':
-            THETA[1] = 0;
-            THETA[2] = 0;
-            THETA[3] = 0;
-            THETA[4] = 0;
-            THETA[5] = 0;
-            THETA[6] = 0;
-            THETA[7] = 0;
-      THETA[8] = 0;
-            THETA[13] = 0;
-            THETA[14] = 0;
-            THETA[15] = 0;
-            THETA[19] = 0;
-            THETA[20] = 0;
-            THETA[21] = 0;
-            THETA[16] = 0;
-            THETA[17] = 0;
-            THETA[18] = 0;
-            THETA[22] = 0;
-            THETA[23] = 0;
-            THETA[24] = 0;
-            THETA[25] = 0;
-            THETA[26] = 0;
-            THETA[27] = 0;
-            THETA[28] = 0;
-            break;  
-
+/*
         case 'y':
     arm_flg = 1;
     DEG_1 -= 1;
@@ -358,8 +219,8 @@ void  check_key_command(void)
             std::cout << "Input w,a,s,d,y,u,i,h,j,k" << std::endl;
     }
   }
+      */
 }
- 
  
   void moveJoint()
   {
@@ -370,12 +231,10 @@ void  check_key_command(void)
     math::Angle angle4 = hinge12->GetAngle(0);
         // 度表示
 printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r ", angle1.Degree(), angle2.Degree(), angle3.Degree(), angle4.Degree());
-
     right_front_deg=angle1.Degree();
     left_front_deg=angle3.Degree();
     right_rear_deg=angle2.Degree();
     left_rear_deg=angle4.Degree();
-
     hinge1->SetVelocity(0, THETA[1]);
     hinge2->SetVelocity(0, THETA[2]);
     hinge3->SetVelocity(0, THETA[3]);
@@ -400,7 +259,6 @@ printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r "
     hinge22->SetVelocity(0, THETA[26]);
     hinge23->SetVelocity(0, THETA[27]);
     hinge24->SetVelocity(0, THETA[28]);
-
     if(arm_flg == 0)
     {
       hinge9->SetVelocity(0, THETA[9]);
@@ -414,17 +272,14 @@ printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r "
       THETA[9]= dev_RF*(-1)*Gp + dev_RF_sum*(-1)*Gi;
       hinge9->SetVelocity(0, THETA[9]);
       dev_RF_sum += dev_RF;
-      
       dev_LF = left_front_deg-DEG_1;    
       THETA[11]= dev_LF*(-1)*Gp + dev_LF_sum*(-1)*Gi; 
       hinge11->SetVelocity(0, THETA[11]);
       dev_LF_sum += dev_LF;
-
       dev_RR = right_rear_deg-DEG_2;
       THETA[10]= dev_RR*(-1)*Gp + dev_RR_sum*(-1)*Gi;
       hinge10->SetVelocity(0, THETA[10]);
       dev_RR_sum += dev_RR;
-      
       dev_LR = left_rear_deg-DEG_2;    
       THETA[12]= dev_LR*(-1)*Gp + dev_LR_sum*(-1)*Gi; 
       hinge12->SetVelocity(0, THETA[12]);
@@ -435,7 +290,6 @@ printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r "
   public:
   void OnUpdate()
   {
-    check_key_command();
     moveJoint();
   }
 
@@ -479,7 +333,32 @@ printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r "
   physics::LinkPtr  sensor;
   double THETA[30];
   double gain;
-};
  
+   /// Distance between wheels on the same axis (Determined from SDF)
+  double wheelSeparation;
+
+   /// Radius of the wheels (Determined from SDF)
+  double wheelRadius;
+
+  /////////////////////////////////////////////////
+  void OnVelMsg(ConstPosePtr &_msg)
+  {
+    // gzmsg << "cmd_vel: " << msg->position().x() << ", "
+    //       <<msgs::Convert(msg->orientation()).GetAsEuler().z<<std::endl;
+  
+    double vel_lin = _msg->position().x() / this->wheelRadius;
+    double vel_rot = -1 * msgs::Convert(_msg->orientation()).GetAsEuler().z
+                     * (this->wheelSeparation / this->wheelRadius);
+  
+    check_key_command(vel_lin - vel_rot, vel_lin + vel_rot);
+    /*
+    this->joints[RIGHT_FRONT]->SetVelocity(0, vel_lin - vel_rot);
+    this->joints[RIGHT_REAR ]->SetVelocity(0, vel_lin - vel_rot);
+    this->joints[LEFT_FRONT ]->SetVelocity(0, vel_lin + vel_rot);
+    this->joints[LEFT_REAR  ]->SetVelocity(0, vel_lin + vel_rot);
+    */
+  }
+};
+
 GZ_REGISTER_MODEL_PLUGIN(MobileBasePlugin)
 }
