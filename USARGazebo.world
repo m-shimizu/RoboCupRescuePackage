@@ -45,7 +45,7 @@
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>EASTENTRANCE   1.5,-40,0.3 0,0,0</StartPose_1>
-      <StartPose_1>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_1>
+      <StartPose_2>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_2>
     </plugin>
 -->
 
