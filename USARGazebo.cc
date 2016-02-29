@@ -878,6 +878,25 @@ struct UC_INIT
     gazebo::msgs::Factory msg;
     // Prepare command
     sprintf(model_cmd, "model://%s", _parent.model_name);
+
+    // Get the path to the model sdf file.
+    /*std::string modelFile = gazebo::common::SystemPaths::Instance()->FindFile(model_cmd);
+    // Open the sdf file
+    std::ifstream modelIn(modelFile.c_str());
+
+    // 1: Read modelIn into a string.
+    std::string modelStr;
+    while (!modelIn.eof())
+    {
+      std::string line;
+      std::getline(modelIn, line);
+      modelStr += line;
+    }
+
+    // 2: Change the name to something new
+    */
+
+
     // Model file to load
     msg.set_sdf_filename(model_cmd);
     // Set this robot's own name
@@ -888,7 +907,18 @@ struct UC_INIT
      , gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
     // Send the message (SPAWN A ROBOT!!)
     factoryPub->Publish(msg);
-    usleep(1000); // Wait for finishing spawn job
+
+    while (!_parent._parent._world->GetModel(_parent.model_name))
+      usleep(1000); // Wait for finishing spawn job
+
+    gazebo::physics::ModelPtr mdl = _parent._parent._world->GetModel(_parent.model_name);
+    mdl->SetName(_parent.own_name);
+
+    // set_edit_name should equal the name of a model that already exists
+    // in Gazebo
+    //msg.set_edit_name(_parent.model_name);
+    // Now set a new SDF, that will change the model.
+    //factoryPub->Publish(msg);
     //  checking loop to get topics of the robot
     //   if any topics of the robot could be got, 
     //    set _parent.robot_was_spawned with "1".
