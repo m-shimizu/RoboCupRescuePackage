@@ -151,7 +151,7 @@
       </visual>
 <!--  <sensor name="laser_tilt" type="ray">  -->
       <sensor name="lms200" type="ray">
-        <update_rate>30.000000</update_rate>
+        <update_rate>10.000000</update_rate>
         <pose>0.000000 0.000000 0.030000 0.000000 -0.000000 0.000000</pose>
         <ray>
           <scan>

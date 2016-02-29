@@ -892,6 +892,7 @@ struct UC_INIT
     //  checking loop to get topics of the robot
     //   if any topics of the robot could be got, 
     //    set _parent.robot_was_spawned with "1".
+    /*
     for(int check_loop_cnt=0; 10 > check_loop_cnt; check_loop_cnt++)
     {
       current_topics_list.Refresh_Topics_List();
@@ -907,6 +908,8 @@ struct UC_INIT
       }
       usleep(100); // Wait more for finishing spawn job
     }
+    */
+    _parent.robot_was_spawned = 1;
   }
 
 #define USARBOTCLASSNAMEPREFIX "USARBot."
