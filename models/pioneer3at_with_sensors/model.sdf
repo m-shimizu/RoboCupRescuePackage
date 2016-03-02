@@ -37,6 +37,24 @@
         </geometry>
       </visual>
 <!-- Right Camera copied from pr2 -->
+      <visual name="visual">
+        <pose>0.0 0.20000 0.3000 0.0 1.57 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.1</length>
+          </cylinder>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <pose>0.0 0.20000 0.3000 0.0 1.57 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.1</length>
+          </cylinder>
+        </geometry>
+      </collision>
       <sensor name="r_camera" type="camera">
         <update_rate>25.000000</update_rate>
         <pose>0.0 0.20000 0.3000 0.0 -0.0 -0.000000</pose>
@@ -54,6 +72,24 @@
         </camera>
       </sensor>
 <!-- Left Camera copied from pr2 -->
+      <visual name="visual">
+        <pose>0.0 -0.200000 0.3000 -0.0 1.57 0.000000</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.1</length>
+          </cylinder>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <pose>0.0 -0.200000 0.3000 -0.0 1.57 0.000000</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.1</length>
+          </cylinder>
+        </geometry>
+      </collision>
       <sensor name="l_camera" type="camera">
         <update_rate>25.000000</update_rate>
         <pose>0.0 -0.200000 0.3000 -0.0 -0.0 0.000000</pose>
