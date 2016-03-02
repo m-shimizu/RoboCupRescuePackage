@@ -1,0 +1,414 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="pioneer3at_with_sensors_b">
+    <pose>0 0 0.180 0 0 0</pose>
+    <static>false</static>
+    <link name="chassis">
+      <inertial>
+        <mass>14.0</mass>
+        <inertia>
+          <!-- http://en.wikipedia.org/wiki/List_of_moment_of_inertia_tensors
+          MATLAB:
+          m=14; h=0.19; w=0.4; d=0.5; 
+          ixx = 1/12*m*(h^2+d^2)
+          iyy = 1/12*m*(w^2+d^2) 
+          izz = 1/12*m*(h^2+d^2) 
+          -->
+          <ixx>0.3338</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.4783</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.3338</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <box>
+            <size>0.501 0.400 0.19</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/chassis.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+<!-- Right Camera copied from pr2 -->
+      <sensor name="r_camera" type="camera">
+        <update_rate>25.000000</update_rate>
+        <pose>0.0 0.20000 0.3000 0.0 -0.0 -0.000000</pose>
+        <camera>
+          <horizontal_fov>1.570796</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.100000</near>
+            <far>100.000000</far>
+          </clip>
+        </camera>
+      </sensor>
+<!-- Left Camera copied from pr2 -->
+      <sensor name="l_camera" type="camera">
+        <update_rate>25.000000</update_rate>
+        <pose>0.0 -0.200000 0.3000 -0.0 -0.0 0.000000</pose>
+        <camera>
+          <horizontal_fov>1.570796</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.100000</near>
+            <far>100.000000</far>
+          </clip>
+        </camera>
+      </sensor>
+<!-- IMU Sensor -->
+      <sensor name="imu_sensor" type="imu">
+        <pose>0 0 0 0 0 0</pose>
+        <always_on>1</always_on>
+        <update_rate>100</update_rate>
+<!--  NOW update rate is set 100 tempolary
+        <update_rate>10</update_rate>
+-->
+        <imu>
+<!--  NOW comment noise parameters out tempolary
+          <noise>
+            <type>gaussian</type>
+            <rate>
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </rate>
+            <accel>
+              <mean>0</mean>
+              <stddev>0.017</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </accel>
+          </noise>
+-->
+        </imu>
+      </sensor>
+    </link>
+<!-- Hokuyo with tilt mount copied from pr2 -->
+    <link name="laser_tilt_mount_link">
+      <self_collide>0</self_collide>
+      <pose>0.0 0.0 0.20 0.000000 -0.000000 0.000000</pose>
+      <inertial>
+        <mass>0.592000</mass>
+        <pose>-0.001134 0.001667 -0.007067 0.000000 -0.000000 0.000000</pose>
+        <inertia>
+          <ixx>0.001296</ixx>
+          <ixy>0.000023</ixy>
+          <ixz>0.000037</ixz>
+          <iyy>0.001086</iyy>
+          <iyz>0.000035</iyz>
+          <izz>0.000895</izz>
+        </inertia>
+      </inertial>
+      <collision name="laser_tilt_mount_link_geom">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/tilting_hokuyo_L.stl</uri>
+            <scale>1.0 0.5 1.0</scale>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.000000</mu>
+              <mu2>0.000000</mu2>
+              <slip1>0.000000</slip1>
+              <slip2>0.000000</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <kp>1000000000000.000000</kp>
+              <kd>10000.000000</kd>
+              <max_vel>100.000000</max_vel>
+              <min_depth>0.000000</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name="laser_tilt_mount_link_geom_visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/tilting_hokuyo.dae</uri>
+            <scale>1.0 0.5 1.0</scale>
+          </mesh>
+        </geometry>
+      </visual>
+<!--  <sensor name="laser_tilt" type="ray">  -->
+      <sensor name="lms200" type="ray">
+        <update_rate>10.000000</update_rate>
+        <pose>0.000000 0.000000 0.030000 0.000000 -0.000000 0.000000</pose>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>181</samples>
+              <resolution>1.000000</resolution>
+              <min_angle>-1.570796</min_angle>
+              <max_angle>1.570796</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.080000</min>
+            <max>10.000000</max>
+            <resolution>0.010000</resolution>
+          </range>
+        </ray>
+      </sensor>
+<!-- GPS sensor copied from gazebo-5.0.1/test/worlds/gps_test.world -->
+      <sensor name="gps" type="gps">
+        <pose>0 0 0 0 0 0</pose>
+        <update_rate>10.0</update_rate>
+        <always_on>true</always_on>
+        <gps>
+          <position_sensing>
+            <horizontal>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>1</stddev>
+                <bias_mean>3</bias_mean>
+                <bias_stddev>1</bias_stddev>
+                <precision>0.5</precision>
+              </noise>
+            </horizontal>
+            <vertical>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>1</stddev>
+                <bias_mean>3</bias_mean>
+                <bias_stddev>1</bias_stddev>
+                <precision>1.0</precision>
+              </noise>
+            </vertical>
+          </position_sensing>
+          <velocity_sensing>
+            <horizontal>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>0.1</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.1</bias_stddev>
+                <precision>0.1</precision>
+              </noise>
+            </horizontal>
+            <vertical>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>0.2</stddev>
+                <bias_mean>0.2</bias_mean>
+                <bias_stddev>0.2</bias_stddev>
+                <precision>0.2</precision>
+              </noise>
+            </vertical>
+          </velocity_sensing>
+        </gps>
+      </sensor>
+<!--  <velocity_decay /> -->
+    </link>
+    <joint name="laser_tilt_mount_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>laser_tilt_mount_link</child>
+      <axis>
+        <xyz>0.000000 1.000000 0.000000</xyz>
+        <dynamics>
+          <damping>0.008000</damping>
+          <friction>0.000000</friction>
+        </dynamics>
+        <limit>
+          <lower>-0.785400</lower>
+          <upper>1.483530</upper>
+          <effort>0.000000</effort>
+          <velocity>4.000000</velocity>
+        </limit>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name="right_front_wheel">
+      <pose>0.125 -0.201 -0.06 1.5707 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.110</radius>
+            <length>0.075</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <slip1>0.5</slip1>
+              <slip2>0</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/wheel.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="left_front_wheel">
+      <pose>0.125 0.201 -0.06 1.5707 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.110</radius>
+            <length>0.075</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <slip1>0.5</slip1>
+              <slip2>0</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/wheel.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="right_rear_wheel">
+      <pose>-0.125 -0.201 -0.06 1.5707 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.110</radius>
+            <length>0.075</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <slip1>0.5</slip1>
+              <slip2>0</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/wheel.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <link name="left_rear_wheel">
+      <pose>-0.125 0.201 -0.06 1.5707 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>0.110</radius>
+            <length>0.075</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <slip1>0.5</slip1>
+              <slip2>0</slip2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://pioneer3at_with_sensors_b/meshes/wheel.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint type="revolute" name="right_front">
+      <pose>0 0 0 0 0 0</pose>
+      <child>right_front_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="right_rear">
+      <pose>0 0 0 0 0 0</pose>
+      <child>right_rear_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="left_front">
+      <pose>0 0 0 0 0 0</pose>
+      <child>left_front_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <joint type="revolute" name="left_rear">
+      <pose>0 0 0 0 0 0</pose>
+      <child>left_rear_wheel</child>
+      <parent>chassis</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <plugin name="SkidSteerDrivePlugin" filename="libSkidSteerDrivePlugin.so">
+      <right_front>right_front</right_front>
+      <right_rear>right_rear</right_rear>
+      <left_front>left_front</left_front>
+      <left_rear>left_rear</left_rear>
+      <max_force>10.0</max_force>
+    </plugin>
+
+    <!--    
+      <include>
+        <uri>model://hokuyo</uri>
+        <pose>0.2 0 0.13 0 0 0</pose>
+      </include>
+      <joint name="hokuyo_joint" type="revolute">
+        <child>hokuyo::link</child>
+        <parent>chassis</parent>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <upper>0</upper>
+            <lower>0</lower>
+          </limit>
+        </axis>
+      </joint>
+    -->
+  </model>
+</sdf>

@@ -29,7 +29,7 @@
       <cast_shadows>1</cast_shadows>
     </light>
 
-<!-- SIMPLE WORLD -->
+<!-- SIMPLE BLOCK WORLD -->
     <include>
       <pose>0 0 0 0 0 0</pose>
       <static>1</static>
@@ -38,7 +38,7 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so"/>
 -->
 
-<!--  Portmessa Nagoya (The RoboCup 2017 venue) 
+<!--  Portmessa Nagoya (The RoboCup 2017 venue)
     <include>
       <static>1</static>
       <uri>model://portmessa</uri>
@@ -68,6 +68,24 @@
       <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
       <StartPose_2>OfficeRoom -12,12,0.3 0,0,0</StartPose_2>
       <StartPose_3>JumpPoint    0, 0,  0 0,0,0</StartPose_3>
+    </plugin>
+-->
+
+<!-- 
+=============================================================
+  HOW TO GET robocup2012_rvrl_pre1_light
+    You can get it by using following commands  
+     $ cd ~/.gazebo/models  
+     $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1_light
+=============================================================
+-->
+<!-- RoboCup 2012 Rescue Virtual Robot League Pre-Liminary 1 Light
+    <include>
+      <static>1</static>
+      <uri>model://robocup2012_rvrl_pre1_light</uri>
+    </include>
+    <plugin name="USARGazebo" filename="libUSARGazebo.so">
+      <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
     </plugin>
 -->
 

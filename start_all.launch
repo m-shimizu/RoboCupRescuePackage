@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<launch>
+  <param name="usarsim/robotType" value="pioneer3at_with_sensors" />
+  <param name="usarsim/robotName" value="pioneer3at_with_sensors" />
+  <param name="usarsim/hostname" value="localhost" />
+  <param name="usarsim/port" value="3000" />
+  <param name="usarsim/startPosition" value="0,0,0.8" />
+  <param name="usarsim/odomSensor" value="GndTruth" />
+  <node name="RosSim" pkg="usarsim_inf" type="usarsim_node"/>
+  <include file="$(find hector_mapping)/launch/mapping_default.launch">
+    <arg name="odom_frame" default="base_link"/>
+    <arg name="scan_topic" default="lms200"/>
+  </include>
+  <node name="rviz" pkg="rviz" type="rviz"/>
+  <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"/>
+</launch>

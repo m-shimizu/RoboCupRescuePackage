@@ -220,7 +220,7 @@ enum DRIVE_TYPE
 // Robot Database 
 struct ROBOT_DATABASE
 {
-  const char* Name;
+  const char* Model_Name;
   const char* Type;
   const char* SteeringType;
   const float Mass;
@@ -239,6 +239,18 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
 
+   ,{"pioneer3at", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
+   ,{"pioneer2dx", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
+   ,{"Crawler_Robot", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
    ,{"quadrotor", RT_D_AERIALVEHICLE, "RotaryWing",
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_QuadRotor}
@@ -247,11 +259,11 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
         0,    0,     0,    0,   0,      0, 0} };
 
-int get_number_of_Robot_DB(const char* robot_name)
+int get_number_of_Robot_DB(const char* robot_model_name)
 {
   int i;
   for(i = 0; (numof(Robot_DB) - 1) > i; i++)
-    if(0 == strNcmp(robot_name, Robot_DB[i].Name))
+    if(0 == strNcmp(robot_model_name, Robot_DB[i].Model_Name))
       break;
   return i;
 }
@@ -960,10 +972,10 @@ struct UC_INIT
     sprintf(_parent.topic_root, "~/%s", _own_name); // ~ = /gazebo/default
     // The following line is tempolary method
     //  until set_edit_name() be fixed
-    strcpy(_parent.own_name, _model_name /*_own_name*/);
+    //strcpy(_parent.own_name, _model_name /*_own_name*/);
     // The following line is correct
     // ,but now set_edit_name() was out of order,then we can not use this.
-    //strcpy(_parent.own_name, _own_name); 
+    strcpy(_parent.own_name, _own_name); 
     strcpy(_parent.model_name, _model_name);
     _parent.spawn_location = _location;
     _parent.spawn_direction = _direction;
