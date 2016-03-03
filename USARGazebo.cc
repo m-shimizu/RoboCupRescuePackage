@@ -235,6 +235,18 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
 
+   ,{"pioneer3at_with_sensors_b", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
+   ,{"pioneer3at_with_sensors_g", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
+   ,{"pioneer3at_with_sensors_y", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
    ,{"Crawler_Robot", RT_D_GROUNDVEHICLE, "SkidSteered",
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
