@@ -46,6 +46,8 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>EASTENTRANCE   1.5,-40,0.3 0,0,0</StartPose_1>
       <StartPose_2>WESTENTRANCE   -1,85,0.3 0,0,0</StartPose_2>
+      <StartPose_3>SOUTHEASTETRANCE -43.67,-21.6,0.3 0,0,0</StartPose_3>
+      <StartPose_4>SOUTHENTRANCE  -57.66,18.4,0.3 0,0,0</StartPose_4>
     </plugin>
 -->
 
@@ -67,7 +69,8 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
       <StartPose_2>OfficeRoom -12,12,0.3 0,0,0</StartPose_2>
-      <StartPose_3>JumpPoint    0, 0,  0 0,0,0</StartPose_3>
+      <StartPose_3>Corridor1    8,-17,0.3 0,0,0</StartPose_3>
+      <StartPose_4>Corridor2    20.4,8,0.3 0,0,0</StartPose_4>
     </plugin>
 -->
 
@@ -79,13 +82,16 @@
      $ git clone https://github.com/m-shimizu/robocup2012_rvrl_pre1_light
 =============================================================
 -->
-<!-- RoboCup 2012 Rescue Virtual Robot League Pre-Liminary 1 Light
+<!-- RoboCup 2012 Rescue Virtual Robot League Pre-Liminary 1 LightS
     <include>
       <static>1</static>
       <uri>model://robocup2012_rvrl_pre1_light</uri>
     </include>
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>Hall         5,10,0.3 0,0,0</StartPose_1>
+      <StartPose_2>OfficeRoom -12,12,0.3 0,0,0</StartPose_2>
+      <StartPose_3>Corridor1    8,-17,0.3 0,0,0</StartPose_3>
+      <StartPose_4>Corridor2    20.4,8,0.3 0,0,0</StartPose_4>
     </plugin>
 -->
 

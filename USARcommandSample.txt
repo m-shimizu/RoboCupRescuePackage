@@ -1,10 +1,14 @@
 # USARSim command samples in GameBot Protocol
 
 ## GETSTARTPOSES
-INIT {ClassName USARBot.pioneer3at_with_sensors}{Name pioneer3at_with_sensors}{Location 1,-1,0}{Rotation 0,0,0}{Start Point1}{Battery 3600}
-INIT {ClassName USARBot.pioneer3at_with_sensors_b}{Name pioneer3at_with_sensors_b}{Location 1,-2,0}{Rotation 0,0,0}{Start Point1}{Battery 3600}
-INIT {ClassName USARBot.pioneer3at_with_sensors_g}{Name pioneer3at_with_sensors_g}{Location 0,-1,0}{Rotation 0,0,0}{Start Point1}{Battery 3600}
-INIT {ClassName USARBot.pioneer3at_with_sensors_y}{Name pioneer3at_with_sensors_y}{Location 0,-2,0}{Rotation 0,0,0}{Start Point1}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors}{Name pioneer3at_with_sensors}{Location 1,-1,0}{Rotation 0,0,0}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_b}{Name pioneer3at_with_sensors_b}{Location 1,-2,0}{Rotation 0,0,0}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_g}{Name pioneer3at_with_sensors_g}{Location 0,-1,0}{Rotation 0,0,0}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_y}{Name pioneer3at_with_sensors_y}{Location 0,-2,0}{Rotation 0,0,0}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors}{Name pioneer3at_with_sensors}{Start Point1}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_b}{Name pioneer3at_with_sensors_b}{Start Point1}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_g}{Name pioneer3at_with_sensors_g}{Start Point1}{Battery 3600}
+INIT {ClassName USARBot.pioneer3at_with_sensors_y}{Name pioneer3at_with_sensors_y}{Start Point1}{Battery 3600}
 DRIVE {RIGHT 1.0} {LEFT 1.0}
 GETCONF {Type Robot}
 GETGEO {Type Robot}

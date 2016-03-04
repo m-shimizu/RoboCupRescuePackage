@@ -312,6 +312,8 @@ int get_number_of_Robot_DB(const char* robot_model_name)
 #define ET_D_U_ODOMETRY     "Odometry"
 #define ET_D_G_GROUNDTRUTH  "GndTruth"
 #define ET_D_U_GROUNDTRUTH  "GroundTruth"
+#define ET_D_G_ENCODER      "Unknnown"
+#define ET_D_U_ENCODER      "Encoder"
 
 //////////////////////////////////////////////////////////////////
 // Gazebo-USARSim Database 
@@ -327,6 +329,7 @@ struct Gazebo_USARSim_DATABASE
     {ET_D_G_IMU,          ET_D_U_IMU},
     {ET_D_G_ODOMETRY,     ET_D_U_ODOMETRY},
     {ET_D_G_GROUNDTRUTH,  ET_D_U_GROUNDTRUTH},
+    {ET_D_G_ENCODER,      ET_D_U_ENCODER},
     {"Unknown",           "UnKnown"} };
 
 int get_number_of_DB_From_Gazebo_name(const char* _name)
@@ -381,6 +384,7 @@ struct USARcommand
   std::vector<event::ConnectionPtr> connections;
   int                           STA_Disp_Counter, IMU_Disp_Counter;
   int                           STA_Last_sec, STA_Count_Per_1sec; 
+  int                           ENCODER_Disp_counter; 
 
   //////////////////////////////////////////////////////////////////
   // Initialize something...
@@ -394,7 +398,7 @@ struct USARcommand
   USARcommand(Server_Framework<USARcommand>&parent) : 
     _parent(parent), _socket(_ioservice), ucbuf(NULL), robot_was_spawned(0)
       , current_topics_list(), registered_topics_list()
-      , STA_Disp_Counter(0), IMU_Disp_Counter(0)
+      , STA_Disp_Counter(0), IMU_Disp_Counter(0), ENCODER_Disp_counter(0)
       , STA_Last_sec(0), STA_Count_Per_1sec(0)
 //    , Msg(), Spawn() 
   { Init(); }
@@ -432,7 +436,7 @@ struct USARcommand
       if(0 < remain_battery)
         remain_battery--;
     }
-    if(STA_Disp_Counter < 0)
+    if(0 > STA_Disp_Counter)
     {
       STA_Disp_Counter = 100; // Display STA 1 times per 100 loop times
       os_res << "STA " << 
@@ -454,6 +458,33 @@ struct USARcommand
   }
 
   //////////////////////////////////////////////////////////////////
+  // USARcommand.Process_SEN_ENCODER for USARcommand.Send_SENS
+  void Process_ENCODER(void)
+  {
+    boost::asio::streambuf response;
+    std::ostream           os_res(&response);
+    char       Current_time_in_form[50];
+    float      Current_time=set_current_time_in_form(Current_time_in_form);
+    int        Current_sec = (int)Current_time;
+    if(0 == robot_was_spawned)
+      return;
+    if(0 > ENCODER_Disp_counter)
+    {
+      ENCODER_Disp_counter = 100; // Display ENCODER 1 times per 100 loop times
+      os_res << "SEN " << 
+        "{Time " << Current_time_in_form << "}" << 
+        "{Battery " << remain_battery << "}" << 
+        "{Type " << ET_D_U_ENCODER << "}" << 
+        "{Name " << "Lwheel" << " Tick " << "0"  << "}" << 
+        "{Name " << "Rwheel" << " Tick " << "0"  << "}" << 
+        "\r\n";
+    }
+    else
+      ENCODER_Disp_counter--;
+    boost::asio::write(_socket, response);
+  }
+
+  //////////////////////////////////////////////////////////////////
   // Prototypes of callback functions
   void Process_laser_scanner_callback(ConstLaserScanStampedPtr& _msg);
   void Process_gps_callback(ConstGPSPtr& _msg);
@@ -469,6 +500,7 @@ struct USARcommand
       return;
     // 1. send STA of this robot
     Process_STA();
+    Process_ENCODER();
     // 2. Check robot's sensors from topics list
     if(NULL == current_topics_list.Search(own_name) 
       ||  0 == current_topics_list.Size()
@@ -773,7 +805,7 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
     IMU_Disp_Counter = 10; // Display STA 1 times per 100 loop times
     ///////////////////////////////////////////////////////////////
     // Send INS
-		/*
+    /*
     boost::asio::streambuf sen;
     std::ostream os(&sen);
     os << "SEN " << 
@@ -785,7 +817,7 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
           "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os << "\r\n"; 
     boost::asio::write(_socket, sen);
-		*/
+    */
     ///////////////////////////////////////////////////////////////
     // Send Odometory 
     boost::asio::streambuf sen_odo;
@@ -928,14 +960,15 @@ struct UC_INIT
     msg.set_edit_name(_parent.own_name); */
     // Pose to initialize the model to
     gazebo::msgs::Set(msg.mutable_pose()
-     , gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
+     ,gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
     // Send the message (SPAWN A ROBOT!!)
     factoryPub->Publish(msg);
 
     while (!_parent._parent._world->GetModel(_parent.model_name))
       usleep(1000); // Wait for finishing spawn job
 
-    gazebo::physics::ModelPtr mdl = _parent._parent._world->GetModel(_parent.model_name);
+    gazebo::physics::ModelPtr mdl 
+                 = _parent._parent._world->GetModel(_parent.model_name);
     mdl->SetName(_parent.own_name);
 
     // set_edit_name should equal the name of a model that already exists
@@ -965,13 +998,97 @@ struct UC_INIT
     */
     _parent.robot_was_spawned = 1;
   }
+#ifdef ____SAMMLE_____
+  void spawn_a_robot(void)
+  {
+    int        spawned_check_loop = 20;
+    char       model_cmd[100];
+    TopicsList current_topics_list;
+    // Already a robot has been spawned, then return
+    if(1 == _parent.robot_was_spawned)
+      return;
+    // Create a publisher on the ~/factory topic
+    gazebo::transport::PublisherPtr factoryPub
+      = _parent._node->Advertise<gazebo::msgs::Factory>("~/factory");
+    // Create the message
+    gazebo::msgs::Factory msg;
+    // Prepare command
+    sprintf(model_cmd, "model://%s", _parent.model_name);
 
+    // Get the path to the model sdf file.
+    /*std::string modelFile = gazebo::common::SystemPaths::Instance()->FindFile(model_cmd);
+    // Open the sdf file
+    std::ifstream modelIn(modelFile.c_str());
+    // 1: Read modelIn into a string.
+    std::string modelStr;
+    while (!modelIn.eof())
+    {
+      std::string line;
+      std::getline(modelIn, line);
+      modelStr += line;
+    }
+    // 2: Change the name to something new
+    */
+
+    // Model file to load
+    msg.set_sdf_filename(model_cmd);
+    // Set this robot's own name
+/*msg.set_edit_name is not working in Gazebo5.
+    msg.set_edit_name(_parent.own_name);*/
+    // Pose to initialize the model to
+    gazebo::msgs::Set(msg.mutable_pose()
+     ,gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
+    // Send the message (SPAWN A ROBOT!!)
+    factoryPub->Publish(msg);
+    /*
+    while(NULL != _parent._parent._world->GetModel(_parent.model_name))
+    {
+printf("Now waiting : %d\n", spawned_check_loop);
+      if(0 == spawned_check_loop--)
+        return;
+      usleep(1000); // Wait for finishing spawn job
+    }
+    usleep(1000); // Wait for finishing spawn job
+    */
+    // set_edit_name should equal the name of a model that already exists
+    // in Gazebo
+    //msg.set_edit_name(_parent.model_name);
+    // Now set a new SDF, that will change the model.
+    //factoryPub->Publish(msg);
+    //  checking loop to get topics of the robot
+    //   if any topics of the robot could be got, 
+    //    set _parent.robot_was_spawned with "1".
+    /*
+    for(int check_loop_cnt=0; 10 > check_loop_cnt; check_loop_cnt++)
+    {
+      current_topics_list.Refresh_Topics_List();
+      // The following line is tempolary method
+      current_topics_list.Filter(_parent.model_name);
+      // The following line is correct
+      // ,but now set_edit_name() is not working,then we can not use this.
+      //current_topics_list.Filter(_parent.own_name);
+      if(0 < current_topics_list.Size())
+      {
+        _parent.robot_was_spawned = 1;
+        break;
+      }
+      usleep(100); // Wait more for finishing spawn job
+    }
+    */
+    usleep(5000);
+    gazebo::physics::ModelPtr mdl
+                   = _parent._parent._world->GetModel(_parent.model_name);
+    mdl->SetName(_parent.own_name);
+    _parent.robot_was_spawned = 1;
+  }
+
+#endif
 #define USARBOTCLASSNAMEPREFIX "USARBot."
 
   //////////////////////////////////////////////////////////////////
   //  record_robot_param
   void record_robot_param(char* _own_name, char* _model_name
-    , float x, float y, float z, float q1, float q2, float q3, int battery)
+   , float x, float y, float z, float q1, float q2, float q3, int battery)
   {
       // Already a robot has been spawned, then return
     if(1 == _parent.robot_was_spawned)
@@ -1162,37 +1279,37 @@ struct UC_GETGEO
     int         effecters;
     char        tmpbuf[100];
     int         flag_gps = 0;
-		const char* topic_name;
+    const char* topic_name;
     const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
-		if(NULL != effecter_name)
-		{
-			topic_name = _parent.registered_topics_list.Search(
-			                                      Gazebo_name, effecter_name);
-			if(NULL == topic_name)
-			  return UCE_NO_EFFECTER;
+    if(NULL != effecter_name)
+    {
+      topic_name = _parent.registered_topics_list.Search(
+                                            Gazebo_name, effecter_name);
+      if(NULL == topic_name)
+        return UCE_NO_EFFECTER;
       const char* dev_name = 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
                      (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
       st_response << 
-			  "{Name " << dev_name << "}" <<
+        "{Name " << dev_name << "}" <<
         "{Location " << "0,0.1,0.1" << "}" <<
         "{Orientation " << "0,0.1,0.1" << "}" << 
         "{Mount " << _parent.own_name << "}";
       return UCE_GOOD;
-		}
+    }
     for(int i = 0; 1; i++)
     {
-			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
-			if(NULL == topic_name)
-				if(0 == i)
-			    return UCE_NO_EFFECTER;
-			  else
-			    break;
+      topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+      if(NULL == topic_name)
+        if(0 == i)
+          return UCE_NO_EFFECTER;
+        else
+          break;
       st_response << 
         "{Name " << 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
@@ -1212,22 +1329,22 @@ struct UC_GETGEO
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-		if(NULL != effecter_name)
-		{
+    if(NULL != effecter_name)
+    {
       st_response << 
         "{Name " << ET_D_G_ODOMETRY << "}" <<
         "{Location " << "0,0.1,0.1" << "}" <<
         "{Orientation " << "0,0.1,0.1" << "}" <<
         "{Mount " << _parent.own_name << "}";
-		}
-		else
-		{
+    }
+    else
+    {
       st_response << 
         "{Name " << ET_D_G_ODOMETRY << 
         " Location " << "0,0.1,0.1" <<
         " Orientation " << "0,0.1,0.1" << 
         " Mount " << _parent.own_name << "}";
-	  }
+    }
     return UCE_GOOD;
   }
 
@@ -1239,22 +1356,61 @@ struct UC_GETGEO
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-		if(NULL != effecter_name)
-		{
+    if(NULL != effecter_name)
+    {
       st_response << 
         "{Name " << ET_D_G_GROUNDTRUTH << "}" << 
         "{Location " << "0,0.1,0.1" << "}" << 
         "{Orientation " << "0,0.1,0.1" << "}" << 
         "{Mount " << _parent.own_name << "}";
     }
-		else
-		{
+    else
+    {
       st_response << 
         "{Name " << ET_D_G_GROUNDTRUTH << 
         " Location " << "0,0.1,0.1" <<
         " Orientation " << "0,0.1,0.1" << 
         " Mount " << _parent.own_name << "}";
-		}
+    }
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  GEO_set_groundtruth_params
+  int GEO_set_encoder_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
+    st_response << "{Type " << _USARSim_name << "}";
+    if(0 == strNcmp(effecter_name, "Lwheel"))
+    {
+      st_response << 
+        "{Name " << "Lwheel" << "}" << 
+        "{Location " << "0,0.1,0.1" << "}" << 
+        "{Orientation " << "0,0.1,0.1" << "}" << 
+        "{Mount " << _parent.own_name << "}";
+    }
+    else if(0 == strNcmp(effecter_name, "Rwheel"))
+    {
+      st_response << 
+        "{Name " << "Rwheel" << "}" << 
+        "{Location " << "0,0.1,0.1" << "}" << 
+        "{Orientation " << "0,0.1,0.1" << "}" << 
+        "{Mount " << _parent.own_name << "}";
+    }
+    else
+    {
+      st_response << 
+        "{Name " << "Lwheel" << 
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" << 
+        " Mount " << _parent.own_name << "}" << 
+        "{Name " << "Rwheel" << 
+        " Location " << "0,0.1,0.1" <<
+        " Orientation " << "0,0.1,0.1" << 
+        " Mount " << _parent.own_name << "}";
+    }
     return UCE_GOOD;
   }
 
@@ -1289,6 +1445,8 @@ struct UC_GETGEO
         GEO_set_odometry_params(st_response, ET_D_U_ODOMETRY);
       else if(NULL != strcasestr(rtn, ET_D_U_GROUNDTRUTH))
         GEO_set_groundtruth_params(st_response, ET_D_U_GROUNDTRUTH);
+      else if(NULL != strcasestr(rtn, ET_D_U_ENCODER))
+        GEO_set_encoder_params(st_response, ET_D_U_ENCODER);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         st_response << 
@@ -1336,19 +1494,19 @@ struct UC_GETCONF
     int         effecters;
     char        tmpbuf[100];
     int         flag_gps = 0;
-		const char* topic_name;
+    const char* topic_name;
     const char* Gazebo_name = get_Gazebo_name_of(_USARSim_name);
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
     if(0 == strNcmp(Gazebo_name, ET_D_G_GPS))
       flag_gps = 1;
-		if(NULL != effecter_name)
-		{
-			topic_name = _parent.registered_topics_list.Search(
-			                                      Gazebo_name, effecter_name);
-			if(NULL == topic_name)
-			  return UCE_NO_EFFECTER;
+    if(NULL != effecter_name)
+    {
+      topic_name = _parent.registered_topics_list.Search(
+                                            Gazebo_name, effecter_name);
+      if(NULL == topic_name)
+        return UCE_NO_EFFECTER;
       const char* dev_name = 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
                      (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
@@ -1363,15 +1521,15 @@ struct UC_GETCONF
                      "{Tilting True}";
       }
       return UCE_GOOD;
-		}
+    }
     for(int i = 0; 1; i++)
     {
-			topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
-			if(NULL == topic_name)
-				if(0 == i)
-			    return UCE_NO_EFFECTER;
-			  else
-			    break;
+      topic_name = _parent.registered_topics_list.Search_n(i,Gazebo_name);
+      if(NULL == topic_name)
+        if(0 == i)
+          return UCE_NO_EFFECTER;
+        else
+          break;
       const char* dev_name = 
          ((flag_gps)?(UC_GET_TYPE_FROM_TOPIC_NAME(tmpbuf,topic_name)):
                      (UC_GET_NAME_FROM_TOPIC_NAME(tmpbuf,topic_name))); 
@@ -1412,15 +1570,43 @@ struct UC_GETCONF
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     const char* effecter_name = BUCIP.Search("Name");
     st_response << "{Type " << _USARSim_name << "}";
-		if(NULL != effecter_name)
-		{
+    if(NULL != effecter_name)
+    {
       st_response << "{Name GndTruth}" <<
                      "{ScanInterval 0.1000}";
     }
     else
-		{
+    {
       st_response << "{Name GndTruth" <<
                      " ScanInterval 0.1000}";
+    }
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  CONF_set_encoder_params
+  int CONF_set_encoder_params(std::iostream& st_response, 
+                                             const char* _USARSim_name)
+  {
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+    const char* effecter_name = BUCIP.Search("Name");
+    st_response << "{Type " << _USARSim_name << "}";
+    if(0 == strNcmp(effecter_name, "Lwheel"))
+    {
+      st_response << "{Name Lwheel}" <<
+                     "{ScanInterval 1}";
+    }
+    else if(0 == strNcmp(effecter_name, "Rwheel"))
+    {
+      st_response << "{Name Rwheel}" <<
+                     "{ScanInterval 1}";
+    }
+    else
+    {
+      st_response << "{Name Rwheel" <<
+                     " ScanInterval 1}" << 
+                     "{Name Lwheel" <<
+                     " ScanInterval 1}";
     }
     return UCE_GOOD;
   }
@@ -1456,6 +1642,8 @@ struct UC_GETCONF
         CONF_set_odometry_params(st_response, ET_D_U_ODOMETRY);
       else if(NULL != strcasestr(rtn, ET_D_U_GROUNDTRUTH))
         CONF_set_groundtruth_params(st_response, ET_D_U_GROUNDTRUTH);
+      else if(NULL != strcasestr(rtn, ET_D_U_ENCODER))
+        CONF_set_encoder_params(st_response, ET_D_U_ENCODER);
       else if(NULL != strcasestr(rtn, "Robot"))
       {
         if(NULL != strcasestr(get_type_of_robot(_parent.model_name),
