@@ -1849,7 +1849,7 @@ struct USARimage
                       , topics_list.Search((char*)"image"));
 */
 printf("image\n");
-    sprintf(topic_camera, "~/%s/chassis"
+    sprintf(topic_camera, "%s"
                      , "~/pioneer3at_with_sensors/chassis/r_camera/image");
     // The function Subscribe needs a valiable which be assigned 
     //  a return value from the function Subscribe. Without the assigning,

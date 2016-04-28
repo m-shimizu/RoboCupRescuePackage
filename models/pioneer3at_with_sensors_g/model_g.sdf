@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="pioneer3at_with_sensors_y">
+  <model name="pioneer3at_with_sensors">
     <pose>0 0 0.180 0 0 0</pose>
     <static>false</static>
     <link name="chassis">
@@ -14,30 +14,30 @@
           iyy = 1/12*m*(w^2+d^2) 
           izz = 1/12*m*(h^2+d^2) 
           -->
-          <ixx>0.3338</ixx>
+          <ixx>0.147116667</ixx>
           <ixy>0.0</ixy>
           <ixz>0.0</ixz>
-          <iyy>0.4783</iyy>
+          <iyy>0.334951167</iyy>
           <iyz>0.0</iyz>
-          <izz>0.3338</izz>
+          <izz>0.3978345</izz>
         </inertia>
       </inertial>
-      <collision name="collision">
+      <collision name="collision1">
         <geometry>
           <box>
-            <size>0.501 0.400 0.19</size>
+            <size>0.501 0.300 0.19</size>
           </box>
         </geometry>
       </collision>
-      <visual name="visual">
+      <visual name="visual1">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/chassis.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/chassis_g.dae</uri>
           </mesh>
         </geometry>
       </visual>
 <!-- Right Camera copied from pr2 -->
-      <visual name="visual">
+      <visual name="visual2">
         <pose>0.0 0.20000 0.3000 0.0 1.57 0.0</pose>
         <geometry>
           <cylinder>
@@ -46,7 +46,7 @@
           </cylinder>
         </geometry>
       </visual>
-      <collision name="collision">
+      <collision name="collision2">
         <pose>0.0 0.20000 0.3000 0.0 1.57 0.0</pose>
         <geometry>
           <cylinder>
@@ -72,7 +72,7 @@
         </camera>
       </sensor>
 <!-- Left Camera copied from pr2 -->
-      <visual name="visual">
+      <visual name="visual3">
         <pose>0.0 -0.200000 0.3000 -0.0 1.57 0.000000</pose>
         <geometry>
           <cylinder>
@@ -81,7 +81,7 @@
           </cylinder>
         </geometry>
       </visual>
-      <collision name="collision">
+      <collision name="collision3">
         <pose>0.0 -0.200000 0.3000 -0.0 1.57 0.000000</pose>
         <geometry>
           <cylinder>
@@ -154,7 +154,7 @@
       <collision name="laser_tilt_mount_link_geom">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/tilting_hokuyo_L.stl</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/tilting_hokuyo_L.stl</uri>
             <scale>1.0 0.5 1.0</scale>
           </mesh>
         </geometry>
@@ -180,7 +180,7 @@
       <visual name="laser_tilt_mount_link_geom_visual">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/tilting_hokuyo.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/tilting_hokuyo.dae</uri>
             <scale>1.0 0.5 1.0</scale>
           </mesh>
         </geometry>
@@ -275,6 +275,19 @@
     </joint>
     <link name="right_front_wheel">
       <pose>0.125 -0.201 -0.06 1.5707 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.005240625</ixx>
+          <iyy>0.005240625</iyy>
+          <izz>0.009075</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
       <collision name="collision">
         <geometry>
           <cylinder>
@@ -296,13 +309,26 @@
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/wheel.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/wheel.dae</uri>
           </mesh>
         </geometry>
       </visual>
     </link>
     <link name="left_front_wheel">
       <pose>0.125 0.201 -0.06 1.5707 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.005240625</ixx>
+          <iyy>0.005240625</iyy>
+          <izz>0.009075</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
       <collision name="collision">
         <geometry>
           <cylinder>
@@ -324,13 +350,26 @@
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/wheel.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/wheel.dae</uri>
           </mesh>
         </geometry>
       </visual>
     </link>
     <link name="right_rear_wheel">
       <pose>-0.125 -0.201 -0.06 1.5707 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.005240625</ixx>
+          <iyy>0.005240625</iyy>
+          <izz>0.009075</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
       <collision name="collision">
         <geometry>
           <cylinder>
@@ -352,13 +391,26 @@
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/wheel.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/wheel.dae</uri>
           </mesh>
         </geometry>
       </visual>
     </link>
     <link name="left_rear_wheel">
       <pose>-0.125 0.201 -0.06 1.5707 0 0</pose>
+
+      <inertial>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.005240625</ixx>
+          <iyy>0.005240625</iyy>
+          <izz>0.009075</izz>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyz>0</iyz>
+        </inertia>
+      </inertial>
+
       <collision name="collision">
         <geometry>
           <cylinder>
@@ -380,7 +432,7 @@
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://pioneer3at_with_sensors_y/meshes/wheel.dae</uri>
+            <uri>model://pioneer3at_with_sensors/meshes/wheel.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -426,7 +478,7 @@
       <right_rear>right_rear</right_rear>
       <left_front>left_front</left_front>
       <left_rear>left_rear</left_rear>
-      <max_force>10.0</max_force>
+      <max_force>5.0</max_force>
     </plugin>
 
     <!--    

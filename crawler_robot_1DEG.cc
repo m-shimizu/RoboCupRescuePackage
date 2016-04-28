@@ -44,7 +44,6 @@ public:
     {
        // physics::WorldPtr world = physics::get_world("default");
 
-        // modelへポインタを格納
         this->model = _parent;
 
         hinge1 = this->model->GetJoint("right_front");
@@ -86,15 +85,10 @@ public:
 
         
         for (int i=0; i< 30; i++)
-        {
             THETA[i] = 0;
-        }
 
-        // このプラグイン用のパラメータをロード
         if (this->LoadParams(_sdf))
         {
-            // アップテートイベントを聞く。シミュレーションの繰り返し時に
-            // このイベントはブロードキャストされる。
             this->updateConnection
             = event::Events::ConnectWorldUpdateBegin(
                   boost::bind(&MobileBasePlugin::OnUpdate, this));
@@ -104,19 +98,13 @@ public:
  
     bool LoadParams(sdf::ElementPtr _sdf)
     {
-        // 制御用のgainパラメータを見つける
         if (!_sdf->HasElement("gain"))
         {
             gzerr << "param [gain] not found\n";
             return false;
         }
         else
-        {
-            // gainの値を取得
             this->gain = _sdf->Get<double>("gain");
-        }
- 
-        // 成功時
         return true;
     }
  
@@ -191,6 +179,7 @@ void  check_key_command(void)
             THETA[27] = 10;
             THETA[28] = 10;
             break;     
+
         case 'z':
             THETA[1] = -10;
             THETA[2] = -10;
@@ -217,6 +206,7 @@ void  check_key_command(void)
             THETA[27] = -10;
             THETA[28] = -10;
             break;    
+
         case 'a':
             THETA[1] = 10;
             THETA[2] = 10;
@@ -244,6 +234,7 @@ void  check_key_command(void)
             THETA[27] = -10;
             THETA[28] = -10;
             break;   
+
         case 'd':
             THETA[1] = -10;
             THETA[2] = -10;
@@ -271,6 +262,7 @@ void  check_key_command(void)
             THETA[27] = 10;
             THETA[28] = 10;
             break;   
+
         case 's':
             THETA[1] = 0;
             THETA[2] = 0;
@@ -305,9 +297,8 @@ void  check_key_command(void)
     dev_LF_sum = 0;
     dev_RR_sum = 0;
     dev_LR_sum = 0;
-
-
             break; 
+
         case 'u':
     arm_flg = 1;
     DEG_1 = 0;
@@ -315,8 +306,8 @@ void  check_key_command(void)
     dev_LF_sum = 0;
     dev_RR_sum = 0;
     dev_LR_sum = 0;
-
             break;
+
         case 'i':
     arm_flg = 1;
     DEG_1 += 1;
@@ -324,7 +315,6 @@ void  check_key_command(void)
     dev_LF_sum = 0;
     dev_RR_sum = 0;
     dev_LR_sum = 0;
-
       break;
 
         case 'h':
@@ -334,8 +324,8 @@ void  check_key_command(void)
     dev_LF_sum = 0;
     dev_RR_sum = 0;
     dev_LR_sum = 0;
-
             break; 
+
         case 'j':
     arm_flg = 1;
     DEG_2 = 0;
@@ -344,6 +334,7 @@ void  check_key_command(void)
     dev_RR_sum = 0;
     dev_LR_sum = 0;
             break;
+        
         case 'k':
     arm_flg = 1;
     DEG_2 -= 1;
@@ -351,7 +342,6 @@ void  check_key_command(void)
     dev_LF_sum = 0;
     dev_RR_sum = 0;
     dev_LR_sum = 0;
-
       break;
 
         default:
@@ -364,11 +354,10 @@ void  check_key_command(void)
   void moveJoint()
   {
     float right_front_deg=0,left_front_deg=0,right_rear_deg=0,left_rear_deg=0;
-    math::Angle angle1 = hinge9->GetAngle(0);   // 関節角の取得
+    math::Angle angle1 = hinge9->GetAngle(0);
     math::Angle angle2 = hinge10->GetAngle(0);
     math::Angle angle3 = hinge11->GetAngle(0);   
     math::Angle angle4 = hinge12->GetAngle(0);
-        // 度表示
 printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r ", angle1.Degree(), angle2.Degree(), angle3.Degree(), angle4.Degree());
 
     right_front_deg=angle1.Degree();

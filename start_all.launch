@@ -8,10 +8,21 @@
   <param name="usarsim/startPosition" value="0,0,0.8" />
   <param name="usarsim/odomSensor" value="GndTruth" />
   <node name="RosSim" pkg="usarsim_inf" type="usarsim_node"/>
+
   <include file="$(find hector_mapping)/launch/mapping_default.launch">
+    <!--
     <arg name="odom_frame" default="base_link"/>
+    <arg name="odom_frame" default="world"/>
+    -->
+    <arg name="odom_frame" default="odom"/>
     <arg name="scan_topic" default="lms200"/>
   </include>
-  <node name="rviz" pkg="rviz" type="rviz"/>
-  <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py"/>
+
+  <include file="$(find hector_geotiff)/launch/geotiff_mapper.launch">
+    <arg name="trajectory_publish_rate" value="4"/> 
+  </include>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(env HOME)/RoboCupRescuePackage/sample.rviz"/>
+
+  <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" launch-prefix="xterm -e"/>
 </launch>
