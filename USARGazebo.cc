@@ -1739,7 +1739,10 @@ void USARcommand::UC_check_command_from_USARclient(void)
 //  Image Server
 //#######################################################################
 
-/*
+//####################
+// libjpeg_sample
+//####################
+#ifdef __libjpeg_sample__
 #include <stdio.h>
 #include <stdlib.h>
 #include <jpeglib.h>
@@ -1755,7 +1758,7 @@ int main () {
     int width = 256;
     int height = 256;
     cinfo.image_width = width;
-    cinfo.image_height = height;
+    cinfo.image_height  = height;
     cinfo.input_components = 3;
     cinfo.in_color_space = JCS_RGB;
     jpeg_set_defaults(&cinfo);
@@ -1773,11 +1776,13 @@ int main () {
     jpeg_write_scanlines(&cinfo, img, height);
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
+
     for (int i = 0; i < height; i++) {
         free(img[i]);
     }
     free(img);
-    const char *filename = "output.jpg";
+
+    const char *filename = "test_jpeg_output.jpg";
     FILE *fp = fopen(filename, "wb");
     if (fp == NULL) {
         fprintf(stderr, "cannot open %s\n", filename);
@@ -1785,12 +1790,25 @@ int main () {
     }
    fwrite((const void*)outbuffer_pt, outlen, 1, fp);
    fclose(fp);
+
    if(NULL != outbuffer_pt)
    {
      free(outbuffer_pt);
    }
 }
-*/
+#endif
+
+#define MAX_CAMERA_NUM 20
+#define MAX_CAMERA_WINS 4
+#define CAM_IMG_WIDTH 640
+#define CAM_IMG_HEIGHT 480
+#define LINESIZE (3*CAM_IMG_WIDTH)
+#include <jpeglib.h>
+#include <string.h>
+
+#define CCO camera_connected_order
+
+#define NO__CAMERA_IMAGE_DEBUG__
 
 //////////////////////////////////////////////////////////////////
 // USARimage : A structure for transferring image data
@@ -1804,27 +1822,132 @@ struct USARimage
   boost::asio::streambuf           _buffer;
   boost::thread                    _thread;
   gazebo::transport::NodePtr       _node;
-  gazebo::transport::SubscriberPtr _sub_camera_image;
+  gazebo::transport::SubscriberPtr _sub_camera_image[MAX_CAMERA_NUM];
   // Add your own variables here
-  int  flag_OK, flag_U, flag_SS;
-  char model_name[200], own_name[200], topic_camera[300];
-  void send_full_size_image(ConstImageStampedPtr& _msg);
-  void send_rectangle_area_image(ConstImageStampedPtr& _msg);
-  void imageserver_callback(ConstImageStampedPtr& _msg);
-  // A part of sample code to decide camera topic name automatically
-  TopicsList topics_list;
+//  int  flag_OK, flag_U, flag_SS;
+//  char model_name[200], own_name[200], topic_camera[300];
+//  void send_full_size_image(ConstImageStampedPtr& _msg);
+//  void imageserver_callback(ConstImageStampedPtr& _msg);
+  void camera_callback_0(ConstImageStampedPtr& _msg);
+  void camera_callback_1(ConstImageStampedPtr& _msg);
+  void camera_callback_2(ConstImageStampedPtr& _msg);
+  void camera_callback_3(ConstImageStampedPtr& _msg);
+  void camera_callback_4(ConstImageStampedPtr& _msg);
+  void camera_callback_5(ConstImageStampedPtr& _msg);
+  void camera_callback_6(ConstImageStampedPtr& _msg);
+  void camera_callback_7(ConstImageStampedPtr& _msg);
+  void camera_callback_8(ConstImageStampedPtr& _msg);
+  void camera_callback_9(ConstImageStampedPtr& _msg);
+  void camera_callback_10(ConstImageStampedPtr& _msg);
+  void camera_callback_11(ConstImageStampedPtr& _msg);
+  void camera_callback_12(ConstImageStampedPtr& _msg);
+  void camera_callback_13(ConstImageStampedPtr& _msg);
+  void camera_callback_14(ConstImageStampedPtr& _msg);
+  void camera_callback_15(ConstImageStampedPtr& _msg);
+  void camera_callback_16(ConstImageStampedPtr& _msg);
+  void camera_callback_17(ConstImageStampedPtr& _msg);
+  void camera_callback_18(ConstImageStampedPtr& _msg);
+  void camera_callback_19(ConstImageStampedPtr& _msg);
+  void camera_callback_20(ConstImageStampedPtr& _msg);
+  int camera_connected_order[MAX_CAMERA_NUM];
+  int current_camera_order;
+  JSAMPARRAY img;
+//  TopicsList topics_list;
 
   //////////////////////////////////////////////////////////////////
-  // Initialize some thing..
-  void Init(void) { }
+  // Initialize some things..
+  void Init(void)
+  {
+    int i;
+    // Initiarize camera callback function parameters
+    current_camera_order = 0;
+    for(i = 0; i < MAX_CAMERA_NUM; i++)
+      CCO[i] = -1;
+    // Get Camera Image Array Memory
+    img = (JSAMPARRAY) new JSAMPROW[CAM_IMG_HEIGHT];
+    for(i = 0; i < CAM_IMG_HEIGHT; i++)
+      img[i] = (JSAMPROW) new JSAMPLE[3*CAM_IMG_WIDTH*MAX_CAMERA_WINS];
+  }
 
   //////////////////////////////////////////////////////////////////
   // USARimage.Constructor
   USARimage(Server_Framework<USARimage>&parent)
     : _parent(parent), _socket(_ioservice)
-     , flag_OK(0), flag_U(0), flag_SS(0)
-      , topics_list()
+//     , flag_OK(0), flag_U(0), flag_SS(0)
+//      , topics_list()
   { Init(); }
+
+  //////////////////////////////////////////////////////////////////
+  // USARimage.Destructor
+  ~USARimage()
+  {
+    // Release Camera Image Array Memory
+    for(int i = 0; i < CAM_IMG_HEIGHT; i++)
+      delete img[i];
+    delete img;
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // Send combined camera images to client in jpeg
+  void send_camera_image_to_socket(void)
+  {
+    unsigned char *outbuffer_pt = NULL;
+    unsigned long int outlen = 0;
+    struct jpeg_compress_struct cinfo;
+    struct jpeg_error_mgr jerr;
+    cinfo.err = jpeg_std_error(&jerr);
+    jpeg_create_compress(&cinfo);
+    jpeg_mem_dest(&cinfo, &outbuffer_pt, &outlen);
+//  jpeg_stdio_dest(&cinfo, fp);
+    cinfo.image_width  = CAM_IMG_WIDTH * MAX_CAMERA_WINS;
+    cinfo.image_height = CAM_IMG_HEIGHT;
+    cinfo.input_components = 3;
+    cinfo.in_color_space = JCS_RGB;
+    jpeg_set_defaults(&cinfo);
+    jpeg_set_quality(&cinfo, 75, TRUE);
+    jpeg_start_compress(&cinfo, TRUE);
+    jpeg_write_scanlines(&cinfo, img, CAM_IMG_HEIGHT);
+    jpeg_finish_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
+#ifdef __CAMERA_IMAGE_DEBUG__
+    const char *filename = "test_jpeg_output.jpg";
+    FILE *fp = fopen(filename, "wb");
+    if (fp == NULL) {
+        fprintf(stderr, "cannot open %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    fwrite((const void*)outbuffer_pt, outlen, 1, fp);
+    fclose(fp);
+#else
+    unsigned char* ImageBuf = new unsigned char[5 + outlen];
+    ImageBuf[0] = 3; // Jpeg Data with normal image quality
+    *(unsigned long int*)&ImageBuf[1] = outlen; // Image Size
+    memcpy(ImageBuf + 5, outbuffer_pt, outlen);
+    boost::asio::write(_socket, boost::asio::buffer((void*)ImageBuf
+                       , 5 + outlen));
+    delete ImageBuf;
+#endif
+    if(NULL != outbuffer_pt)
+    {
+      free(outbuffer_pt);
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // Save camera image to the combination camera image buffer
+  void save_camera_image(int cam, ConstImageStampedPtr& _msg)
+  {
+    unsigned char* ip = (unsigned char*)_msg->image().data().c_str();
+    if(-1 == CCO[cam])
+    {
+      if(MAX_CAMERA_WINS > current_camera_order)
+        CCO[cam] = current_camera_order++;
+      else
+        return;
+    }
+    for(int i = 0; i < CAM_IMG_HEIGHT; i++)
+      memcpy(&img[i][CCO[cam]*LINESIZE], &ip[i*LINESIZE], LINESIZE);
+  }
 
   //////////////////////////////////////////////////////////////////
   // USARimage.Child_Session_Loop_Core
@@ -1846,11 +1969,14 @@ struct USARimage
       if(0 < line.length())
       {
         if(0 == strNcmp(line.c_str(), "OK"))
-          flag_OK = 1;
-        else if(0 == strNcmp(line.c_str(), "U["))
-          flag_U = 1;
-        else if(0 == strNcmp(line.c_str(), "SS"))
-          flag_SS = 1;
+        {
+          send_camera_image_to_socket();
+        }
+          //flag_OK = 1;
+   //     else if(0 == strNcmp(line.c_str(), "U["))
+          //flag_U = 1;
+    //    else if(0 == strNcmp(line.c_str(), "SS"))
+          //flag_SS = 1;
       }
       else
         break;
@@ -1863,6 +1989,26 @@ struct USARimage
   {
     _node = gazebo::transport::NodePtr(new gazebo::transport::Node());
     _node->Init();
+//printf("Image Server was connected with your client\n");
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE "_sub_camera_image[?] ="
+    _sub_camera_image[0] = _node->Subscribe(
+       "/gazebo/default/pioneer3at_with_sensors/chassis/r_camera/image",
+       &USARimage::camera_callback_0, this);
+    _sub_camera_image[1] = _node->Subscribe(
+       "/gazebo/default/pioneer3at_with_sensors_b/chassis/r_camera/image",
+       &USARimage::camera_callback_1, this);
+    _sub_camera_image[2] = _node->Subscribe(
+       "/gazebo/default/pioneer3at_with_sensors_g/chassis/r_camera/image",
+       &USARimage::camera_callback_2, this);
+    _sub_camera_image[3] = _node->Subscribe(
+       "/gazebo/default/pioneer3at_with_sensors_y/chassis/r_camera/image",
+       &USARimage::camera_callback_3, this);
+    while(1)
+      Child_Session_Loop_Core();
     // Set topic name of camera
     // Now the camera topic name is set as : 
     // "~/pioneer3at_with_sensors/chassis/r_camera/image" .
@@ -1900,23 +2046,166 @@ struct USARimage
     }
     sprintf(camera_topic_name, "%s"
                       , topics_list.Search((char*)"image"));
-*/
-printf("image\n");
+    */
+    /*
     sprintf(topic_camera, "%s"
                      , "~/pioneer3at_with_sensors/chassis/r_camera/image");
-    // The function Subscribe needs a valiable which be assigned 
-    //  a return value from the function Subscribe. Without the assigning,
-    //   a call-back function  which was registered 
-    //    by the function Subscribe will NOT be call-backed.
-    // DO NOT REMOVE _sub_camera_image
     _sub_camera_image 
       = _node->Subscribe(topic_camera, &USARimage::imageserver_callback
                                                                   , this);
-    while(1)
-      Child_Session_Loop_Core();
+    */
   }
+
 };
 
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_0(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(0, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_1(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(1, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_2(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(2, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_3(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(3, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_4(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(4, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_5(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(5, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_6(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(6, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_7(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(7, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_8(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(8, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_9(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(9, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_10(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(10, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_11(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(11, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_12(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(12, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_13(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(13, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_14(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(14, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_15(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(15, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_16(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(16, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_17(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(17, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_18(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(18, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_19(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(19, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_20(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(20, _msg);
+}
+
+#ifdef __DEBUG_SAMPLE__
 //////////////////////////////////////////////////////////////////
 // SaveAsPPM saves an image for debug
 //  See following page about ConstImageStampedPtr
@@ -1981,12 +2270,7 @@ printf("Sent a full size image in raw data, size = %d\n", 5+ImageSize);
   SaveAsPPM(filename, _msg);
 */
 }
-
-void USARimage::send_rectangle_area_image(ConstImageStampedPtr& _msg)
-{
-  flag_U = 0;
-  // Please anyone, write this function instead of me.....
-}
+#endif
 
 //#######################################################################
 //  World Plugin
