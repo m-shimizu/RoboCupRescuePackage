@@ -101,7 +101,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.  
 
 
-## Developping Status at 2016.2.17  
+## Developping Status at 2016.5.20  
 
 ### Current Function  
 * Waiting for socket connections at port 3000 and port 5003  
@@ -109,19 +109,23 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}  
 * You can drive the robot with "DRIVE" command like next line:  
     DRIVE {Right 0.5}{Left 0.5}  
-* You can get a frame image of camera embeded on the robot with following steps. But now you can not choose camera.  
+* You can get a long landscaped jpeg image consisted from 4 robot cameras with following steps. Each robot camera image's width x height is 640 x 480. Camera images are located side-by-side and first spawned robot's camera image is located at left end of a jpeg image. If a robot has two cameras, currently you can see right camera's image.  
     1. Make a tcp socket connection at port 5003  
     2. Send "OK"  
     3. Get one frame raw image data from camera  
 * You can get following informations from a robot:  
     1. STA (information is limited)
-		2. SEN (Type : RangeScanner , GPS , INS)
-		3. NFA (Return of a command : GETSTARTPOSES )
+    2. SEN (Type : RangeScanner , GPS , INS)
+    3. NFA (Return of a command : GETSTARTPOSES )
 * You can set 9 start pose informations in USARGazebo.world as option parameters of USARGazebo plugin.  
 
+### Robots and equipments
+* pioneer3at_with_sensors series
+    - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_b , pioneer3at_with_sensors_b , pioneer3at_with_sensors_y  
+    - Eqipments : two cameras and a range sensor  
+
 ### Current Constructing Point  
-* Writing codes for sending back sensor data.  
-    ** Sample world of this project has a robot model which have two cameras and a range sensor.  
+* Increasing robots which you can use.
 
 ### Workable USARSim command  
 * USARSim commands  
@@ -129,7 +133,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     - DRIVE (limited)  
     - GETSTARTPOSES (It can return effective start point parameters. It can not read parameters from map but from world file as plugin options)  
 * Image Server  
-    - OK (Raw Image Data only)  
+    - OK (Jpeg only(if you need raw image, please request))  
 
 ### USARSim commands which are underconstruction or scheduled  
     - SET  
@@ -145,6 +149,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     Original maps produced by Stephen Balakirsky and the National Institute of Standards and Technology (NIST).  
 
 ### Change log  
+    * 20/ 5/2016 : Jpeg camera image enabled.
     * 17/ 2/2016 : Add output of sensors.
     * 17/ 6/2015 : GETSTARTPOSES can return start point parameters. GETSTARTPOSES reads parameters from a world file which call the USARGazebo plugin as plugin options.  
     * 22/ 4/2015 : Adding INIT and DRIVE command and a function for sending back camera image.  
