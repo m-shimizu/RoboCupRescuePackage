@@ -1739,76 +1739,17 @@ void USARcommand::UC_check_command_from_USARclient(void)
 //  Image Server
 //#######################################################################
 
-//####################
-// libjpeg_sample
-//####################
-#ifdef __libjpeg_sample__
-#include <stdio.h>
-#include <stdlib.h>
-#include <jpeglib.h>
-int main () {
-    unsigned char *outbuffer_pt = NULL;
-    unsigned long int outlen = 0;
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    cinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&cinfo);
-    jpeg_mem_dest(&cinfo, &outbuffer_pt, &outlen);
-//  jpeg_stdio_dest(&cinfo, fp);
-    int width = 256;
-    int height = 256;
-    cinfo.image_width = width;
-    cinfo.image_height  = height;
-    cinfo.input_components = 3;
-    cinfo.in_color_space = JCS_RGB;
-    jpeg_set_defaults(&cinfo);
-    jpeg_set_quality(&cinfo, 75, TRUE);
-    jpeg_start_compress(&cinfo, TRUE);
-    JSAMPARRAY img = (JSAMPARRAY) malloc(sizeof(JSAMPROW) * height);
-    for (int i = 0; i < height; i++) {
-        img[i] = (JSAMPROW) malloc(sizeof(JSAMPLE) * 3 * width);
-        for (int j = 0; j < width; j++) {
-            img[i][j*3 + 0] = i;
-            img[i][j*3 + 1] = j;
-            img[i][j*3 + 2] = 127;
-        }
-    }
-    jpeg_write_scanlines(&cinfo, img, height);
-    jpeg_finish_compress(&cinfo);
-    jpeg_destroy_compress(&cinfo);
-
-    for (int i = 0; i < height; i++) {
-        free(img[i]);
-    }
-    free(img);
-
-    const char *filename = "test_jpeg_output.jpg";
-    FILE *fp = fopen(filename, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "cannot open %s\n", filename);
-        exit(EXIT_FAILURE);
-    }
-   fwrite((const void*)outbuffer_pt, outlen, 1, fp);
-   fclose(fp);
-
-   if(NULL != outbuffer_pt)
-   {
-     free(outbuffer_pt);
-   }
-}
-#endif
-
 #define MAX_CAMERA_NUM 20
 #define MAX_CAMERA_WINS 4
-#define CAM_IMG_WIDTH 640
-#define CAM_IMG_HEIGHT 480
+#define CAM_IMG_WIDTH 320
+#define CAM_IMG_HEIGHT 240
 #define LINESIZE (3*CAM_IMG_WIDTH)
 #include <jpeglib.h>
 #include <string.h>
 
 #define CCO camera_connected_order
 
-#define NO__CAMERA_IMAGE_DEBUG__
+#define NO__CAMERA_IMAGE_TEST__
 
 //////////////////////////////////////////////////////////////////
 // USARimage : A structure for transferring image data
@@ -1909,7 +1850,7 @@ struct USARimage
     jpeg_write_scanlines(&cinfo, img, CAM_IMG_HEIGHT);
     jpeg_finish_compress(&cinfo);
     jpeg_destroy_compress(&cinfo);
-#ifdef __CAMERA_IMAGE_DEBUG__
+#ifdef __CAMERA_IMAGE_TEST__
     const char *filename = "test_jpeg_output.jpg";
     FILE *fp = fopen(filename, "wb");
     if (fp == NULL) {
@@ -1921,10 +1862,13 @@ struct USARimage
 #else
     unsigned char* ImageBuf = new unsigned char[5 + outlen];
     ImageBuf[0] = 3; // Jpeg Data with normal image quality
-    *(unsigned long int*)&ImageBuf[1] = outlen; // Image Size
-    memcpy(ImageBuf + 5, outbuffer_pt, outlen);
-    boost::asio::write(_socket, boost::asio::buffer((void*)ImageBuf
-                       , 5 + outlen));
+    ImageBuf[1] = (unsigned char)((outlen >> 24) & (unsigned long)0x00FF);
+    ImageBuf[2] = (unsigned char)((outlen >> 16) & (unsigned long)0x00FF);
+    ImageBuf[3] = (unsigned char)((outlen >>  8) & (unsigned long)0x00FF);
+    ImageBuf[4] = (unsigned char)(outlen         & (unsigned long)0x00FF);
+    memcpy(&ImageBuf[5], outbuffer_pt, outlen);
+    boost::asio::write(_socket
+                 , boost::asio::buffer((void*)ImageBuf, 5 + outlen));
     delete ImageBuf;
 #endif
     if(NULL != outbuffer_pt)
