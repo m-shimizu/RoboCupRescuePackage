@@ -107,6 +107,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 * Waiting for socket connections at port 3000 and port 5003  
 * You can spawn a robot into a gazebo with "INIT" command like next line:  
     INIT {ClassName pioneer3at_with_sensors}{Name Robo_A}{Location 1,-2,0}{Rotation 0,0,0}  
+  - Spawning multi robots requires 1 sec interval between each robot spawning.
 * You can drive the robot with "DRIVE" command like next line:  
     DRIVE {Right 0.5}{Left 0.5}  
 * You can get a long landscaped jpeg image consisted from 4 robot cameras with following steps. Each robot camera image's width x height is 640 x 480. Camera images are located side-by-side and first spawned robot's camera image is located at left end of a jpeg image. If a robot has two cameras, currently you can see right camera's image.  
@@ -123,6 +124,13 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 * pioneer3at_with_sensors series
     - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_b , pioneer3at_with_sensors_b , pioneer3at_with_sensors_y  
     - Eqipments : two cameras and a range sensor  
+
+### Sample Client Software  
+* A sample client software was prepared to show fundamental usage of the RoboCupRescuePackage.  
+* See https://github.com/m-shimizu/USARSimSampleClient  
+* What you can see with the USARSimSampleClient:  
+  - Spawning 4 robots
+  - 4 robot's camera images transfered in jpeg format are shown on rviz
 
 ### Current Constructing Point  
 * Increasing robots which you can use.
