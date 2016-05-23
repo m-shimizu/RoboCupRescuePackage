@@ -38,7 +38,7 @@
     <plugin name="USARGazebo" filename="libUSARGazebo.so">
       <StartPose_1>Point1 0,0,0.3 0,0,3.14</StartPose_1>
       <StartPose_2>Point2 0,1,0.3 0,0,1.57</StartPose_2>
-      <StartPose_3>Point3 1,0,0.3 0,0,-i.57</StartPose_3>
+      <StartPose_3>Point3 1,0,0.3 0,0,-1.57</StartPose_3>
       <StartPose_4>Point4 1,1,0.3 0,0,0</StartPose_4>
     </plugin>
 -->

@@ -101,7 +101,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.  
 
 
-## Developping Status at 2016.5.20  
+## Developping Status at 2016.5.23  
 
 ### Current Function  
 * Waiting for socket connections at port 3000 and port 5003  
@@ -129,8 +129,8 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 * A sample client software was prepared to show fundamental usage of the RoboCupRescuePackage.  
 * See https://github.com/m-shimizu/USARSimSampleClient  
 * What you can see with the USARSimSampleClient:  
-  - Spawning 4 robots
-  - 4 robot's camera images transfered in jpeg format are shown on rviz
+  - Spawning 4 robots  
+  - 4 robot's camera images transfered in jpeg format are shown on rviz  
 
 ### Current Constructing Point  
 * Increasing robots which you can use.
