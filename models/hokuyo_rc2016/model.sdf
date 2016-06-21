@@ -56,7 +56,7 @@
         <plugin name="laser" filename="libRayPlugin.so" />
         <always_on>1</always_on>
         <update_rate>30</update_rate>
-        <visualize>true</visualize>
+        <visualize>false</visualize>
       </sensor>
     </link>
   </model>

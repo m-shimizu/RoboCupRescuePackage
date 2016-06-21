@@ -866,7 +866,6 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
     IMU_Disp_Counter = 10; // Display STA 1 times per 100 loop times
     ///////////////////////////////////////////////////////////////
     // Send INS
-    /*
     boost::asio::streambuf sen;
     std::ostream os(&sen);
     os << "SEN " << 
@@ -878,7 +877,6 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
           "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os << "\r\n"; 
     boost::asio::write(_socket, sen);
-    */
     ///////////////////////////////////////////////////////////////
     // Send Odometory 
     boost::asio::streambuf sen_odo;
@@ -1758,8 +1756,11 @@ void USARcommand::UC_check_command_from_USARclient(void)
   else if(0 == nread) 
   {
     perror("EOF, should break connection");
-    _parent.Remove_Child_Session(this);
-    _thread.join();
+    perror("Turn this session into sleep to avoid decreasing performance.\n");
+    for(;;)
+      usleep(1000000);
+//    _parent.Remove_Child_Session(this);
+//    _thread.join();
   }
   std::istream is(&_buffer);
   std::string line;
