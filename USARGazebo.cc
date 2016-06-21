@@ -179,6 +179,30 @@ Plugin_Option_Parameters POP;
 //  USAR Command Server
 //#######################################################################
 
+
+//MEMO in changing camera and hokuyo
+// Differances in tipic names between before and after
+/*
+BEFORE
+/gazebo/default/pioneer3at_with_sensors_b/chassis/l_camera/image
+/gazebo/default/pioneer3at_with_sensors_b/chassis/r_camera/image
+/gazebo/default/pioneer3at_with_sensors_b/laser_tilt_mount_link/lms200/scan
+/gazebo/default/pioneer3at_with_sensors_b/laser_tilt_mount_link/gps
+/gazebo/default/pioneer3at_with_sensors_b/chassis/imu_sensor/imu
+/gazebo/default/pioneer3at_with_sensors_b/joint_cmd
+/gazebo/default/pioneer3at_with_sensors_b/vel_cmd
+/gazebo/default/pioneer3at_with_sensors_b::chassis
+
+AFTER
+/gazebo/default/pioneer3at_with_sensors/camera/link/camera/image
+/gazebo/default/pioneer3at_with_sensors/hokuyo/link/laser/scan
+/gazebo/default/pioneer3at_with_sensors/chassis/gps
+/gazebo/default/pioneer3at_with_sensors/chassis/imu_sensor/imu
+/gazebo/default/pioneer3at_with_sensors/joint_cmd
+/gazebo/default/pioneer3at_with_sensors/vel_cmd
+/gazebo/default/pioneer3at_with_sensors::chassis
+*/
+
 //////////////////////////////////////////////////////////////////
 // Useful flags 
 struct RD
@@ -235,6 +259,10 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
 
+   ,{"pioneer3at_with_sensors_r", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+
    ,{"pioneer3at_with_sensors_b", RT_D_GROUNDVEHICLE, "SkidSteered",
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
@@ -255,13 +283,41 @@ struct ROBOT_DATABASE
    //Mass Speed Torque Front Rear Battery  DT
        20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
 
-   ,{"pioneer2dx", RT_D_GROUNDVEHICLE, "SkidSteered",
+   ,{"pioneer2dx_with_sensors", RT_D_GROUNDVEHICLE, "SkidSteered",
    //Mass Speed Torque Front Rear Battery  DT
-       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
 
-   ,{"Crawler_Robot", RT_D_GROUNDVEHICLE, "SkidSteered",
+   ,{"pioneer2dx_with_sensors_r", RT_D_GROUNDVEHICLE, "SkidSteered",
    //Mass Speed Torque Front Rear Battery  DT
-       20,    5,    10,   10,  10,   3600, DT_SkidsteerDrive}
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"pioneer2dx_with_sensors_g", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"pioneer2dx_with_sensors_b", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"pioneer2dx_with_sensors_y", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"turtlebot_with_sensors_r", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"turtlebot_with_sensors_g", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"turtlebot_with_sensors_b", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
+
+   ,{"turtlebot_with_sensors_y", RT_D_GROUNDVEHICLE, "SkidSteered",
+   //Mass Speed Torque Front Rear Battery  DT
+       20,    5,    10,   10,  10,   3600, DT_DiffarentialDrive}
 
    ,{"quadrotor", RT_D_AERIALVEHICLE, "RotaryWing",
    //Mass Speed Torque Front Rear Battery  DT
@@ -314,6 +370,10 @@ int get_number_of_Robot_DB(const char* robot_model_name)
 #define ET_D_U_GROUNDTRUTH  "GroundTruth"
 #define ET_D_G_ENCODER      "Unknnown"
 #define ET_D_U_ENCODER      "Encoder"
+
+//////////////////////////////////////////////////////////////////
+// EFFECTER_NAME
+#define ET_D_N_LASERSCANNER "lms200"
 
 //////////////////////////////////////////////////////////////////
 // Gazebo-USARSim Database 
@@ -519,7 +579,8 @@ struct USARcommand
       {
         // At only first time, register a callback function for the sensor.
         // RangeFinder 
-        if(NULL != strcasestr(*i, ET_D_G_LASERSCANNER))
+        if(NULL != strcasestr(*i, ET_D_G_LASERSCANNER) 
+          && NULL != strcasestr(*i, ET_D_N_LASERSCANNER))
         {
           if(NULL == registered_topics_list.Search(*i))
           {
@@ -1177,7 +1238,7 @@ struct UC_DRIVE
     {
       case DT_DiffarentialDrive:
         // Pioneer 2DX(Skidsteer); Turn > 0 then robot turn clock wise
-        //_turn = _turn;
+        _turn = _turn;
         break;
       case DT_SkidsteerDrive   : 
         // Pioneer 3AT(Diffarential); Turn < 0 then robot turn clock wise
@@ -1739,7 +1800,7 @@ void USARcommand::UC_check_command_from_USARclient(void)
 //  Image Server
 //#######################################################################
 
-#define MAX_CAMERA_NUM 20
+#define MAX_CAMERA_NUM 30
 #define MAX_CAMERA_WINS 4
 #define CAM_IMG_WIDTH 320
 #define CAM_IMG_HEIGHT 240
@@ -1790,6 +1851,16 @@ struct USARimage
   void camera_callback_18(ConstImageStampedPtr& _msg);
   void camera_callback_19(ConstImageStampedPtr& _msg);
   void camera_callback_20(ConstImageStampedPtr& _msg);
+  void camera_callback_21(ConstImageStampedPtr& _msg);
+  void camera_callback_22(ConstImageStampedPtr& _msg);
+  void camera_callback_23(ConstImageStampedPtr& _msg);
+  void camera_callback_24(ConstImageStampedPtr& _msg);
+  void camera_callback_25(ConstImageStampedPtr& _msg);
+  void camera_callback_26(ConstImageStampedPtr& _msg);
+  void camera_callback_27(ConstImageStampedPtr& _msg);
+  void camera_callback_28(ConstImageStampedPtr& _msg);
+  void camera_callback_29(ConstImageStampedPtr& _msg);
+  void camera_callback_30(ConstImageStampedPtr& _msg);
   int camera_connected_order[MAX_CAMERA_NUM];
   int current_camera_order;
   JSAMPARRAY img;
@@ -1940,17 +2011,44 @@ struct USARimage
     //    by the function Subscribe will NOT be call-backed.
     // DO NOT REMOVE "_sub_camera_image[?] ="
     _sub_camera_image[0] = _node->Subscribe(
-       "/gazebo/default/pioneer3at_with_sensors/chassis/r_camera/image",
+      "/gazebo/default/pioneer3at_with_sensors/camera/link/camera/image",
        &USARimage::camera_callback_0, this);
     _sub_camera_image[1] = _node->Subscribe(
-       "/gazebo/default/pioneer3at_with_sensors_b/chassis/r_camera/image",
+      "/gazebo/default/pioneer3at_with_sensors_b/camera/link/camera/image",
        &USARimage::camera_callback_1, this);
     _sub_camera_image[2] = _node->Subscribe(
-       "/gazebo/default/pioneer3at_with_sensors_g/chassis/r_camera/image",
+      "/gazebo/default/pioneer3at_with_sensors_g/camera/link/camera/image",
        &USARimage::camera_callback_2, this);
     _sub_camera_image[3] = _node->Subscribe(
-       "/gazebo/default/pioneer3at_with_sensors_y/chassis/r_camera/image",
+      "/gazebo/default/pioneer3at_with_sensors_y/camera/link/camera/image",
        &USARimage::camera_callback_3, this);
+    _sub_camera_image[4] = _node->Subscribe(
+      "/gazebo/default/pioneer3at_with_sensors_r/camera/link/camera/image",
+       &USARimage::camera_callback_4, this);
+    _sub_camera_image[5] = _node->Subscribe(
+      "/gazebo/default/pioneer2dx_with_sensors_r/camera/link/camera/image",
+       &USARimage::camera_callback_5, this);
+    _sub_camera_image[6] = _node->Subscribe(
+      "/gazebo/default/pioneer2dx_with_sensors_g/camera/link/camera/image",
+       &USARimage::camera_callback_6, this);
+    _sub_camera_image[7] = _node->Subscribe(
+      "/gazebo/default/pioneer2dx_with_sensors_b/camera/link/camera/image",
+       &USARimage::camera_callback_7, this);
+    _sub_camera_image[8] = _node->Subscribe(
+      "/gazebo/default/pioneer2dx_with_sensors_y/camera/link/camera/image",
+       &USARimage::camera_callback_8, this);
+    _sub_camera_image[9] = _node->Subscribe(
+      "/gazebo/default/turtlebot_with_sensors_r/camera/link/camera/image",
+       &USARimage::camera_callback_9, this);
+    _sub_camera_image[10] = _node->Subscribe(
+      "/gazebo/default/turtlebot_with_sensors_g/camera/link/camera/image",
+       &USARimage::camera_callback_10, this);
+    _sub_camera_image[11] = _node->Subscribe(
+      "/gazebo/default/turtlebot_with_sensors_b/camera/link/camera/image",
+       &USARimage::camera_callback_11, this);
+    _sub_camera_image[12] = _node->Subscribe(
+      "/gazebo/default/turtlebot_with_sensors_y/camera/link/camera/image",
+       &USARimage::camera_callback_12, this);
     while(1)
       Child_Session_Loop_Core();
     // Set topic name of camera
@@ -2147,6 +2245,76 @@ void USARimage::camera_callback_19(ConstImageStampedPtr& _msg)
 void USARimage::camera_callback_20(ConstImageStampedPtr& _msg)
 {
   save_camera_image(20, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_21(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(21, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_22(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(22, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_23(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(23, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_24(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(24, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_25(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(25, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_26(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(26, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_27(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(27, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_28(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(28, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_29(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(29, _msg);
+}
+
+//////////////////////////////////////////////////////////////////
+// Function is called everytime a message is received on topics
+void USARimage::camera_callback_30(ConstImageStampedPtr& _msg)
+{
+  save_camera_image(30, _msg);
 }
 
 #ifdef __DEBUG_SAMPLE__

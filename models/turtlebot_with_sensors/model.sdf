@@ -1,0 +1,572 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="turtlebot_with_sensors">
+    <link name="rack">
+      <inertial>
+        <pose>0.001453 -0.000453 0.029787 0 0 0</pose>
+        <inertia>
+          <ixx>0.058640</ixx>
+          <ixy>0.000124</ixy>
+          <ixz>0.000615</ixz>
+          <iyy>0.058786</iyy>
+          <iyz>0.000014</iyz>
+          <izz>1.532440</izz>
+        </inertia>
+        <mass>2.234000</mass>
+      </inertial>
+<!--
+      <collision name="plate_0_collision">
+        <pose>-0.043340 0 0.084757 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.233502 0.314845 0.006401</size>
+          </box>
+        </geometry>
+      </collision>
+-->
+      <visual name="plate_0_visual">
+        <pose>-0.043340 0 0.084757 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/plate_0_logo.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+<!--
+      <collision name="plate_1_collision">
+        <pose>-0.002660 0 0.141907 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.314856 0.314856 0.006401</size>
+          </box>
+        </geometry>
+      </collision>
+-->
+      <visual name="plate_1_visual">
+        <pose>-0.002660 0 0.141907 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/plate_1_logo.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+<!--
+      <collision name="plate_2_collision">
+        <pose>-0.002660 0 0.199108 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.314856 0.314856 0.006401</size>
+          </box>
+        </geometry>
+      </collision>
+-->
+      <visual name="plate_2_visual">
+        <pose>-0.002660 0 0.199108 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/plate_1_logo.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="plate_3_collision">
+        <pose>-0.015820 0 0.405457 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.288000 0.315000 0.006401</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="plate_3_visual">
+        <pose>-0.015820 0 0.405457 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/plate_2_logo.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="spacer_0_collision">
+        <pose>-0.002540 0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.012700</radius>
+            <length>0.003175</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="spacer_0_visual">
+        <pose>-0.002540 0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02403-125_Spacer.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="spacer_1_collision">
+        <pose>-0.002540 -0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.012700</radius>
+            <length>0.003175</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="spacer_1_visual">
+        <pose>-0.002540 -0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02403-125_Spacer.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="spacer_2_collision">
+        <pose>-0.072390 -0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.012700</radius>
+            <length>0.003175</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="spacer_2_visual">
+        <pose>-0.072390 -0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02403-125_Spacer.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="spacer_3_collision">
+        <pose>-0.072390 0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.012700</radius>
+            <length>0.003175</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="spacer_3_visual">
+        <pose>-0.072390 0.111468 0.079992 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02403-125_Spacer.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_0_collision">
+        <pose>0.067640 0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_0_visual">
+        <pose>0.067640 0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_1_collision">
+        <pose>0.067640 -0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_1_visual">
+        <pose>0.067640 -0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_2_collision">
+        <pose>-0.052832 -0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_2_visual">
+        <pose>-0.052832 -0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_3_collision">
+        <pose>-0.052832 0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_3_visual">
+        <pose>-0.052832 0.131420 0.087980 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_4_collision">
+        <pose>0.067640 0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_4_visual">
+        <pose>0.067640 0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_5_collision">
+        <pose>0.067640 -0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_5_visual">
+        <pose>0.067640 -0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_6_collision">
+        <pose>-0.052832 -0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_6_visual">
+        <pose>-0.052832 -0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_2in_7_collision">
+        <pose>-0.052832 0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.038100</radius>
+            <length>0.063500</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_2in_7_visual">
+        <pose>-0.052832 0.131420 0.145130 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04552-2000-RA_Turtlebot_M-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_8in_0_collision">
+        <pose>0.067640 0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.011113</radius>
+            <length>0.203200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_8in_0_visual">
+        <pose>0.067640 0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02421-8000-RA_Turtlebot_F-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_8in_1_collision">
+        <pose>0.067640 -0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.011113</radius>
+            <length>0.203200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_8in_1_visual">
+        <pose>0.067640 -0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02421-8000-RA_Turtlebot_F-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_8in_2_collision">
+        <pose>-0.052832 -0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.011113</radius>
+            <length>0.203200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_8in_2_visual">
+        <pose>-0.052832 -0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02421-8000-RA_Turtlebot_F-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_8in_3_collision">
+        <pose>-0.052832 0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.011113</radius>
+            <length>0.203200</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_8in_3_visual">
+        <pose>-0.052832 0.131420 0.202280 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-02421-8000-RA_Turtlebot_F-F_Standoff.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+<!-- IMU Sensor -->
+      <sensor name="imu_sensor" type="imu">
+        <pose>0 0 0 0 0 0</pose>
+        <always_on>1</always_on>
+        <update_rate>100</update_rate>
+<!--  NOW update rate is set 10 tempolarity
+        <update_rate>10</update_rate>
+-->
+        <imu>
+<!--  NOW comment noise parameters out tempolary
+          <noise>
+            <type>gaussian</type>
+            <rate>
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+              <bias_mean>7.5e-06</bias_mean>
+              <bias_stddev>8e-07</bias_stddev>
+            </rate>
+            <accel>
+              <mean>0</mean>
+              <stddev>0.017</stddev>
+              <bias_mean>0.1</bias_mean>
+              <bias_stddev>0.001</bias_stddev>
+            </accel>
+          </noise>
+-->
+        </imu>
+      </sensor>
+<!-- GPS sensor copied from gazebo-5.0.1/test/worlds/gps_test.world -->
+      <sensor name="gps" type="gps">
+        <pose>0 0 0 0 0 0</pose>
+        <update_rate>10.0</update_rate>
+        <always_on>true</always_on>
+        <gps>
+          <position_sensing>
+            <horizontal>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>1</stddev>
+                <bias_mean>3</bias_mean>
+                <bias_stddev>1</bias_stddev>
+                <precision>0.5</precision>
+              </noise>
+            </horizontal>
+            <vertical>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>1</stddev>
+                <bias_mean>3</bias_mean>
+                <bias_stddev>1</bias_stddev>
+                <precision>1.0</precision>
+              </noise>
+            </vertical>
+          </position_sensing>
+          <velocity_sensing>
+            <horizontal>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>0.1</stddev>
+                <bias_mean>0.1</bias_mean>
+                <bias_stddev>0.1</bias_stddev>
+                <precision>0.1</precision>
+              </noise>
+            </horizontal>
+            <vertical>
+              <noise type="gaussian_quantized">
+                <mean>0</mean>
+                <stddev>0.2</stddev>
+                <bias_mean>0.2</bias_mean>
+                <bias_stddev>0.2</bias_stddev>
+                <precision>0.2</precision>
+              </noise>
+            </vertical>
+          </velocity_sensing>
+        </gps>
+      </sensor>
+<!--
+      <collision name="standoff_kinect_0_collision">
+        <pose>-0.105098 0.098000 0.202308 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.001111</radius>
+            <length>0.008585</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_kinect_0_visual">
+        <pose>-0.105098 0.098000 0.202308 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04556-RA_Kinect_Standoff_Assy.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="standoff_kinect_1_collision">
+        <pose>-0.105098 -0.098000 0.202308 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.001111</radius>
+            <length>0.008585</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="standoff_kinect_1_visual">
+        <pose>-0.105098 -0.098000 0.202308 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://turtlebot_with_sensors/meshes/68-04556-RA_Kinect_Standoff_Assy.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+-->
+<!--
+      <sensor name="laser" type="ray">
+        <pose>-0.065000 0 0.092000 0 0 0</pose>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>180</samples>
+              <resolution>1.000000</resolution>
+              <min_angle>-2.268928</min_angle>
+              <max_angle>2.268928</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.080000</min>
+            <max>10</max>
+            <resolution>0.010000</resolution>
+          </range>
+        </ray>
+
+        <plugin name='laser_controller' filename='libgazebo_ros_laser.so'>
+          <gaussianNoise>0.005</gaussianNoise>
+          <alwaysOn>1</alwaysOn>
+          <updateRate>20</updateRate>
+          <topicName>scan</topicName>
+          <frameName>laser</frameName>
+        </plugin>
+
+        <update_rate>20</update_rate>
+      </sensor>
+-->
+    </link>
+<!-- Camera (hight is 100mm) -->
+    <include>
+      <name>camera</name>
+      <pose>0.07 0 0.323 0 0 0</pose>
+      <uri>model://camera_rc2016</uri>
+    </include>
+    <joint name="camera_joint" type="revolute">
+      <parent>rack</parent>
+      <child>camera::link</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0.000000 0.000000 1.000000</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+      </axis>
+    </joint>
+<!-- Hokuyo (hight is 70mm) -->
+    <include>
+      <name>hokuyo</name>
+      <pose>0.07 0 0.238 0 0 0</pose>
+      <uri>model://hokuyo_rc2016</uri>
+    </include>
+    <joint name="hokuyo_joint" type="revolute">
+      <parent>rack</parent>
+      <child>hokuyo::link</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0.000000 0.000000 1.000000</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+      </axis>
+    </joint>
+    <include>
+      <uri>model://create_rc2016</uri>
+    </include>
+    <joint name="create_rack" type="revolute">
+      <parent>create_rc2016::base</parent>
+      <child>rack</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+<!--
+    <include>
+      <uri>model://kinect</uri>
+      <pose>-0.087098 0 0.303857 0 0 0</pose>
+    </include>
+    <joint name="kinect_rack" type="revolute">
+      <parent>kinect::link</parent>
+      <child>rack</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+-->
+  </model>
+</sdf>

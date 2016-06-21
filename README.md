@@ -121,9 +121,17 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 * You can set 9 start pose informations in USARGazebo.world as option parameters of USARGazebo plugin.  
 
 ### Robots and equipments
-* pioneer3at_with_sensors series
-    - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_b , pioneer3at_with_sensors_b , pioneer3at_with_sensors_y  
-    - Eqipments : two cameras and a range sensor  
+* pioneer3at_with_sensors series  
+    - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_r , pioneer3at_with_sensors_b , pioneer3at_with_sensors_g , pioneer3at_with_sensors_y  
+    - Eqipments : one cameras and one range sensor  
+
+* pioneer2dx_with_sensors series  
+    - Classname : pioneer2dx_with_sensors_r , pioneer2dx_with_sensors_b , pioneer2dx_with_sensors_g , pioneer2dx_with_sensors_y  
+    - Eqipments : one cameras and one range sensor  
+
+* turtlebot_with_sensors series  
+    - Classname : turtlebot_with_sensors_r , turtlebot_with_sensors_b , turtlebot_with_sensors_g , turtlebot_with_sensors_y  
+    - Eqipments : one cameras and one range sensor  
 
 ### Sample Client Software  
 * A sample client software was prepared to show fundamental usage of the RoboCupRescuePackage.  
