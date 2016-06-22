@@ -1230,7 +1230,7 @@ struct UC_DRIVE
  // _pub_vel_cmd->WaitForConnection();
     // Calc speed and turn
     _speed = (_right_power + _left_power) / 2.0;
-    _turn  = -_right_power + _left_power;
+    _turn  = (-_right_power + _left_power) * 2.0;
     // Adjust parameters by robot drive type
     switch(_DriveType)
     {
