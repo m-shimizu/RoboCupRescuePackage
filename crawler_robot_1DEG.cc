@@ -8,34 +8,13 @@
 #include <gazebo/common/Time.hh>
 #include <stdio.h>
 #include <gazebo/math/gzmath.hh>
+#include "flipper_control_msgs.hh"
 
 #include <termios.h>
 #include <iostream>
 
-// Japanese comments will be removed soon, soory. M.Shimizu
-
-#define DEG00 0
-#define DEG45 45
-#define DEG90 90
-#define DEG_45 -45
-#define DEG_90 -90
-#define Gp 0.05
+#define Gp 3.0  //0.05
 #define Gi 0.00 //0.00005
-
-int arm_deg = 0;
-int arm_deg_2 = 0;
-int arm_flg = 0;
-float dev_RF = 0;
-float dev_LF = 0;
-float dev_RR = 0;
-float dev_LR = 0;
-double dev_RF_sum = 0;
-double dev_LF_sum = 0;
-double dev_RR_sum = 0;
-double dev_LR_sum = 0;
-
-double DEG_1 = -45;
-double DEG_2 = +45;
 
 namespace gazebo
 {
@@ -46,6 +25,7 @@ class MobileBasePlugin : public ModelPlugin
   common::Time       simTime;
 
   transport::SubscriberPtr velSub;
+  transport::SubscriberPtr flpSub;
   transport::SubscriberPtr statsSub;
   event::ConnectionPtr updateConnection;
 
@@ -91,13 +71,25 @@ class MobileBasePlugin : public ModelPlugin
   /// Radius of the wheels (Determined from SDF)
   double wheelRadius;
 
-  /// Arm flag
-  int arm_flg;
+  /// Flipper target angle 
+  double FLP_FR, FLP_FL, FLP_RR, FLP_RL;
+
+  /// Flipper angle controller
+  double dev_FLP_FR;
+  double dev_FLP_FL;
+  double dev_FLP_RR;
+  double dev_FLP_RL;
+  double dev_FLP_FR_sum;
+  double dev_FLP_FL_sum;
+  double dev_FLP_RR_sum;
+  double dev_FLP_RL_sum;
 
   public:
   MobileBasePlugin(void)
   {
-    arm_flg         = 0;
+    FLP_FR = FLP_FL = FLP_RR = FLP_RL = M_PI / 4;
+    dev_FLP_FR = dev_FLP_FL = dev_FLP_RR = dev_FLP_RL = 0;
+    dev_FLP_FR_sum = dev_FLP_FL_sum = dev_FLP_RR_sum = dev_FLP_RL_sum = 0;
     wheelRadius     = 0.2;
     wheelSeparation = 1;
     for(int i = 0; i < 30; i++)
@@ -115,6 +107,9 @@ class MobileBasePlugin : public ModelPlugin
       this->velSub = this->node->Subscribe(
       std::string("~/") + this->model->GetName() + std::string("/vel_cmd"),
       &MobileBasePlugin::OnVelMsg, this);
+      this->flpSub = this->node->Subscribe(
+      std::string("~/") + this->model->GetName() + std::string("/flp_cmd"),
+      &MobileBasePlugin::OnFlpMsg, this);
       this->updateConnection
         = event::Events::ConnectWorldUpdateBegin(
                   boost::bind(&MobileBasePlugin::OnUpdate, this));
@@ -210,77 +205,14 @@ class MobileBasePlugin : public ModelPlugin
   }
 
   /////////////////////////////////////////////////
-/* UNDER CONSTRUCTION
-  void OnArmMsg(ConstPosePtr &_msg)
+  void OnFlpMsg(ConstFlipperControlPtr &_msg)
   {
-    // gzmsg << "cmd_vel: " << msg->position().x() << ", "
-    //       <<msgs::Convert(msg->orientation()).GetAsEuler().z<<std::endl;
-  
-    double vel_lin = _msg->position().x() / this->wheelRadius;
-    double vel_rot = -1 * msgs::Convert(_msg->orientation()).GetAsEuler().z
-                     * (this->wheelSeparation / this->wheelRadius);
-
-    set_velocity(vel_lin - vel_rot, vel_lin + vel_rot);
+    FLP_FR = _msg->fr();
+    FLP_FL = _msg->fl();
+    FLP_RR = _msg->rr();
+    FLP_RL = _msg->rl();
   }
 
-  void set_arm_angle(void)
-  {
-        case 'y':
-    arm_flg = 1;
-    DEG_1 -= 1;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-            break; 
-
-        case 'u':
-    arm_flg = 1;
-    DEG_1 = 0;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-            break;
-
-        case 'i':
-    arm_flg = 1;
-    DEG_1 += 1;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-      break;
-
-        case 'h':
-    arm_flg = 1;
-    DEG_2 += 1;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-            break; 
-
-        case 'j':
-    arm_flg = 1;
-    DEG_2 = 0;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-            break;
-
-        case 'k':
-    arm_flg = 1;
-    DEG_2 -= 1;
-    dev_RF_sum = 0;
-    dev_LF_sum = 0;
-    dev_RR_sum = 0;
-    dev_LR_sum = 0;
-      break;
-  }
-*/
- 
   /////////////////////////////////////////////////
   void MoveWheel(void)
   {
@@ -310,34 +242,31 @@ class MobileBasePlugin : public ModelPlugin
     hinge24->SetVelocity(0, THETA[28]);
   }
 
-  void MoveArm(void)
+  void MoveFlipper(void)
   {
-    float right_front_deg=0, left_front_deg=0,
-          right_rear_deg=0,  left_rear_deg=0;
-    math::Angle angle1 = hinge9->GetAngle(0);   // get current arm angles
-    math::Angle angle2 = hinge10->GetAngle(0);
-    math::Angle angle3 = hinge11->GetAngle(0);   
-    math::Angle angle4 = hinge12->GetAngle(0);
-printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r ", angle1.Degree(), angle2.Degree(), angle3.Degree(), angle4.Degree());
-    right_front_deg = angle1.Degree();
-    left_front_deg  = angle3.Degree();
-    right_rear_deg  = angle2.Degree();
-    left_rear_deg   = angle4.Degree();
-//    if(1 == arm_flg)
-    {
-      dev_RF = right_front_deg-DEG_1;
-      THETA[9]= dev_RF*(-1)*Gp + dev_RF_sum*(-1)*Gi;
-      dev_RF_sum += dev_RF;
-      dev_LF = left_front_deg-DEG_1;    
-      THETA[11]= dev_LF*(-1)*Gp + dev_LF_sum*(-1)*Gi; 
-      dev_LF_sum += dev_LF;
-      dev_RR = right_rear_deg-DEG_2;
-      THETA[10]= dev_RR*(-1)*Gp + dev_RR_sum*(-1)*Gi;
-      dev_RR_sum += dev_RR;
-      dev_LR = left_rear_deg-DEG_2;    
-      THETA[12]= dev_LR*(-1)*Gp + dev_LR_sum*(-1)*Gi; 
-      dev_LR_sum += dev_LR;
-    }
+    // Get current arm angle
+    double flp_fr = hinge9->GetAngle(0).Radian();
+    double flp_fl = hinge11->GetAngle(0).Radian();
+    double flp_rr = hinge10->GetAngle(0).Radian();   
+    double flp_rl = hinge12->GetAngle(0).Radian();
+//printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r ", flp_fr, flp_fl, flp_rr, flp_rl);
+    // Calc anguler velocity of Front Right flipper
+    dev_FLP_FR = flp_fr - (-FLP_FR);
+    THETA[9] = dev_FLP_FR*(-1)*Gp + dev_FLP_FR_sum*(-1)*Gi;
+    dev_FLP_FR_sum += dev_FLP_FR;
+    // Calc anguler velocity of Front Left flipper
+    dev_FLP_FL = flp_fl - (-FLP_FL);    
+    THETA[11] = dev_FLP_FL*(-1)*Gp + dev_FLP_FL_sum*(-1)*Gi; 
+    dev_FLP_FL_sum += dev_FLP_FL;
+    // Calc anguler velocity of Rear Right flipper
+    dev_FLP_RR = flp_rr - FLP_RR;
+    THETA[10] = dev_FLP_RR*(-1)*Gp + dev_FLP_RR_sum*(-1)*Gi;
+    dev_FLP_RR_sum += dev_FLP_RR;
+    // Calc anguler velocity of Rear Left flipper
+    dev_FLP_RL = flp_rl - FLP_RL;    
+    THETA[12] = dev_FLP_RL*(-1)*Gp + dev_FLP_RL_sum*(-1)*Gi; 
+    dev_FLP_RL_sum += dev_FLP_RL;
+    // Set flipper anguler velocity
     hinge9->SetVelocity(0, THETA[9]);
     hinge10->SetVelocity(0, THETA[10]);
     hinge11->SetVelocity(0, THETA[11]);
@@ -348,7 +277,7 @@ printf("right_front=%6.3f right_rear=%6.3f left_front=%6.3f left_rear=%6.3f \r "
   void OnUpdate()
   {
     MoveWheel();
-    MoveArm();
+    MoveFlipper();
   }
 };
 

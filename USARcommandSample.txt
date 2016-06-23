@@ -10,6 +10,10 @@ INIT {ClassName USARBot.pioneer3at_with_sensors_b}{Name pioneer3at_with_sensors_
 INIT {ClassName USARBot.pioneer3at_with_sensors_g}{Name pioneer3at_with_sensors_g}{Start Point1}{Battery 3600}
 INIT {ClassName USARBot.pioneer3at_with_sensors_y}{Name pioneer3at_with_sensors_y}{Start Point1}{Battery 3600}
 DRIVE {RIGHT 1.0} {LEFT 1.0}
+INIT {ClassName Crawler_Robot}{Name Crawler_Robot}{Start Point1}{Battery 3600}
+MULTIDRIVE {FRFlipper 1.5}{FLflipper 1.5}{RRFlipper 1.5}{RLflipper 1.5}
+MULTIDRIVE {FRFlipper 0.78}{FLflipper 0.78}{RRFlipper 0.78}{RLflipper 0.78}
+MULTIDRIVE {FRFlipper 0.0}{FLflipper 0.0}{RRFlipper 0.0}{RLflipper 0.0}
 GETCONF {Type Robot}
 GETGEO {Type Robot}
 GETCONF {Type RangeScanner}

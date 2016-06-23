@@ -18,6 +18,7 @@
 #include "boost_server_framework.hh"
 #include "break_usar_command_into_params.hh"
 #include "get_topics_list.hh"
+#include "flipper_control_msgs.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -268,7 +269,8 @@ enum DRIVE_TYPE
 {
   DT_DiffarentialDrive = 1,
   DT_SkidsteerDrive    = 2,
-  DT_QuadRotor         = 3
+  DT_QuadRotor         = 3,
+  DT_FlipperArm        = 4
 };
 
 //////////////////////////////////////////////////////////////////
@@ -446,6 +448,8 @@ int get_number_of_DB_From_USARSim_name(const char* _name)
 #define get_Gazebo_name_of(X) \
       Gazebo_USARSim_DB[get_number_of_DB_From_USARSim_name(X)].Gazebo_name
 
+#define INIT_FLP (M_PI/4)
+
 namespace gazebo
 {
 //////////////////////////////////////////////////////////////////
@@ -460,6 +464,10 @@ struct USARcommand
   boost::asio::streambuf        _buffer;
   boost::thread                 _thread;
   gazebo::transport::NodePtr    _node;
+  // Wheel torque
+  float                         _left_power, _right_power;
+  // Flipper Angle
+  double                        flp_fr, flp_fl, flp_rr, flp_rl;
   // Add your own variables here
 //RD   Msg, Spawn;
   int                           robot_was_spawned;
@@ -491,6 +499,9 @@ struct USARcommand
       , current_topics_list(), registered_topics_list()
       , STA_Disp_Counter(0), IMU_Disp_Counter(0), ENCODER_Disp_counter(0)
       , STA_Last_sec(0), STA_Count_Per_1sec(0)
+      , _left_power(0), _right_power(0)
+      , flp_fr(INIT_FLP), flp_fl(INIT_FLP)
+      , flp_rr(INIT_FLP), flp_rl(INIT_FLP)
 //    , Msg(), Spawn() 
   { Init(); }
 
@@ -1211,12 +1222,11 @@ struct UC_DRIVE
   //////////////////////////////////////////////////////////////////
   //  Variables
   USARcommand& _parent;
-  float        _left_power, _right_power;
 
   //////////////////////////////////////////////////////////////////
   //  The constructor
   UC_DRIVE(USARcommand& parent)
-    : _parent(parent), _left_power(0), _right_power(0)
+    : _parent(parent)
   {
     if(1 != _parent.robot_was_spawned)
       return;
@@ -1235,10 +1245,10 @@ struct UC_DRIVE
       return UCE_INCLUDING_BROKEN_BRACE;
     rtn = BUCIP.Search("LEFT");
     if(NULL != rtn)
-      sscanf(rtn, "%f", &_left_power);
+      sscanf(rtn, "%f", &_parent._left_power);
     rtn = BUCIP.Search("RIGHT");
     if(NULL != rtn)
-      sscanf(rtn, "%f", &_right_power);
+      sscanf(rtn, "%f", &_parent._right_power);
     return UCE_GOOD;
   }
 
@@ -1261,8 +1271,8 @@ struct UC_DRIVE
     // Wait for finishing the connection
  // _pub_vel_cmd->WaitForConnection();
     // Calc speed and turn
-    _speed = (_right_power + _left_power) / 2.0;
-    _turn  = (-_right_power + _left_power);
+    _speed = (_parent._right_power + _parent._left_power) / 2.0;
+    _turn  = (-_parent._right_power + _parent._left_power);
     _turn  = _MIN(_turn, M_PI * 2);
     _turn  = _MAX(_turn, -M_PI * 2);
     // Adjust parameters by robot drive type
@@ -1285,6 +1295,86 @@ struct UC_DRIVE
     gazebo::msgs::Set(&msg, pose);
     // Send the message
     _pub_vel_cmd->Publish(msg);
+  }
+};
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+// UC_MULTIDRIVE
+// Front flipper: MULTIDRIVE {FRFlipper float } {FLflipper float }
+// Rear  flipper: MULTIDRIVE {RRFlipper float } {RLflipper float }
+
+struct UC_MULTIDRIVE
+{
+  //////////////////////////////////////////////////////////////////
+  //  Variables
+  USARcommand& _parent;
+
+  //////////////////////////////////////////////////////////////////
+  //  The constructor
+  UC_MULTIDRIVE(USARcommand& parent)
+      : _parent(parent)
+  {
+    if(1 != _parent.robot_was_spawned)
+      return;
+    if(UCE_GOOD == read_params_from_usar_command())
+      move_flippers();
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  read_params_from_usar_command
+  int read_params_from_usar_command(void)
+  {
+    char*                          rtn;
+    Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
+//  BUCIP.Disp();
+    if(BIE_GOOD != BUCIP.Error_code())
+      return UCE_INCLUDING_BROKEN_BRACE;
+    rtn = BUCIP.Search("FRFlipper");
+    if(NULL != rtn)
+      sscanf(rtn, "%lf", &_parent.flp_fr);
+    rtn = BUCIP.Search("FLFlipper");
+    if(NULL != rtn)
+      sscanf(rtn, "%lf", &_parent.flp_fl);
+    rtn = BUCIP.Search("RRFlipper");
+    if(NULL != rtn)
+      sscanf(rtn, "%lf", &_parent.flp_rr);
+    rtn = BUCIP.Search("RLFlipper");
+    if(NULL != rtn)
+      sscanf(rtn, "%lf", &_parent.flp_rl);
+    return UCE_GOOD;
+  }
+
+  //////////////////////////////////////////////////////////////////
+  //  drive_a_robot
+  void move_flippers(void)
+  {
+    flipper_control_msgs::msgs::FlipperControl flpmsg;
+    char                                       _TopicName[100];
+    // Already a robot has been spawned, then return
+    if(1 != _parent.robot_was_spawned)
+      return;
+    // Prepare topic name for drive command
+    sprintf(_TopicName, "~/%s/flp_cmd", _parent.own_name);
+ // sprintf(_TopicName, "~/%s/vel_cmd", _parent.model_name);
+    // Create a publisher on the ~/factory topic
+    gazebo::transport::PublisherPtr _pub_flp_cmd
+     = _parent._node->Advertise<flipper_control_msgs::msgs::FlipperControl>
+                                                             (_TopicName);
+    // Check angle value limitation
+    _parent.flp_fr = _MIN(_parent.flp_fr, M_PI * 2); 
+    _parent.flp_fr = _MAX(_parent.flp_fr, M_PI * -2);
+    _parent.flp_fl = _MIN(_parent.flp_fl, M_PI * 2); 
+    _parent.flp_fl = _MAX(_parent.flp_fl, M_PI * -2);
+    _parent.flp_rr = _MIN(_parent.flp_rr, M_PI * 2); 
+    _parent.flp_rr = _MAX(_parent.flp_rr, M_PI * -2);
+    _parent.flp_rl = _MIN(_parent.flp_rl, M_PI * 2); 
+    _parent.flp_rl = _MAX(_parent.flp_rl, M_PI * -2);
+    flpmsg.set_fr(_parent.flp_fr);
+    flpmsg.set_fl(_parent.flp_fl);
+    flpmsg.set_rr(_parent.flp_rr);
+    flpmsg.set_rl(_parent.flp_rl);
+    _pub_flp_cmd->Publish(flpmsg);
   }
 };
 
@@ -1817,6 +1907,8 @@ void USARcommand::UC_check_command_from_USARclient(void)
         UC_INIT UC_init(*this);
       else if(0 == strNcmp(ucbuf, "DRIVE"))
         UC_DRIVE UC_drive(*this);
+      else if(0 == strNcmp(ucbuf, "MULTIDRIVE"))
+        UC_MULTIDRIVE UC_multidrive(*this);
       else if(0 == strNcmp(ucbuf, "GETSTARTPOSES"))
         UC_GETSTARTPOSES UC_getstartposes(*this);
       else if(0 == strNcmp(ucbuf, "GETGEO"))

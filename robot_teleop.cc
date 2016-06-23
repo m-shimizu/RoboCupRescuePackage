@@ -20,9 +20,22 @@
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/math/gzmath.hh>
+#include "flipper_control_msgs.hh"
 
 #include <termios.h>
 #include <iostream>
+
+#ifndef numof
+#define numof(X) (sizeof(X)/sizeof(typeof(X[0])))
+#endif
+
+#ifndef _MAX
+#define _MAX(X,Y) (((X)>(Y))?(X):(Y))
+#endif
+
+#ifndef _MIN
+#define _MIN(X,Y) (((X)<(Y))?(X):(Y))
+#endif
 
 enum DRIVE_TYPE
 {
@@ -32,7 +45,8 @@ enum DRIVE_TYPE
 
 //char  DefaultRobotName[][20] = {"Default", "pioneer2dx", "pioneer3at"};
 
-void  publish_vel_cmd(gazebo::transport::PublisherPtr pub, float speed = 0, float turn = 0, int RobotType = 0)
+void  publish_vel_cmd(gazebo::transport::PublisherPtr pub, 
+                  float speed = 0, float turn = 0, int RobotType = 0)
 {
   switch(RobotType)
   {
@@ -49,6 +63,25 @@ void  publish_vel_cmd(gazebo::transport::PublisherPtr pub, float speed = 0, floa
   gazebo::msgs::Pose msg;
   gazebo::msgs::Set(&msg, pose);
   pub->Publish(msg);
+}
+
+void  publish_flp_cmd(gazebo::transport::PublisherPtr pub,
+             double fr = 0, double fl = 0, double rr = 0, double rl = 0)
+{
+  flipper_control_msgs::msgs::FlipperControl flpmsg;
+  fr = _MIN(fr, M_PI * 2);
+  fr = _MAX(fr, M_PI * -2);
+  fl = _MIN(fl, M_PI * 2);
+  fl = _MAX(fl, M_PI * -2);
+  rr = _MIN(rr, M_PI * 2);
+  rr = _MAX(rr, M_PI * -2);
+  rl = _MIN(rl, M_PI * 2);
+  rl = _MAX(rl, M_PI * -2);
+  flpmsg.set_fr(fr);
+  flpmsg.set_fl(fl);
+  flpmsg.set_rr(rr);
+  flpmsg.set_rl(rl);
+  pub->Publish(flpmsg);
 }
 
 int  doslike_kbhit(void)
@@ -92,17 +125,18 @@ void  disp_usage_control_and_status(float speed, float turn)
   static int  loop_counter = 0;
   if(0 == (loop_counter++ % 10))
   {
-    printf("\n              [w]:speed up to front\n");
-    printf("[a]:left turn [s]:stop        [d]:right turn\n");
-    printf("              [x]:speed up to back\n");
-		printf("\nAnd with a game controller, you can use the right analog stick to move the robot\n");
+    printf("\n");
+    printf("\n");
+    printf("[q]:Flipper FL [w]:speed +    [e]:Flipper FR  [r]:Flipper up\n");
+    printf("[a]:left turn  [s]:stop       [d]:right turn  [f]:Flipper home\n");
+    printf("[z]:Flipper RL [x]:speed -    [c]:Flipper RR  [v]:Flipper down\n");
+    printf("To move flippers : At 1st push [qezc] and push [rfv].\n");
+		printf("\n");
+    printf("With a game controller, you can use the right analog stick to move the robot\n");
 		printf("Current programmed game controllers are:\n  BUFFALO BSGP1601\n");
   }
   printf("  Speed : %8.3f , Turn : %8.3f\r", speed, turn);
 }
-
-#define _MAX(X,Y)  ((X > Y)?X:Y)
-#define _MIN(X,Y)  ((X < Y)?X:Y)
 
 #include <linux/joystick.h>
 #define BUTTON_DATA_MAX 20
@@ -165,8 +199,10 @@ void  check_joystick(gazebo::transport::PublisherPtr pub, int RobotType
   disp_usage_control_and_status(speed, turn);
 }
 
-void  check_key_command(gazebo::transport::PublisherPtr pub, int RobotType
-                        , float& speed, float& turn)
+void  check_key_command(gazebo::transport::PublisherPtr velpub,
+                        gazebo::transport::PublisherPtr flppub,
+                        int RobotType , float& speed, float& turn,
+                        int& flp_ch, double flp[])
 {
   if(doslike_kbhit())
   {
@@ -174,24 +210,28 @@ void  check_key_command(gazebo::transport::PublisherPtr pub, int RobotType
     switch(cmd)
     {
       case 's': turn  = 0;
-      case 'S': speed = 0;
-          break;
+      case 'S': speed = 0; break;
       case 'W': turn   = 0;
-      case 'w': speed += 0.2;
-          break;
+      case 'w': speed += 0.2; break;
       case 'X': turn   = 0;
-      case 'x': speed -= 0.2;
-          break;
+      case 'x': speed -= 0.2; break;
       case 'A': speed = 0;
-      case 'a': turn -= 0.2;
-          turn = _MAX(turn, -3.14);
-          break;
+      case 'a': turn -= 0.2; turn = _MAX(turn, -3.14); break;
       case 'D': speed = 0;
-      case 'd': turn += 0.2;
-          turn = _MIN(turn, 3.14);
-          break;
+      case 'd': turn += 0.2; turn = _MIN(turn, 3.14); break;
+      case 'e': flp_ch = 0; break; // FR
+      case 'q': flp_ch = 1; break; // FL
+      case 'c': flp_ch = 2; break; // RR
+      case 'z': flp_ch = 3; break; // RL
+      case 'F': flp[0] = flp[1] = flp[2] = flp[3] = M_PI / 4; break;
+      case 'f': flp[flp_ch] = M_PI / 4; break;
+      case 'r': flp[flp_ch] += (M_PI / 180 * 5); break;
+      case 'R': flp[flp_ch] += (M_PI / 180 * 10); break;
+      case 'v': flp[flp_ch] -= (M_PI / 180 * 5); break;
+      case 'V': flp[flp_ch] -= (M_PI / 180 * 10); break;
     }
-    publish_vel_cmd(pub, speed, turn, RobotType);
+    publish_vel_cmd(velpub, speed, turn, RobotType);
+    publish_flp_cmd(flppub, flp[0], flp[1], flp[2], flp[3]);
     disp_usage_control_and_status(speed, turn);
   }
 }
@@ -205,10 +245,14 @@ void  disp_usage_option(char* arg)
   printf("Example3: %s pioneer3at 2 test_world\n", arg);
 }
 
+#define INIT_FLIPPER_ANGLE (M_PI/4)
 int main(int argc, char* argv[])
 {
   char  worldname[50];
 	float speed = 0, turn = 0;
+  int   flipper_number = 0;
+  double flipper_angles[4] ={INIT_FLIPPER_ANGLE, INIT_FLIPPER_ANGLE, 
+                             INIT_FLIPPER_ANGLE, INIT_FLIPPER_ANGLE};
   if(3 != argc && 4 != argc)
   {
     disp_usage_option(argv[0]);
@@ -216,29 +260,39 @@ int main(int argc, char* argv[])
   }
   else
   {
-    
     if(3 == argc)
       strcpy(worldname, "default");
     else if(4 == argc)
       strcpy(worldname, argv[3]);
-    printf("Robot name = %s\nRobot Type = %d\nWorld name = %s\n", argv[1], atoi(argv[2]), worldname);
+    printf("Robot name = %s\nRobot Type = %d\nWorld name = %s\n", 
+                                      argv[1], atoi(argv[2]), worldname);
   }
   int  RobotType = atoi(argv[2]);
-  char  TopicName[100];
+  char VelTopicName[100];
+  char FlpTopicName[100];
   gazebo::transport::init();
   gazebo::transport::run();
   gazebo::transport::NodePtr  node(new gazebo::transport::Node());
   node->Init(worldname);
-  sprintf(TopicName, "~/%s/vel_cmd", argv[1]);
-printf("%s\n", TopicName);
-  gazebo::transport::PublisherPtr pub = node->Advertise<gazebo::msgs::Pose>(TopicName);
-  pub->WaitForConnection();
+  // Create velpub
+  sprintf(VelTopicName, "~/%s/vel_cmd", argv[1]);
+printf("%s\n", VelTopicName);
+  gazebo::transport::PublisherPtr velpub 
+                     = node->Advertise<gazebo::msgs::Pose>(VelTopicName);
+  // Create flppub
+  sprintf(FlpTopicName, "~/%s/flp_cmd", argv[1]);
+  gazebo::transport::PublisherPtr flppub 
+          = node->Advertise<flipper_control_msgs::msgs::FlipperControl>
+                                                          (FlpTopicName);
+  // Wait for response of the target robot
+  velpub->WaitForConnection();
   disp_usage_control_and_status(0, 0);
   for(;1;)
   {
     gazebo::common::Time::MSleep(100);
-    check_key_command(pub, RobotType, speed, turn);
-    check_joystick(pub, RobotType, speed, turn);
+    check_key_command(velpub, flppub, RobotType, speed, turn, 
+                           flipper_number, flipper_angles);
+    check_joystick(velpub, RobotType, speed, turn);
   }
   return 0;
 }

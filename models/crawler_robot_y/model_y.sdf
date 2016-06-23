@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
-  <model name="Crawler_Robot">
+  <model name="crawler_robot_y">
     <static>false</static>
 <!--__________________body_____________________-->
     <link name='chassis'>
@@ -29,7 +29,7 @@
         <pose>-0.08 0 0 0 0 1.5707</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/crawler.dae</uri>
+            <uri>model://crawler_robot/dae/crawler_y.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -38,7 +38,7 @@
         <pose>0.08 0 0 0 0 1.5707</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/crawler.dae</uri>
+            <uri>model://crawler_robot/dae/crawler_y.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -617,7 +617,7 @@
     <pose>-0.015 0 -0.05 0 0 1.57</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/arm_crawler_2.dae</uri>
+            <uri>model://crawler_robot/dae/arm_crawler_2.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -783,7 +783,7 @@
     <pose>0.015 0 -0.05 0 0 1.57</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/arm_crawler_2.dae</uri>
+            <uri>model://crawler_robot/dae/arm_crawler_2.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -944,7 +944,7 @@
     <pose>-0.015 0 -0.05 0 0 1.57</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/arm_crawler_2.dae</uri>
+            <uri>model://crawler_robot/dae/arm_crawler_2.dae</uri>
           </mesh>
         </geometry>
       </visual>
@@ -1106,7 +1106,7 @@
     <pose>0.015 0 -0.05 0 0 1.57</pose>
         <geometry>
           <mesh>
-            <uri>model://Crawler_Robot/dae/arm_crawler_2.dae</uri>
+            <uri>model://crawler_robot/dae/arm_crawler_2.dae</uri>
           </mesh>
         </geometry>
       </visual>
