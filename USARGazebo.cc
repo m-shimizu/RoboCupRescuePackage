@@ -38,6 +38,14 @@
 #define numof(X) (sizeof(X)/sizeof(typeof(X[0])))
 #endif
 
+#ifndef _MAX
+#define _MAX(X,Y) (((X)>(Y))?(X):(Y))
+#endif
+
+#ifndef _MIN
+#define _MIN(X,Y) (((X)<(Y))?(X):(Y))
+#endif
+
 //#######################################################################
 //  USARGazebo Plugin Option Reader
 //#######################################################################
@@ -1255,7 +1263,8 @@ struct UC_DRIVE
     // Calc speed and turn
     _speed = (_right_power + _left_power) / 2.0;
     _turn  = (-_right_power + _left_power);
-    _turn  = fmod(_turn, M_PI * 2);
+    _turn  = _MIN(_turn, M_PI * 2);
+    _turn  = _MAX(_turn, -M_PI * 2);
     // Adjust parameters by robot drive type
     switch(_DriveType)
     {
