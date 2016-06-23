@@ -100,6 +100,14 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
         
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.  
 
+## Describing XML tags of USARGazebo in world file.
+    * Location and orientation of start point
+      <StartPose_1>X Y Z Roll Pitch Yaw</StartPose_1> 
+      <StartPose_2>X Y Z Roll Pitch Yaw</StartPose_2> 
+      <StartPose_3>X Y Z Roll Pitch Yaw</StartPose_3> 
+      <StartPose_4>X Y Z Roll Pitch Yaw</StartPose_4> 
+    * Turning Ground Truth on
+      <GroundTruth>true</GroundTruth>
 
 ## Developping Status at 2016.5.23  
 
@@ -165,6 +173,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     Original maps produced by Stephen Balakirsky and the National Institute of Standards and Technology (NIST).  
 
 ### Change log  
+    * 22/ 6/2016 : pioneer2dx and turtlebot are added.
     * 20/ 5/2016 : Jpeg camera image enabled.
     * 17/ 2/2016 : Add output of sensors.
     * 17/ 6/2015 : GETSTARTPOSES can return start point parameters. GETSTARTPOSES reads parameters from a world file which call the USARGazebo plugin as plugin options.  

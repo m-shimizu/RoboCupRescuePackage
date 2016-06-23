@@ -2,15 +2,12 @@
 <sdf version='1.4'>
   <model name="Crawler_Robot">
     <static>false</static>
-
 <!--__________________body_____________________-->
-
     <link name='chassis'>
-    <pose>0 0 .05 0 0 0</pose>
-   <inertial>
-    <mass>20</mass>
-    </inertial>
-
+      <pose>0 0 .05 0 0 0</pose>
+      <inertial>
+        <mass>20</mass>
+      </inertial>
 
       <collision name='collision'>
         <geometry>
@@ -27,11 +24,9 @@
           </box>
         </geometry>
       </visual>
-<!--__________________/body_____________________-->    
 <!--__________________crawler_____________________-->
-
-      <visual name="crawler_visual">
-    <pose>-0.08 0 0 0 0 1.5707</pose>
+      <visual name="crawler_visual_R">
+        <pose>-0.08 0 0 0 0 1.5707</pose>
         <geometry>
           <mesh>
             <uri>model://Crawler_Robot/dae/crawler.dae</uri>
@@ -39,41 +34,73 @@
         </geometry>
       </visual>
 
-      <visual name="crawler_visual">
-    <pose>0.08 0 0 0 0 1.5707</pose>
+      <visual name="crawler_visual_L">
+        <pose>0.08 0 0 0 0 1.5707</pose>
         <geometry>
           <mesh>
             <uri>model://Crawler_Robot/dae/crawler.dae</uri>
           </mesh>
         </geometry>
       </visual>
-<!--__________________/crawler_____________________-->
-</link>
-<!--__________________/body_____________________-->
-  
+    </link>
+<!-- Camera (hight is 100mm) -->
+    <include>
+      <name>camera</name>
+      <pose>0 0 0.22 0 0 -1.57</pose>
+      <uri>model://camera_rc2016</uri>
+    </include>
+    <joint name="camera_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>camera::link</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0.000000 0.000000 1.000000</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+      </axis>
+    </joint>
+<!-- Hokuyo (hight is 70mm) -->
+    <include>
+      <name>hokuyo</name>
+      <pose>0 0 0.135 0 0 -1.57</pose>
+      <uri>model://hokuyo_rc2016</uri>
+    </include>
+    <joint name="hokuyo_joint" type="revolute">
+      <parent>chassis</parent>
+      <child>hokuyo::link</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0.000000 0.000000 1.000000</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0</upper>
+        </limit>
+      </axis>
+    </joint>
 <!--__________________right_crawler___________________-->
+    <link name="right_rear_wheel"> 
+      <pose>-0.1 0.15 0.05 0 1.5707 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
 
-<link name="right_rear_wheel"> 
-    <pose>-0.1 0.15 0.05 0 1.5707 0</pose>
-    <inertial>
-      <inertia>
-	<ixx>0.001</ixx>
-	<ixy>0</ixy>
-	<ixz>0</ixz>
-	<iyy>0.001</iyy>
-	<iyz>0</iyz>
-	<izz>0.001</izz>
-      </inertia>
-      <mass>1.0</mass>
-    </inertial>
-
-    <collision name="collision">
-      <geometry>
-            <cylinder>
-              <radius>.05</radius>
-              <length>.1</length>
-            </cylinder>
-      </geometry>
+      <collision name="collision">
+        <geometry>
+          <cylinder>
+            <radius>.05</radius>
+            <length>.1</length>
+          </cylinder>
+        </geometry>
         <surface>
           <friction>
             <ode>
@@ -82,16 +109,16 @@
             </ode>
           </friction>
         </surface>
-    </collision>
-    <visual name="visual">
-      <geometry>
-            <cylinder>
-              <radius>.05</radius>
-              <length>.1</length>
-            </cylinder>
-      </geometry>
-    </visual>
-  </link>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <cylinder>
+            <radius>.05</radius>
+            <length>.1</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
 
 <link name="right_front_wheel">
     <pose>-0.1 -0.15 0.05 0 1.5707 0</pose>

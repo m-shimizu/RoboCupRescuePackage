@@ -50,6 +50,8 @@ char Plugin_Option_Name_StartPose[][30]
                ,"StartPose_4", "StartPose_5", "StartPose_6"
                ,"StartPose_7", "StartPose_8", "StartPose_9"};
 
+#define Plugin_Option_Name_GroundTruth "GroundTruth"
+
 //////////////////////////////////////////////////////////////////
 // Return device type in topic name
 const char* get_string_between_slash_from_topic_name(char* dist, 
@@ -112,6 +114,8 @@ struct Plugin_Option_Parameters
 {
   int Num_Of_StartPoses;
   char StartPoses[MAX_StartPoses][MAX_StartPose_Length];
+  char GroundTruth[MAX_StartPose_Length];
+  int  GroundTruthIsOn;
 
   //////////////////////////////////////////////////////////////////
   // Constructor
@@ -122,6 +126,7 @@ struct Plugin_Option_Parameters
   void Read_Option_Parameters(sdf::ElementPtr _sdf)
   {
     Read_Start_Pose_Parameters(_sdf);
+    Read_GroundTruth_Parameter(_sdf);
   }
 
   //////////////////////////////////////////////////////////////////
@@ -140,6 +145,24 @@ struct Plugin_Option_Parameters
                  , MAX_StartPose_Length);
         Num_Of_StartPoses++;
       }
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////
+  // Read Ground Truth Parameters
+  void Read_GroundTruth_Parameter(sdf::ElementPtr _sdf)
+  {
+    int i;
+    GroundTruthIsOn = 0;
+    if(_sdf->HasElement(Plugin_Option_Name_GroundTruth))
+    {
+      std::stringstream s;
+      s << _sdf->GetElement(Plugin_Option_Name_GroundTruth)
+                  ->Get<std::string>();
+      strncat(GroundTruth, s.str().c_str(), MAX_StartPose_Length);
+      if(NULL != strcasestr(GroundTruth, "true")
+      || NULL != strcasestr(GroundTruth, "1"))
+        GroundTruthIsOn = 1;
     }
   }
 
@@ -891,7 +914,8 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
           "{Location " << pose.x <<","<< pose.y <<","<< pose.z << "}" << 
           "{Orientation " << roll << "," << pitch << "," << yaw << "}";
     os_odo << "\r\n"; 
-    boost::asio::write(_socket, sen_odo);
+    if(1 == POP.GroundTruthIsOn)
+      boost::asio::write(_socket, sen_odo);
   }
   else
     IMU_Disp_Counter--;
@@ -933,7 +957,7 @@ struct UC_INIT
   {
     float                          x = 0, y = 0, z = 0, 
                                    r = 0, p = 0, yaw = 0;
-    int                            battery = 0;
+    int                            battery = 3600;
     char*                          rtn;
     Break_USAR_Command_Into_Params BUCIP(_parent.ucbuf);
     // Display Init parameters for debug.
@@ -1230,7 +1254,8 @@ struct UC_DRIVE
  // _pub_vel_cmd->WaitForConnection();
     // Calc speed and turn
     _speed = (_right_power + _left_power) / 2.0;
-    _turn  = (-_right_power + _left_power) * 2.0;
+    _turn  = (-_right_power + _left_power);
+    _turn  = fmod(_turn, M_PI * 2);
     // Adjust parameters by robot drive type
     switch(_DriveType)
     {
