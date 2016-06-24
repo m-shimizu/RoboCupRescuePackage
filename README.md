@@ -100,7 +100,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
         
         * Shutdown process of Gazebo needs 15~20 sec. You should make an interval before starting Gazebo again.  
 
-## Describing XML tags of USARGazebo in world file.
+## Describing XML tags for USARGazebo in a world file.
     * Location and orientation of start point
       <StartPose_1>X Y Z Roll Pitch Yaw</StartPose_1> 
       <StartPose_2>X Y Z Roll Pitch Yaw</StartPose_2> 
@@ -109,7 +109,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     * Turning Ground Truth on
       <GroundTruth>true</GroundTruth>
 
-## Developping Status at 2016.5.23  
+## Developping Status at 2016.6.24  
 
 ### Current Function  
 * Waiting for socket connections at port 3000 and port 5003  
@@ -118,6 +118,8 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
   - Spawning multi robots requires 1 sec interval between each robot spawning.
 * You can drive the robot with "DRIVE" command like next line:  
     DRIVE {Right 0.5}{Left 0.5}  
+* You can move flipper arms of a crawler robot with "MULTIDRIVE" command like next line:  
+    MULTIDRIVE {FRFlipper 1.57}{FLFlipper 1.57}{RRFlipper 1.57}{RLFlipper 1.57}  
 * You can get a long landscaped jpeg image consisted from 4 robot cameras with following steps. Each robot camera image's width x height is 640 x 480. Camera images are located side-by-side and first spawned robot's camera image is located at left end of a jpeg image. If a robot has two cameras, currently you can see right camera's image.  
     1. Make a tcp socket connection at port 5003  
     2. Send "OK"  
@@ -131,15 +133,21 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 ### Robots and equipments
 * pioneer3at_with_sensors series  
     - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_r , pioneer3at_with_sensors_b , pioneer3at_with_sensors_g , pioneer3at_with_sensors_y  
-    - Eqipments : one cameras and one range sensor  
+    - Equipments : one cameras and one range sensor.  
 
 * pioneer2dx_with_sensors series  
     - Classname : pioneer2dx_with_sensors_r , pioneer2dx_with_sensors_b , pioneer2dx_with_sensors_g , pioneer2dx_with_sensors_y  
-    - Eqipments : one cameras and one range sensor  
+    - Equipments : one cameras and one range sensor.  
 
 * turtlebot_with_sensors series  
     - Classname : turtlebot_with_sensors_r , turtlebot_with_sensors_b , turtlebot_with_sensors_g , turtlebot_with_sensors_y  
-    - Eqipments : one cameras and one range sensor  
+    - Equipments : one cameras and one range sensor.  
+
+* crawler_robot series  
+    - Classname : crawler_robot_r , crawler_robot_b , crawler_robot_g , crawler_robot_y  
+    - Equipments : one cameras, one range sensor and four flipper arms.  
+    - Flipper arms : You can control the angle of a flipper arm with MULTIDRIVE command.  
+       MULTIDRIVE {FRFlipper 1.57}{FLFlipper 1.57}{RRFlipper 1.57}{RLFlipper 1.57}  
 
 ### Sample Client Software  
 * A sample client software was prepared to show fundamental usage of the RoboCupRescuePackage.  
@@ -154,15 +162,16 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 ### Workable USARSim command  
 * USARSim commands  
     - INIT (limited)  
+    - GETCONF (limited)  
+    - GETGEO (limited)  
     - DRIVE (limited)  
+    - MULTIDRIVE (only for controlling flipper arms)  
     - GETSTARTPOSES (It can return effective start point parameters. It can not read parameters from map but from world file as plugin options)  
 * Image Server  
     - OK (Jpeg only(if you need raw image, please request))  
 
 ### USARSim commands which are underconstruction or scheduled  
     - SET  
-    - GETCONF  
-    - GETGEO  
     - MISPGK  
 
 ### Completed rate (sponsered by RoboCup Foundation)  
@@ -173,7 +182,8 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     Original maps produced by Stephen Balakirsky and the National Institute of Standards and Technology (NIST).  
 
 ### Change log  
-    * 22/ 6/2016 : pioneer2dx and turtlebot are added.
+    * 24/ 6/2016 : crawler_robot was added.
+    * 22/ 6/2016 : pioneer2dx and turtlebot were added.
     * 20/ 5/2016 : Jpeg camera image enabled.
     * 17/ 2/2016 : Add output of sensors.
     * 17/ 6/2015 : GETSTARTPOSES can return start point parameters. GETSTARTPOSES reads parameters from a world file which call the USARGazebo plugin as plugin options.  
