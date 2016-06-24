@@ -2176,6 +2176,18 @@ struct USARimage
     _sub_camera_image[12] = _node->Subscribe(
       "/gazebo/default/turtlebot_with_sensors_y/camera/link/camera/image",
        &USARimage::camera_callback_12, this);
+    _sub_camera_image[13] = _node->Subscribe(
+      "/gazebo/default/crawler_robot_r/camera/link/camera/image",
+       &USARimage::camera_callback_12, this);
+    _sub_camera_image[14] = _node->Subscribe(
+      "/gazebo/default/crawler_robot_g/camera/link/camera/image",
+       &USARimage::camera_callback_12, this);
+    _sub_camera_image[15] = _node->Subscribe(
+      "/gazebo/default/crawler_robot_b/camera/link/camera/image",
+       &USARimage::camera_callback_12, this);
+    _sub_camera_image[16] = _node->Subscribe(
+      "/gazebo/default/crawler_robot_y/camera/link/camera/image",
+       &USARimage::camera_callback_12, this);
     while(1)
       Child_Session_Loop_Core();
     // Set topic name of camera
