@@ -20,6 +20,7 @@
 #include "gazebo/physics/physics.hh"
 #include "gazebo/transport/transport.hh"
 #include "SkidSteerDrivePlugin_rc2016.hh"
+#include "encoder_msgs.hh"
 
 using namespace gazebo;
 GZ_REGISTER_MODEL_PLUGIN(SkidSteerDrivePlugin)
@@ -95,21 +96,21 @@ void SkidSteerDrivePlugin::Load(physics::ModelPtr _model,
   // and that all wheels have the same diameter
   physics::EntityPtr wheelLink = boost::dynamic_pointer_cast<physics::Entity>(
                                         this->joints[RIGHT_FRONT]->GetChild() );
-  if (wheelLink)
+  if(wheelLink)
   {
     math::Box bb = wheelLink->GetBoundingBox();
     this->wheelRadius = bb.GetSize().GetMax() * 0.5;
   }
 
   // Validity checks...
-  if (this->wheelSeparation <= 0)
+  if(this->wheelSeparation <= 0)
   {
     gzerr << "Unable to find the wheel separation distance." << std::endl
           << "  This could mean that the right_front link and the left_front "
           << "link are overlapping." << std::endl;
     return;
   }
-  if (this->wheelRadius <= 0)
+  if(this->wheelRadius <= 0)
   {
     gzerr << "Unable to find the wheel radius." << std::endl
           << "  This could mean that the sdf is missing a wheel link on "
@@ -120,6 +121,9 @@ void SkidSteerDrivePlugin::Load(physics::ModelPtr _model,
   this->velSub = this->node->Subscribe(
     std::string("~/") + this->model->GetName() + std::string("/vel_cmd"),
     &SkidSteerDrivePlugin::OnVelMsg, this);
+  this->EncPub = this->node->Advertise<encoder_msgs::msgs::Encoder>(
+    std::string("~/") + this->model->GetName() + std::string("/Encoders"));
+//  EncPub->WaitForConnection();
 
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
           boost::bind(&SkidSteerDrivePlugin::OnUpdate, this));
@@ -140,8 +144,15 @@ void SkidSteerDrivePlugin::OnVelMsg(ConstPosePtr &_msg)
 /////////////////////////////////////////////////
 void SkidSteerDrivePlugin::OnUpdate()
 {
+  encoder_msgs::msgs::Encoder  encmsg;
   this->joints[RIGHT_FRONT]->SetVelocity(0, vel_lin - vel_rot);
   this->joints[RIGHT_REAR ]->SetVelocity(0, vel_lin - vel_rot);
   this->joints[LEFT_FRONT ]->SetVelocity(0, vel_lin + vel_rot);
   this->joints[LEFT_REAR  ]->SetVelocity(0, vel_lin + vel_rot);
+  //enc.set_has_right(true);
+  //enc.set_has_left(true);
+  encmsg.set_right(this->joints[RIGHT_FRONT]->GetAngle(0).Radian());
+  encmsg.set_left(this->joints[LEFT_FRONT]->GetAngle(0).Radian());
+//printf("Enc:%f , %f \n", this->joints[RIGHT_FRONT]->GetAngle(0).Radian(), this->joints[LEFT_FRONT]->GetAngle(0).Radian());
+  EncPub->Publish(encmsg);
 }

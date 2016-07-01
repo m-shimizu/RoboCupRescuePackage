@@ -23,6 +23,7 @@
 #include "gazebo/physics/physics.hh"
 #include "gazebo/transport/TransportTypes.hh"
 #include "gazebo/util/system.hh"
+#include "encoder_msgs.hh"
 
 #define NUMBER_OF_WHEELS 4
 
@@ -60,6 +61,7 @@ namespace gazebo
 
     /// \brief Gazebo topic subscriber
     private: transport::SubscriberPtr velSub;
+    private: transport::PublisherPtr  EncPub;
 
     /// \brief Pointer to the model which this plugin is attached
     private: physics::ModelPtr model;

@@ -19,6 +19,7 @@
 #include "break_usar_command_into_params.hh"
 #include "get_topics_list.hh"
 #include "flipper_control_msgs.hh"
+#include "encoder_msgs.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -401,7 +402,7 @@ int get_number_of_Robot_DB(const char* robot_model_name)
 #define ET_D_U_ODOMETRY     "Odometry"
 #define ET_D_G_GROUNDTRUTH  "GndTruth"
 #define ET_D_U_GROUNDTRUTH  "GroundTruth"
-#define ET_D_G_ENCODER      "Unknnown"
+#define ET_D_G_ENCODER      "Encoders"
 #define ET_D_U_ENCODER      "Encoder"
 
 //////////////////////////////////////////////////////////////////
@@ -559,6 +560,7 @@ struct USARcommand
     boost::asio::write(_socket, response);
   }
 
+/*
   //////////////////////////////////////////////////////////////////
   // USARcommand.Process_SEN_ENCODER for USARcommand.Send_SENS
   void Process_ENCODER(void)
@@ -585,12 +587,14 @@ struct USARcommand
       ENCODER_Disp_counter--;
     boost::asio::write(_socket, response);
   }
+*/
 
   //////////////////////////////////////////////////////////////////
   // Prototypes of callback functions
   void Process_laser_scanner_callback(ConstLaserScanStampedPtr& _msg);
   void Process_gps_callback(ConstGPSPtr& _msg);
   void Process_imu_callback(ConstIMUPtr& _msg);
+  void Process_encoder_callback(ConstEncoderPtr& _msg);
   void Send_odometry(ConstIMUPtr& _msg);
   
   //////////////////////////////////////////////////////////////////
@@ -602,7 +606,7 @@ struct USARcommand
       return;
     // 1. send STA of this robot
     Process_STA();
-    Process_ENCODER();
+//    Process_ENCODER();
     // 2. Check robot's sensors from topics list
     if(NULL == current_topics_list.Search(own_name) 
       ||  0 == current_topics_list.Size()
@@ -670,6 +674,23 @@ std::cout << "IMU cb registered" << std::endl;
     // DO NOT REMOVE *_sub
             *_sub = _node->Subscribe((const char*)*i
                , &USARcommand::Process_imu_callback, this);
+          }
+        }
+        // Encoder 
+        else if(NULL != strcasestr(*i, ET_D_G_ENCODER))
+        {
+          if(NULL == registered_topics_list.Search(*i))
+          {
+std::cout << "IMU cb registered" << std::endl;
+            registered_topics_list.Add_a_topics(*i);
+            _sub = new gazebo::transport::SubscriberPtr;
+    // The function Subscribe needs a valiable which be assigned 
+    //  a return value from the function Subscribe. Without the assigning,
+    //   a call-back function  which was registered 
+    //    by the function Subscribe will NOT be call-backed.
+    // DO NOT REMOVE *_sub
+            *_sub = _node->Subscribe((const char*)*i
+               , &USARcommand::Process_encoder_callback, this);
           }
         }
       }
@@ -938,6 +959,40 @@ void USARcommand::Process_imu_callback(ConstIMUPtr& _msg)
   }
   else
     IMU_Disp_Counter--;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Process_encoder_callback
+//   Defined on USARSim Manual P.82
+// This function is called everytime a message is received on topics
+//  See following page or source files about type of _msg
+// About ConstEncoderPtr
+//    double get_right();
+//    double get_left();
+#define RESOLUTION_1TICK (0.01745)
+void USARcommand::Process_encoder_callback(ConstEncoderPtr& _msg)
+{
+  char  tmpbuf[100];
+  boost::asio::streambuf sen;
+  std::ostream os(&sen);
+  char       Current_time_in_form[50];
+  float      Current_time=set_current_time_in_form(Current_time_in_form);
+  int        Current_sec = (int)Current_time;
+
+  if(0 > ENCODER_Disp_counter)
+  {
+    ENCODER_Disp_counter = 50; // Display ENCODER 1 times per 50 loop times
+    os << "SEN " << 
+      "{Time " << Current_time_in_form << "}" << 
+      "{Battery " << remain_battery << "}" << 
+      "{Type " << ET_D_U_ENCODER << "}" << 
+      "{Name " << "Lwheel" << " Tick " << (int)(_msg->left()/RESOLUTION_1TICK)  << "}" << 
+      "{Name " << "Rwheel" << " Tick " << (int)(_msg->right()/RESOLUTION_1TICK) << "}" << 
+      "\r\n";
+    boost::asio::write(_socket, sen);
+  }
+  else
+    ENCODER_Disp_counter--;
 }
 
 //////////////////////////////////////////////////////////////////

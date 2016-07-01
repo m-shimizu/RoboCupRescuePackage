@@ -8,9 +8,11 @@ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
 endforeach()
 
 set (msgs
-  flipper_control.proto
+  flipper_control.proto encoder.proto
 )
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 add_library(flipper_control_msgs SHARED ${PROTO_SRCS})
 target_link_libraries(flipper_control_msgs ${PROTOBUF_LIBRARY})
+add_library(encoder_msgs SHARED ${PROTO_SRCS})
+target_link_libraries(encoder_msgs ${PROTOBUF_LIBRARY})
 
