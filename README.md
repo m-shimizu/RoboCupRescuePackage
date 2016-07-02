@@ -102,10 +102,10 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 
 ## Describing XML tags for USARGazebo in a world file.
     * Location and orientation of start point
-      <StartPose_1>X Y Z Roll Pitch Yaw</StartPose_1> 
-      <StartPose_2>X Y Z Roll Pitch Yaw</StartPose_2> 
-      <StartPose_3>X Y Z Roll Pitch Yaw</StartPose_3> 
-      <StartPose_4>X Y Z Roll Pitch Yaw</StartPose_4> 
+      <StartPose_1>LOCATIONNAME1 X Y Z Roll Pitch Yaw</StartPose_1> 
+      <StartPose_2>LOCATIONNAME2 X Y Z Roll Pitch Yaw</StartPose_2> 
+      <StartPose_3>LOCATIONNAME3 X Y Z Roll Pitch Yaw</StartPose_3> 
+      <StartPose_4>LOCATIONNAME4 X Y Z Roll Pitch Yaw</StartPose_4> 
     * Turning Ground Truth on
       <GroundTruth>true</GroundTruth>
 
@@ -133,7 +133,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
 ### Robots and equipments
 * pioneer3at_with_sensors series  
     - Classname : pioneer3at_with_sensors , pioneer3at_with_sensors_r , pioneer3at_with_sensors_b , pioneer3at_with_sensors_g , pioneer3at_with_sensors_y  
-    - Equipments : one cameras and one range sensor.  
+    - Equipments : 2 encoder sensors, one cameras and one range sensor.  
 
 * pioneer2dx_with_sensors series  
     - Classname : pioneer2dx_with_sensors_r , pioneer2dx_with_sensors_b , pioneer2dx_with_sensors_g , pioneer2dx_with_sensors_y  
@@ -182,6 +182,7 @@ In the case, at first, you have to remove the installed Gazebo 2, and then, you 
     Original maps produced by Stephen Balakirsky and the National Institute of Standards and Technology (NIST).  
 
 ### Change log  
+    *  1/ 7/2016 : encoder for pioneer3at was fixed.
     * 24/ 6/2016 : crawler_robot was added.
     * 22/ 6/2016 : pioneer2dx and turtlebot were added.
     * 20/ 5/2016 : Jpeg camera image enabled.
