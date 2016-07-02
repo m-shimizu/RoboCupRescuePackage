@@ -71,6 +71,8 @@ namespace gazebo
 
     /// \brief Max force limit for each wheel joint (Default 5.0)
     private: double maxForce;
+    /// \brief publish counter
+    private: double Enc_Counter;
 
     /// \brief Distance between wheels on the same axis (Determined from SDF)
     private: double wheelSeparation;

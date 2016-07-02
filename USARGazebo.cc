@@ -560,7 +560,7 @@ struct USARcommand
     boost::asio::write(_socket, response);
   }
 
-/*
+/* THIS IS OLD ONE. NOW SIMPLY MEMO...
   //////////////////////////////////////////////////////////////////
   // USARcommand.Process_SEN_ENCODER for USARcommand.Send_SENS
   void Process_ENCODER(void)
@@ -681,7 +681,7 @@ std::cout << "IMU cb registered" << std::endl;
         {
           if(NULL == registered_topics_list.Search(*i))
           {
-std::cout << "IMU cb registered" << std::endl;
+std::cout << "ENCODER cb registered" << std::endl;
             registered_topics_list.Add_a_topics(*i);
             _sub = new gazebo::transport::SubscriberPtr;
     // The function Subscribe needs a valiable which be assigned 
@@ -981,7 +981,7 @@ void USARcommand::Process_encoder_callback(ConstEncoderPtr& _msg)
 
   if(0 > ENCODER_Disp_counter)
   {
-    ENCODER_Disp_counter = 50; // Display ENCODER 1 times per 50 loop times
+    ENCODER_Disp_counter = 10; // Display ENCODER 1 times per 50 loop times
     os << "SEN " << 
       "{Time " << Current_time_in_form << "}" << 
       "{Battery " << remain_battery << "}" << 

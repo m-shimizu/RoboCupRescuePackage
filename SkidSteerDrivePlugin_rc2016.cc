@@ -32,6 +32,7 @@ SkidSteerDrivePlugin::SkidSteerDrivePlugin()
   this->wheelRadius = 0.0;
   this->wheelSeparation = 0.0;
   this->vel_lin = this->vel_rot = 0.0;
+  this->Enc_Counter =0;
 }
 
 /////////////////////////////////////////////////
@@ -149,10 +150,16 @@ void SkidSteerDrivePlugin::OnUpdate()
   this->joints[RIGHT_REAR ]->SetVelocity(0, vel_lin - vel_rot);
   this->joints[LEFT_FRONT ]->SetVelocity(0, vel_lin + vel_rot);
   this->joints[LEFT_REAR  ]->SetVelocity(0, vel_lin + vel_rot);
-  //enc.set_has_right(true);
-  //enc.set_has_left(true);
-  encmsg.set_right(this->joints[RIGHT_FRONT]->GetAngle(0).Radian());
-  encmsg.set_left(this->joints[LEFT_FRONT]->GetAngle(0).Radian());
 //printf("Enc:%f , %f \n", this->joints[RIGHT_FRONT]->GetAngle(0).Radian(), this->joints[LEFT_FRONT]->GetAngle(0).Radian());
-  EncPub->Publish(encmsg);
+  if(0 == Enc_Counter)
+  {
+    Enc_Counter = 100;
+    //enc.set_has_right(true);
+    //enc.set_has_left(true);
+    encmsg.set_right(this->joints[RIGHT_FRONT]->GetAngle(0).Radian());
+    encmsg.set_left(this->joints[LEFT_FRONT]->GetAngle(0).Radian());
+    EncPub->Publish(encmsg);
+  }
+  else
+    Enc_Counter--;
 }
