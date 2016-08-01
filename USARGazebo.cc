@@ -37,7 +37,7 @@
 #define strNcmp(B,C) strncasecmp(B,C,strlen(C))
 
 #ifndef numof
-#define numof(X) (sizeof(X)/sizeof(typeof(X[0])))
+#define numof(A)  (sizeof(A)/sizeof(A[0]))
 #endif
 
 #ifndef _MAX
@@ -1116,8 +1116,20 @@ struct UC_INIT
 /*msg.set_edit_name is not working in Gazebo5.
     msg.set_edit_name(_parent.own_name); */
     // Pose to initialize the model to
+#if(GAZEBO_MAJOR_VERSION == 5)
     gazebo::msgs::Set(msg.mutable_pose()
      ,gazebo::math::Pose(_parent.spawn_location,_parent.spawn_direction));
+#endif
+#if(GAZEBO_MAJOR_VERSION == 7)
+    ignition::math::Vector3d    locIgn(_parent.spawn_location.x,
+                                    _parent.spawn_location.y,
+                                    _parent.spawn_location.z);
+    ignition::math::Quaterniond dirIgn(_parent.spawn_direction.x,
+                                       _parent.spawn_direction.y,
+                                       _parent.spawn_direction.z);
+    ignition::math::Pose3d      poseIgn(locIgn, dirIgn);
+    gazebo::msgs::Set(msg.mutable_pose(), poseIgn);
+#endif
     // Send the message (SPAWN A ROBOT!!)
     factoryPub->Publish(msg);
 
@@ -1345,7 +1357,12 @@ struct UC_DRIVE
         return;
     }
     // Set the message
+#if(GAZEBO_MAJOR_VERSION == 5)
     gazebo::math::Pose pose(_speed, 0, 0, 0, 0, _turn);
+#endif
+#if(GAZEBO_MAJOR_VERSION == 7)
+    ignition::math::Pose3d pose(_speed, 0, 0, 0, 0, _turn);
+#endif
     gazebo::msgs::Pose msg;
     gazebo::msgs::Set(&msg, pose);
     // Send the message

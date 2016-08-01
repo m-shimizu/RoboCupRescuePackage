@@ -1,4 +1,4 @@
-. /usr/share/gazebo/setup.sh
+. ~/local/share/gazebo/setup.sh
 export GAZEBO_PLUGIN_PATH=`pwd`/build:${GAZEBO_PLUGIN_PATH}
 export GAZEBO_MODEL_PATH=`pwd`/models:${GAZEBO_MODEL_PATH}
 #source /opt/ros/indigo/setup.bash

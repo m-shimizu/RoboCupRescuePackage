@@ -12,6 +12,9 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 #include_directories(${GAZEBO_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/msgs)
 #link_directories(${GAZEBO_LIBRARY_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/msgs)
 
+#add_compile_options(-std=gnu++11)
+#add_compile_options(-traditional)
+
 ################################################
 # Build flipper control message
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/msgs)

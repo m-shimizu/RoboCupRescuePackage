@@ -92,7 +92,12 @@ void DiffDrivePlugin::OnVelMsg(ConstPosePtr &_msg)
   double vr, va;
 
   vr = _msg->position().x();
+#if(GAZEBO_MAJOR_VERSION == 5)
   va =  msgs::Convert(_msg->orientation()).GetAsEuler().z;
+#endif
+#if(GAZEBO_MAJOR_VERSION == 7)
+  va =  msgs::ConvertIgn(_msg->orientation()).Euler().Z();
+#endif
 
   this->wheelSpeed[LEFT] = vr + va * this->wheelSeparation / 2.0;
   this->wheelSpeed[RIGHT] = vr - va * this->wheelSeparation / 2.0;

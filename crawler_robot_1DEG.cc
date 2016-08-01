@@ -170,8 +170,14 @@ class MobileBasePlugin : public ModelPlugin
     // gzmsg << "cmd_vel: " << msg->position().x() << ", "
     //       <<msgs::Convert(msg->orientation()).GetAsEuler().z<<std::endl;
     double vel_lin = _msg->position().x() / this->wheelRadius;
+#if(GAZEBO_MAJOR_VERSION == 5)
     double vel_rot = -1 * msgs::Convert(_msg->orientation()).GetAsEuler().z
                      * (this->wheelSeparation / this->wheelRadius);
+#endif
+#if(GAZEBO_MAJOR_VERSION == 7)
+    double vel_rot = -1 * msgs::ConvertIgn(_msg->orientation()).Euler().Z()
+                     * (this->wheelSeparation / this->wheelRadius);
+#endif
     set_velocity(vel_lin - vel_rot, vel_lin + vel_rot);
   }
 
