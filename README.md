@@ -1,3 +1,6 @@
+# IMPORTANT : THIS REPOSITORY WAS MOVED TO [RoboCup Rescue Simulation Virtual Robot League](https://github.com/RoboCupRescueVirtualRobotLeague).  
+# PLEASE VISIT THE ORGANIZATION TO KEEP YOU UPTODATE.  
+
 # RoboCupRescuePackage for RoboCup Resuce Virtual Robot League
 A package adding USARSim interface to Gazebo
 
